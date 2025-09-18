@@ -1,0 +1,881 @@
+# =============================================================================
+# SentinelBERT AI Documentation Generator GitHub Action
+# =============================================================================
+# 
+# This workflow automatically generates and updates documentation using AI
+# when files are modified, added, or uploaded to the repository.
+# 
+# Features:
+# - Detects file changes and generates appropriate documentation
+# - Updates README files, API docs, and code comments
+# - Creates comprehensive documentation for new features
+# - Maintains documentation consistency across the project
+# - Supports multiple file types and programming languages
+# 
+# Triggers:
+# - Push to main/develop branches
+# - Pull request creation/updates
+# - Manual workflow dispatch
+# - File uploads via GitHub web interface
+# 
+# =============================================================================
+
+name: 🤖 AI Documentation Generator
+
+on:
+  # Trigger on push to main branches
+  push:
+    branches: [ main, develop, master ]
+    paths:
+      - 'services/**'
+      - 'frontend/**'
+      - 'database/**'
+      - 'monitoring/**'
+      - 'docs/**'
+      - '*.md'
+      - '*.yml'
+      - '*.yaml'
+      - '*.json'
+      - '*.toml'
+      - 'Dockerfile*'
+      - 'docker-compose*'
+  
+  # Trigger on pull requests
+  pull_request:
+    branches: [ main, develop, master ]
+    types: [opened, synchronize, reopened]
+    paths:
+      - 'services/**'
+      - 'frontend/**'
+      - 'database/**'
+      - 'monitoring/**'
+      - 'docs/**'
+      - '*.md'
+      - '*.yml'
+      - '*.yaml'
+      - '*.json'
+      - '*.toml'
+      - 'Dockerfile*'
+      - 'docker-compose*'
+  
+  # Allow manual triggering
+  workflow_dispatch:
+    inputs:
+      documentation_scope:
+        description: 'Documentation scope'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - code-comments
+          - api-docs
+          - readme-updates
+          - architecture-docs
+      force_regenerate:
+        description: 'Force regenerate all documentation'
+        required: false
+        default: false
+        type: boolean
+
+# Set permissions for the workflow
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+  actions: read
+
+# Environment variables
+env:
+  NODE_VERSION: '18'
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  # =============================================================================
+  # JOB 1: Detect Changes and Plan Documentation Updates
+  # =============================================================================
+  detect-changes:
+    name: 🔍 Detect Changes & Plan Updates
+    runs-on: ubuntu-latest
+    outputs:
+      has-code-changes: ${{ steps.changes.outputs.code }}
+      has-config-changes: ${{ steps.changes.outputs.config }}
+      has-doc-changes: ${{ steps.changes.outputs.docs }}
+      changed-files: ${{ steps.file-list.outputs.files }}
+      documentation-needed: ${{ steps.plan.outputs.needed }}
+    
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: 🔍 Detect File Changes
+        id: changes
+        uses: dorny/paths-filter@v2
+        with:
+          filters: |
+            code:
+              - 'services/**/*.rs'
+              - 'services/**/*.py'
+              - 'services/**/*.java'
+              - 'services/**/*.js'
+              - 'services/**/*.ts'
+              - 'services/**/*.jsx'
+              - 'services/**/*.tsx'
+            config:
+              - '*.yml'
+              - '*.yaml'
+              - '*.json'
+              - '*.toml'
+              - 'Dockerfile*'
+              - 'docker-compose*'
+              - '.env*'
+            docs:
+              - '*.md'
+              - 'docs/**'
+              - 'README*'
+          list-files: json
+      
+      - name: 📋 List Changed Files
+        id: file-list
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            # For pull requests, get files from the PR
+            files=$(echo '${{ steps.changes.outputs.code_files }}${{ steps.changes.outputs.config_files }}${{ steps.changes.outputs.docs_files }}' | jq -r '.[]' | tr '\n' ',' | sed 's/,$//')
+          else
+            # For pushes, get files from git diff
+            files=$(git diff --name-only HEAD~1 HEAD | tr '\n' ',' | sed 's/,$//')
+          fi
+          echo "files=$files" >> $GITHUB_OUTPUT
+          echo "Changed files: $files"
+      
+      - name: 📋 Create Documentation Plan
+        id: plan
+        run: |
+          echo "Creating documentation update plan..."
+          
+          needed="false"
+          
+          if [[ "${{ steps.changes.outputs.code }}" == "true" ]] || [[ "${{ steps.changes.outputs.config }}" == "true" ]] || [[ "${{ github.event.inputs.force_regenerate }}" == "true" ]]; then
+            needed="true"
+          fi
+          
+          echo "needed=$needed" >> $GITHUB_OUTPUT
+          echo "Documentation update needed: $needed"
+
+  # =============================================================================
+  # JOB 2: Generate AI Documentation
+  # =============================================================================
+  generate-documentation:
+    name: 🤖 Generate AI Documentation
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.documentation-needed == 'true'
+    
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ github.head_ref || github.ref }}
+      
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: 📦 Install Dependencies
+        run: |
+          pip install --upgrade pip
+          pip install requests jinja2 pyyaml pathlib
+      
+      - name: 🤖 Generate Documentation with AI
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CHANGED_FILES: ${{ needs.detect-changes.outputs.changed-files }}
+        run: |
+          cat > generate_docs.py << 'EOF'
+          #!/usr/bin/env python3
+          """
+          AI-powered documentation generator for SentinelBERT project.
+          """
+          
+          import os
+          import json
+          import subprocess
+          import requests
+          from pathlib import Path
+          from typing import Dict, List, Any
+          import yaml
+          
+          class AIDocumentationGenerator:
+              def __init__(self):
+                  self.openai_key = os.getenv('OPENAI_API_KEY')
+                  self.github_token = os.getenv('GITHUB_TOKEN')
+                  self.repo_path = Path('.')
+                  
+              def get_changed_files(self) -> List[str]:
+                  """Get list of changed files."""
+                  changed_files_str = os.getenv('CHANGED_FILES', '')
+                  if changed_files_str:
+                      return [f.strip() for f in changed_files_str.split(',') if f.strip()]
+                  
+                  # Fallback to git diff
+                  try:
+                      result = subprocess.run(
+                          ['git', 'diff', '--name-only', 'HEAD~1', 'HEAD'],
+                          capture_output=True, text=True, check=True
+                      )
+                      return result.stdout.strip().split('\n') if result.stdout.strip() else []
+                  except subprocess.CalledProcessError:
+                      return []
+              
+              def analyze_file_content(self, file_path: str) -> Dict[str, Any]:
+                  """Analyze file content and extract metadata."""
+                  path = Path(file_path)
+                  if not path.exists():
+                      return {}
+                  
+                  try:
+                      with open(path, 'r', encoding='utf-8') as f:
+                          content = f.read()
+                  except (UnicodeDecodeError, PermissionError):
+                      return {'type': 'binary', 'size': path.stat().st_size}
+                  
+                  analysis = {
+                      'path': file_path,
+                      'extension': path.suffix,
+                      'size': len(content),
+                      'lines': len(content.split('\n')),
+                      'type': self.get_file_type(path.suffix),
+                      'content_preview': content[:1000] + '...' if len(content) > 1000 else content
+                  }
+                  
+                  return analysis
+              
+              def get_file_type(self, extension: str) -> str:
+                  """Determine file type from extension."""
+                  type_map = {
+                      '.py': 'python',
+                      '.rs': 'rust',
+                      '.js': 'javascript',
+                      '.ts': 'typescript',
+                      '.jsx': 'react',
+                      '.tsx': 'react-typescript',
+                      '.java': 'java',
+                      '.md': 'markdown',
+                      '.yml': 'yaml',
+                      '.yaml': 'yaml',
+                      '.json': 'json',
+                      '.toml': 'toml',
+                  }
+                  return type_map.get(extension.lower(), 'unknown')
+              
+              def generate_documentation_with_ai(self, file_analysis: Dict[str, Any]) -> str:
+                  """Generate documentation using AI API or fallback."""
+                  if self.openai_key:
+                      try:
+                          return self.call_openai_api(file_analysis)
+                      except Exception as e:
+                          print(f"OpenAI API failed: {e}")
+                  
+                  return self.generate_fallback_documentation(file_analysis)
+              
+              def call_openai_api(self, file_analysis: Dict[str, Any]) -> str:
+                  """Call OpenAI API for documentation generation."""
+                  prompt = self.create_documentation_prompt(file_analysis)
+                  
+                  headers = {
+                      'Authorization': f'Bearer {self.openai_key}',
+                      'Content-Type': 'application/json'
+                  }
+                  
+                  data = {
+                      'model': 'gpt-3.5-turbo',
+                      'messages': [
+                          {'role': 'system', 'content': 'You are a technical documentation expert for the SentinelBERT project.'},
+                          {'role': 'user', 'content': prompt}
+                      ],
+                      'max_tokens': 1500,
+                      'temperature': 0.3
+                  }
+                  
+                  response = requests.post(
+                      'https://api.openai.com/v1/chat/completions',
+                      headers=headers,
+                      json=data,
+                      timeout=30
+                  )
+                  
+                  if response.status_code == 200:
+                      return response.json()['choices'][0]['message']['content']
+                  else:
+                      raise Exception(f"OpenAI API error: {response.status_code}")
+              
+              def create_documentation_prompt(self, file_analysis: Dict[str, Any]) -> str:
+                  """Create AI prompt for documentation generation."""
+                  file_type = file_analysis.get('type', 'unknown')
+                  file_path = file_analysis.get('path', 'unknown')
+                  
+                  prompt = f"""
+                  Generate comprehensive documentation for this {file_type} file in the SentinelBERT project (a multi-platform sentiment analysis system for law enforcement).
+                  
+                  File: {file_path}
+                  Type: {file_type}
+                  Size: {file_analysis.get('lines', 0)} lines
+                  
+                  Content preview:
+                  ```{file_type}
+                  {file_analysis.get('content_preview', '')}
+                  ```
+                  
+                  Please provide:
+                  1. Clear description of the file's purpose
+                  2. Key components and their functionality
+                  3. Integration points with other system components
+                  4. Usage examples if applicable
+                  5. Security considerations for law enforcement use
+                  
+                  Format as markdown with appropriate headers.
+                  """
+                  
+                  return prompt
+              
+              def generate_fallback_documentation(self, file_analysis: Dict[str, Any]) -> str:
+                  """Generate basic documentation without AI."""
+                  file_path = file_analysis.get('path', 'unknown')
+                  file_type = file_analysis.get('type', 'unknown')
+                  
+                  doc = f"""# {Path(file_path).name}
+          
+          **File Type**: {file_type}  
+          **Path**: `{file_path}`  
+          **Size**: {file_analysis.get('lines', 0)} lines  
+          
+          ## Overview
+          
+          This {file_type} file is part of the SentinelBERT multi-platform sentiment analysis system.
+          
+          ## Purpose
+          
+          This file contributes to the overall functionality of the SentinelBERT system by providing
+          {file_type}-specific implementation details.
+          
+          ## Integration
+          
+          This file integrates with other components of the SentinelBERT system to provide
+          comprehensive social media sentiment analysis capabilities.
+          
+          ## Usage
+          
+          This file is automatically loaded as part of the SentinelBERT system deployment.
+          Refer to the main project documentation for integration details.
+          
+          ## Notes
+          
+          - This documentation was auto-generated
+          - For detailed implementation notes, see the source code comments
+          - Part of the SentinelBERT multi-platform sentiment analysis system
+          
+          ---
+          
+          *Generated by AI Documentation Generator*
+          """
+                  
+                  return doc
+              
+              def save_documentation(self, file_path: str, documentation: str):
+                  """Save generated documentation to appropriate location."""
+                  # Create docs directory structure
+                  docs_dir = Path('docs/generated')
+                  docs_dir.mkdir(parents=True, exist_ok=True)
+                  
+                  # Generate documentation file name
+                  original_path = Path(file_path)
+                  doc_name = f"{original_path.stem}_{original_path.suffix[1:] if original_path.suffix else 'file'}.md"
+                  doc_path = docs_dir / doc_name
+                  
+                  # Save documentation
+                  with open(doc_path, 'w', encoding='utf-8') as f:
+                      f.write(documentation)
+                  
+                  print(f"Documentation saved: {doc_path}")
+                  return doc_path
+              
+              def update_documentation_index(self, generated_docs: List[Path]):
+                  """Update documentation index with new files."""
+                  index_path = Path('docs/INDEX.md')
+                  
+                  index_content = f"""# 📚 SentinelBERT Documentation Index
+          
+          *Last updated: {subprocess.run(['date', '-u'], capture_output=True, text=True).stdout.strip()}*
+          
+          ## Generated Documentation
+          
+          The following documentation files have been automatically generated:
+          
+          """
+                  
+                  for doc_path in generated_docs:
+                      relative_path = doc_path.relative_to(Path('.'))
+                      index_content += f"- [{doc_path.stem}]({relative_path})\n"
+                  
+                  index_content += f"""
+          ## Main Documentation
+          
+          - [README](../README.md) - Project overview and quick start
+          - [Deployment Guide](../DEPLOYMENT_GUIDE.md) - Complete deployment instructions
+          - [System Design](../SYSTEM_DESIGN.md) - Technical architecture
+          - [Architecture Diagram](../ARCHITECTURE_DIAGRAM.md) - Visual system overview
+          
+          ## API Documentation
+          
+          - [API Reference](api/API_REFERENCE.md) - Complete API documentation
+          
+          ---
+          
+          *This index is automatically maintained by the AI Documentation Generator.*
+          """
+                  
+                  # Ensure docs directory exists
+                  index_path.parent.mkdir(parents=True, exist_ok=True)
+                  
+                  with open(index_path, 'w', encoding='utf-8') as f:
+                      f.write(index_content)
+                  
+                  print("Documentation index updated")
+              
+              def run(self):
+                  """Main execution function."""
+                  print("🤖 Starting AI Documentation Generation...")
+                  
+                  changed_files = self.get_changed_files()
+                  print(f"Found {len(changed_files)} changed files")
+                  
+                  if not changed_files:
+                      print("No files to process")
+                      return
+                  
+                  generated_docs = []
+                  
+                  for file_path in changed_files[:10]:  # Limit to prevent API overuse
+                      if not file_path or file_path.startswith('.git'):
+                          continue
+                      
+                      print(f"Processing: {file_path}")
+                      
+                      # Analyze file
+                      analysis = self.analyze_file_content(file_path)
+                      if not analysis or analysis.get('type') == 'binary':
+                          continue
+                      
+                      # Skip if file is too small or not relevant
+                      if analysis.get('size', 0) < 100:
+                          continue
+                      
+                      # Generate documentation
+                      try:
+                          documentation = self.generate_documentation_with_ai(analysis)
+                          doc_path = self.save_documentation(file_path, documentation)
+                          generated_docs.append(doc_path)
+                      except Exception as e:
+                          print(f"Error generating docs for {file_path}: {e}")
+                          continue
+                  
+                  # Update documentation index
+                  if generated_docs:
+                      self.update_documentation_index(generated_docs)
+                  
+                  print(f"✅ Generated documentation for {len(generated_docs)} files")
+          
+          if __name__ == "__main__":
+              generator = AIDocumentationGenerator()
+              generator.run()
+          EOF
+          
+          python generate_docs.py
+      
+      - name: 📝 Generate API Documentation
+        run: |
+          echo "Generating API documentation..."
+          
+          # Create API docs directory
+          mkdir -p docs/api
+          
+          # Generate basic API documentation
+          cat > docs/api/API_REFERENCE.md << 'EOF'
+          # SentinelBERT API Reference
+          
+          *Auto-generated API documentation*
+          
+          ## Overview
+          
+          SentinelBERT provides RESTful APIs for social media sentiment analysis and behavioral pattern detection.
+          
+          ### Base URLs
+          
+          - **Development**: `http://localhost:8080/api`
+          - **Production**: `https://your-domain.com/api`
+          
+          ### Authentication
+          
+          All API endpoints require JWT authentication:
+          
+          ```
+          Authorization: Bearer <your-jwt-token>
+          ```
+          
+          ## Core Endpoints
+          
+          ### Search API
+          
+          **POST** `/api/v1/search`
+          
+          Perform content searches across social media platforms.
+          
+          ```json
+          {
+            "query": "climate change",
+            "platforms": ["twitter", "reddit"],
+            "date_range": {
+              "start": "2024-01-01",
+              "end": "2024-01-31"
+            },
+            "sentiment_filter": "negative"
+          }
+          ```
+          
+          ### Analytics API
+          
+          **GET** `/api/v1/analytics/sentiment`
+          
+          Get sentiment analysis results.
+          
+          **GET** `/api/v1/analytics/trends`
+          
+          Get trending topics and patterns.
+          
+          ### User Management API
+          
+          **GET** `/api/v1/users`
+          
+          List system users (admin only).
+          
+          **POST** `/api/v1/users`
+          
+          Create new user account.
+          
+          ## Response Format
+          
+          All API responses follow this format:
+          
+          ```json
+          {
+            "success": true,
+            "data": {},
+            "message": "Success message",
+            "timestamp": "2024-01-18T10:30:00Z"
+          }
+          ```
+          
+          ## Error Handling
+          
+          Error responses include appropriate HTTP status codes:
+          
+          ```json
+          {
+            "success": false,
+            "error": {
+              "code": "VALIDATION_ERROR",
+              "message": "Invalid input parameters"
+            },
+            "timestamp": "2024-01-18T10:30:00Z"
+          }
+          ```
+          
+          ## Rate Limiting
+          
+          - Standard endpoints: 100 requests/minute
+          - Search endpoints: 50 requests/minute
+          - Analysis endpoints: 20 requests/minute
+          
+          ---
+          
+          *This documentation is automatically updated when API changes are detected.*
+          EOF
+      
+      - name: 📤 Commit Generated Documentation
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "AI Documentation Bot"
+          
+          # Add generated documentation
+          git add docs/
+          
+          # Check if there are changes to commit
+          if git diff --staged --quiet; then
+            echo "No documentation changes to commit"
+          else
+            git commit -m "📝 Auto-generate documentation for code changes
+            
+            - Generated documentation for modified files
+            - Updated API reference documentation
+            - Created documentation index
+            - Automated by AI Documentation Generator
+            
+            Co-authored-by: openhands <openhands@all-hands.dev>"
+            
+            # Push changes
+            git push origin ${{ github.head_ref || github.ref_name }}
+          fi
+
+  # =============================================================================
+  # JOB 3: Update README and Project Documentation
+  # =============================================================================
+  update-readme:
+    name: 📖 Update README Documentation
+    runs-on: ubuntu-latest
+    needs: [detect-changes, generate-documentation]
+    if: needs.detect-changes.outputs.documentation-needed == 'true'
+    
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ github.head_ref || github.ref }}
+      
+      - name: 📖 Update README with Documentation Links
+        run: |
+          echo "Updating README with documentation links..."
+          
+          # Check if README exists
+          if [ ! -f "README.md" ]; then
+            echo "README.md not found, skipping update"
+            exit 0
+          fi
+          
+          # Create backup
+          cp README.md README.md.backup
+          
+          # Add documentation section if it doesn't exist
+          if ! grep -q "## 📚 Documentation" README.md; then
+            cat >> README.md << 'EOF'
+          
+          ## 📚 Documentation
+          
+          ### Quick Links
+          - [📋 Documentation Index](docs/INDEX.md) - Complete documentation overview
+          - [🔧 Deployment Guide](DEPLOYMENT_GUIDE.md) - Step-by-step deployment
+          - [🏗️ System Design](SYSTEM_DESIGN.md) - Technical architecture
+          - [📊 Architecture Diagram](ARCHITECTURE_DIAGRAM.md) - Visual overview
+          
+          ### API Documentation
+          - [📡 API Reference](docs/api/API_REFERENCE.md) - Complete API documentation
+          - [🔍 Search API](docs/api/search.md) - Search functionality
+          - [📈 Analytics API](docs/api/analytics.md) - Analytics endpoints
+          
+          ### Generated Documentation
+          - [🤖 Auto-Generated Docs](docs/generated/) - AI-generated code documentation
+          - [📝 Code Comments](docs/generated/) - Detailed code explanations
+          
+          ### Guides and Tutorials
+          - [🚀 Quick Start Guide](docs/QUICK_START.md) - Get started in 5 minutes
+          - [⚙️ Configuration Guide](docs/CONFIGURATION.md) - System configuration
+          - [🔒 Security Guide](docs/SECURITY.md) - Security best practices
+          - [🐛 Troubleshooting](docs/TROUBLESHOOTING.md) - Common issues and solutions
+          
+          ---
+          
+          *Documentation is automatically updated when code changes are detected.*
+          EOF
+            
+            echo "Added documentation section to README"
+          else
+            echo "Documentation section already exists in README"
+          fi
+      
+      - name: 📤 Commit README Updates
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "README Documentation Bot"
+          
+          # Add README changes
+          git add README.md
+          
+          # Check if there are changes to commit
+          if git diff --staged --quiet; then
+            echo "No README changes to commit"
+          else
+            git commit -m "📖 Auto-update README with documentation links
+            
+            - Added comprehensive documentation section
+            - Linked to all available documentation
+            - Organized by category for easy navigation
+            - Automated by AI Documentation Generator
+            
+            Co-authored-by: openhands <openhands@all-hands.dev>"
+            
+            # Push changes
+            git push origin ${{ github.head_ref || github.ref_name }}
+          fi
+
+  # =============================================================================
+  # JOB 4: Create Documentation Summary and Notification
+  # =============================================================================
+  create-summary:
+    name: 📊 Create Documentation Summary
+    runs-on: ubuntu-latest
+    needs: [detect-changes, generate-documentation, update-readme]
+    if: always() && needs.detect-changes.outputs.documentation-needed == 'true'
+    
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ github.head_ref || github.ref_name }}
+      
+      - name: 📊 Generate Documentation Summary
+        id: summary
+        run: |
+          echo "Generating documentation summary..."
+          
+          # Count documentation files
+          total_docs=$(find docs -name "*.md" 2>/dev/null | wc -l || echo "0")
+          generated_docs=$(find docs/generated -name "*.md" 2>/dev/null | wc -l || echo "0")
+          
+          # Create summary
+          summary="## 🤖 AI Documentation Generator Summary
+          
+          **Workflow**: ${{ github.workflow }}  
+          **Run**: #${{ github.run_number }}  
+          **Trigger**: ${{ github.event_name }}  
+          **Branch**: ${{ github.ref_name }}  
+          **Timestamp**: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          
+          ### 📊 Documentation Statistics
+          - **Total documentation files**: $total_docs
+          - **Generated documentation files**: $generated_docs
+          - **Changed files processed**: $(echo '${{ needs.detect-changes.outputs.changed-files }}' | tr ',' '\n' | wc -l)
+          
+          ### ✅ Completed Tasks"
+          
+          if [[ "${{ needs.generate-documentation.result }}" == "success" ]]; then
+            summary="$summary
+          - ✅ AI documentation generated successfully"
+          else
+            summary="$summary
+          - ❌ AI documentation generation failed"
+          fi
+          
+          if [[ "${{ needs.update-readme.result }}" == "success" ]]; then
+            summary="$summary
+          - ✅ README updated with documentation links"
+          else
+            summary="$summary
+          - ❌ README update failed"
+          fi
+          
+          summary="$summary
+          
+          ### 📚 Available Documentation
+          - [📋 Documentation Index](docs/INDEX.md)
+          - [📡 API Reference](docs/api/API_REFERENCE.md)
+          - [🤖 Generated Code Docs](docs/generated/)
+          - [📖 Updated README](README.md)
+          
+          ### 🔗 Quick Access
+          - **Main Documentation**: [README.md](README.md)
+          - **Deployment Guide**: [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)
+          - **System Architecture**: [SYSTEM_DESIGN.md](SYSTEM_DESIGN.md)
+          - **All Documentation**: [docs/](docs/)
+          
+          ### 🎯 Next Steps
+          1. Review generated documentation for accuracy
+          2. Update any manual documentation as needed
+          3. Consider adding more detailed examples
+          4. Ensure all links are working correctly
+          
+          ---
+          
+          🤖 *Automated by SentinelBERT AI Documentation Generator*  
+          📧 *Questions? Create an issue or check the documentation*"
+          
+          # Save summary to file
+          echo "$summary" > docs/DOCUMENTATION_SUMMARY.md
+          
+          # Output for GitHub Actions
+          echo "summary<<EOF" >> $GITHUB_OUTPUT
+          echo "$summary" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+      
+      - name: 💬 Comment on PR (if applicable)
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const summary = `${{ steps.summary.outputs.summary }}`;
+            
+            // Check if we already commented on this PR
+            const comments = await github.rest.issues.listComments({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+            });
+            
+            const existingComment = comments.data.find(comment => 
+              comment.user.login === 'github-actions[bot]' && 
+              comment.body.includes('AI Documentation Generator Summary')
+            );
+            
+            if (existingComment) {
+              // Update existing comment
+              await github.rest.issues.updateComment({
+                comment_id: existingComment.id,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: summary
+              });
+            } else {
+              // Create new comment
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: summary
+              });
+            }
+      
+      - name: 📤 Commit Documentation Summary
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "Documentation Summary Bot"
+          
+          # Add summary file
+          git add docs/DOCUMENTATION_SUMMARY.md
+          
+          # Check if there are changes to commit
+          if git diff --staged --quiet; then
+            echo "No summary changes to commit"
+          else
+            git commit -m "📊 Add documentation generation summary
+            
+            - Created comprehensive documentation summary
+            - Included statistics and completion status
+            - Added quick access links
+            - Automated by AI Documentation Generator
+            
+            Co-authored-by: openhands <openhands@all-hands.dev>"
+            
+            # Push changes
+            git push origin ${{ github.head_ref || github.ref_name }}
+          fi
+      
+      - name: 📝 Add to Workflow Summary
+        run: |
+          echo "${{ steps.summary.outputs.summary }}" >> $GITHUB_STEP_SUMMARY

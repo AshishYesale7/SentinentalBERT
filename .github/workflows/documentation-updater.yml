@@ -1,0 +1,221 @@
+# =============================================================================
+# Simple Documentation Updater Workflow
+# =============================================================================
+# 
+# This workflow provides a lightweight alternative for documentation updates
+# when AI services are not available or for basic documentation maintenance.
+# 
+# =============================================================================
+
+name: 📝 Documentation Updater
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'services/**'
+      - 'frontend/**'
+      - '*.md'
+      - 'docs/**'
+  
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-docs:
+    name: 📝 Update Documentation
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: 🔍 Detect Changes
+        id: changes
+        run: |
+          # Get changed files
+          if [ "${{ github.event_name }}" = "push" ]; then
+            changed_files=$(git diff --name-only HEAD~1 HEAD | tr '\n' ',' | sed 's/,$//')
+          else
+            changed_files=""
+          fi
+          
+          echo "files=$changed_files" >> $GITHUB_OUTPUT
+          echo "Changed files: $changed_files"
+      
+      - name: 📚 Update Documentation Index
+        run: |
+          # Create docs directory if it doesn't exist
+          mkdir -p docs
+          
+          # Generate documentation index
+          cat > docs/INDEX.md << 'EOF'
+          # 📚 SentinelBERT Documentation Index
+          
+          *Last updated: $(date -u +"%Y-%m-%d %H:%M:%S UTC")*
+          
+          ## Main Documentation
+          
+          - [README](../README.md) - Project overview and quick start
+          - [Deployment Guide](../DEPLOYMENT_GUIDE.md) - Complete deployment instructions
+          - [System Design](../SYSTEM_DESIGN.md) - Technical architecture and design
+          - [Architecture Diagram](../ARCHITECTURE_DIAGRAM.md) - Visual system overview
+          - [Executive Summary](../EXECUTIVE_SUMMARY.md) - Business case and ROI
+          - [Project Status](../PROJECT_STATUS.md) - Current development status
+          
+          ## Technical Documentation
+          
+          - [API Reference](api/API_REFERENCE.md) - Complete API documentation
+          - [Configuration Guide](CONFIGURATION.md) - System configuration options
+          - [Security Guide](SECURITY.md) - Security best practices
+          - [Troubleshooting](TROUBLESHOOTING.md) - Common issues and solutions
+          
+          ## Development
+          
+          - [Contributing Guide](CONTRIBUTING.md) - How to contribute to the project
+          - [Development Setup](DEVELOPMENT.md) - Local development environment
+          - [Testing Guide](TESTING.md) - Testing procedures and standards
+          - [Code Style Guide](CODE_STYLE.md) - Coding standards and conventions
+          
+          ## Deployment and Operations
+          
+          - [Docker Guide](DOCKER.md) - Container deployment
+          - [Kubernetes Guide](KUBERNETES.md) - Kubernetes deployment
+          - [Monitoring Guide](MONITORING.md) - System monitoring and alerting
+          - [Backup and Recovery](BACKUP.md) - Data backup and recovery procedures
+          
+          ## User Guides
+          
+          - [Quick Start](QUICK_START.md) - Get started in 5 minutes
+          - [User Manual](USER_MANUAL.md) - Complete user guide
+          - [FAQ](FAQ.md) - Frequently asked questions
+          - [Best Practices](BEST_PRACTICES.md) - Usage best practices
+          
+          ---
+          
+          *This index is automatically maintained by the Documentation Updater workflow.*
+          EOF
+      
+      - name: 📋 Create Basic API Documentation
+        run: |
+          mkdir -p docs/api
+          
+          cat > docs/api/API_REFERENCE.md << 'EOF'
+          # SentinelBERT API Reference
+          
+          ## Overview
+          
+          SentinelBERT provides RESTful APIs for social media sentiment analysis.
+          
+          ### Base URL
+          ```
+          http://localhost:8080/api/v1
+          ```
+          
+          ### Authentication
+          ```
+          Authorization: Bearer <jwt-token>
+          ```
+          
+          ## Endpoints
+          
+          ### Search API
+          - `POST /search` - Search social media content
+          - `GET /search/{id}` - Get search results
+          - `DELETE /search/{id}` - Delete search query
+          
+          ### Analytics API
+          - `GET /analytics/sentiment` - Get sentiment analysis
+          - `GET /analytics/trends` - Get trending topics
+          - `GET /analytics/influencers` - Get key influencers
+          
+          ### User Management
+          - `GET /users` - List users (admin only)
+          - `POST /users` - Create user
+          - `PUT /users/{id}` - Update user
+          - `DELETE /users/{id}` - Delete user
+          
+          ## Response Format
+          
+          ```json
+          {
+            "success": true,
+            "data": {},
+            "message": "Success",
+            "timestamp": "2024-01-18T10:30:00Z"
+          }
+          ```
+          
+          ## Error Codes
+          
+          - `400` - Bad Request
+          - `401` - Unauthorized
+          - `403` - Forbidden
+          - `404` - Not Found
+          - `500` - Internal Server Error
+          
+          ---
+          
+          *For detailed API documentation, see the OpenAPI specification.*
+          EOF
+      
+      - name: 📖 Update README Links
+        run: |
+          # Check if README exists and add documentation section if missing
+          if [ -f "README.md" ] && ! grep -q "## 📚 Documentation" README.md; then
+            cat >> README.md << 'EOF'
+          
+          ## 📚 Documentation
+          
+          - [📋 Documentation Index](docs/INDEX.md) - Complete documentation overview
+          - [🚀 Quick Start](docs/QUICK_START.md) - Get started quickly
+          - [🔧 Deployment Guide](DEPLOYMENT_GUIDE.md) - Deployment instructions
+          - [📡 API Reference](docs/api/API_REFERENCE.md) - API documentation
+          - [🏗️ System Design](SYSTEM_DESIGN.md) - Technical architecture
+          - [🔒 Security Guide](docs/SECURITY.md) - Security best practices
+          
+          ---
+          
+          *Documentation is automatically maintained and updated.*
+          EOF
+          fi
+      
+      - name: 📤 Commit Documentation Updates
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "Documentation Updater"
+          
+          # Add all documentation changes
+          git add docs/ README.md
+          
+          # Check if there are changes to commit
+          if git diff --staged --quiet; then
+            echo "No documentation changes to commit"
+          else
+            git commit -m "📝 Auto-update documentation
+            
+            - Updated documentation index
+            - Enhanced API reference
+            - Added README documentation links
+            - Automated by Documentation Updater
+            
+            Co-authored-by: openhands <openhands@all-hands.dev>"
+            
+            # Push changes
+            git push origin ${{ github.ref_name }}
+          fi
+      
+      - name: 📊 Summary
+        run: |
+          echo "## 📝 Documentation Update Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Documentation index updated" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ API reference created/updated" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ README documentation links added" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Changed files**: ${{ steps.changes.outputs.files }}" >> $GITHUB_STEP_SUMMARY

@@ -1,0 +1,409 @@
+# SentinelBERT Ingestion Service Configuration
+# This file contains all configuration settings for the Rust-based data ingestion service
+# 
+# Configuration Sections:
+# - [server] - HTTP server settings
+# - [database] - PostgreSQL connection settings
+# - [redis] - Redis cache settings
+# - [elasticsearch] - ElasticSearch settings
+# - [platforms] - Social media platform API configurations
+# - [rate_limiting] - API rate limiting settings
+# - [security] - Security and privacy settings
+# - [monitoring] - Metrics and logging settings
+# - [processing] - Data processing settings
+
+# =============================================================================
+# Server Configuration
+# =============================================================================
+[server]
+# HTTP server bind address (0.0.0.0 for all interfaces)
+host = "0.0.0.0"
+
+# HTTP server port
+port = 8081
+
+# Number of worker threads (0 = auto-detect based on CPU cores)
+workers = 0
+
+# Request timeout in seconds
+request_timeout = 30
+
+# Maximum request body size in bytes (10MB)
+max_request_size = 10485760
+
+# Enable CORS for cross-origin requests
+enable_cors = true
+
+# Allowed CORS origins (empty = allow all)
+cors_origins = ["http://localhost:3000", "http://localhost:8080"]
+
+# =============================================================================
+# Database Configuration
+# =============================================================================
+[database]
+# PostgreSQL connection settings
+host = "localhost"
+port = 5432
+database = "sentinelbert"
+username = "sentinel"
+password = "your_secure_password_here"
+
+# Connection pool settings
+max_connections = 20
+min_connections = 5
+connection_timeout = 30
+idle_timeout = 600
+
+# Enable SSL connection (recommended for production)
+ssl_mode = "prefer"
+
+# Connection retry settings
+max_retries = 3
+retry_delay = 5
+
+# =============================================================================
+# Redis Cache Configuration
+# =============================================================================
+[redis]
+# Redis connection settings
+host = "localhost"
+port = 6379
+password = "your_redis_password_here"
+database = 0
+
+# Connection pool settings
+max_connections = 10
+connection_timeout = 5
+command_timeout = 10
+
+# Cache TTL settings (in seconds)
+default_ttl = 3600        # 1 hour
+user_profile_ttl = 86400  # 24 hours
+post_cache_ttl = 1800     # 30 minutes
+
+# =============================================================================
+# ElasticSearch Configuration
+# =============================================================================
+[elasticsearch]
+# ElasticSearch connection settings
+host = "localhost"
+port = 9200
+username = "elastic"
+password = "your_elastic_password_here"
+
+# Index settings
+index_prefix = "sentinelbert"
+posts_index = "social_posts"
+users_index = "user_profiles"
+
+# Bulk indexing settings
+bulk_size = 1000
+bulk_timeout = 30
+max_retries = 3
+
+# =============================================================================
+# Social Media Platform API Configurations
+# =============================================================================
+
+# Twitter/X.com API Configuration
+[platforms.twitter]
+enabled = true
+api_version = "2"
+bearer_token = "your_twitter_bearer_token_here"
+base_url = "https://api.twitter.com"
+
+# Rate limiting (requests per 15-minute window)
+rate_limit = 300
+rate_window = 900
+
+# Search parameters
+max_results_per_request = 100
+tweet_fields = ["id", "text", "author_id", "created_at", "public_metrics", "geo", "lang", "context_annotations"]
+user_fields = ["id", "username", "name", "public_metrics", "verified", "created_at", "location"]
+expansions = ["author_id", "geo.place_id"]
+
+# Content filtering
+exclude_retweets = false
+exclude_replies = false
+min_engagement_threshold = 0
+
+# Reddit API Configuration
+[platforms.reddit]
+enabled = true
+client_id = "your_reddit_client_id_here"
+client_secret = "your_reddit_client_secret_here"
+user_agent = "SentinelBERT/1.0"
+base_url = "https://oauth.reddit.com"
+
+# Rate limiting (requests per minute)
+rate_limit = 60
+rate_window = 60
+
+# Search parameters
+max_results_per_request = 100
+sort_options = ["relevance", "hot", "top", "new"]
+time_filter = "all"  # hour, day, week, month, year, all
+subreddit_filter = []  # empty = all subreddits
+
+# Content filtering
+min_score_threshold = 0
+exclude_nsfw = true
+exclude_deleted = true
+
+# YouTube Data API Configuration
+[platforms.youtube]
+enabled = true
+api_key = "your_youtube_api_key_here"
+base_url = "https://www.googleapis.com/youtube/v3"
+
+# Rate limiting (quota units per day)
+daily_quota_limit = 10000
+requests_per_minute = 100
+
+# Search parameters
+max_results_per_request = 50
+search_type = "video"  # video, channel, playlist
+order = "relevance"    # date, rating, relevance, title, viewCount
+video_duration = "any" # any, long, medium, short
+
+# Content filtering
+safe_search = "moderate"  # none, moderate, strict
+region_code = "US"
+relevance_language = "en"
+
+# Instagram Basic Display API Configuration
+[platforms.instagram]
+enabled = true
+access_token = "your_instagram_access_token_here"
+base_url = "https://graph.instagram.com"
+
+# Rate limiting (requests per hour)
+rate_limit = 200
+rate_window = 3600
+
+# Search parameters (limited to user's own content in basic API)
+max_results_per_request = 25
+media_fields = ["id", "caption", "media_type", "media_url", "timestamp", "username"]
+
+# Telegram Bot API Configuration
+[platforms.telegram]
+enabled = true
+bot_token = "your_telegram_bot_token_here"
+base_url = "https://api.telegram.org"
+
+# Rate limiting (messages per second)
+rate_limit = 30
+rate_window = 1
+
+# Channel monitoring settings
+monitored_channels = []  # List of public channel usernames
+update_interval = 300    # Check for new messages every 5 minutes
+
+# =============================================================================
+# Rate Limiting Configuration
+# =============================================================================
+[rate_limiting]
+# Global rate limiting settings
+enabled = true
+
+# Per-IP rate limiting
+requests_per_minute = 100
+requests_per_hour = 1000
+
+# Per-user rate limiting (authenticated requests)
+user_requests_per_minute = 200
+user_requests_per_hour = 2000
+
+# Burst allowance (temporary spike above normal limits)
+burst_size = 50
+burst_duration = 60
+
+# Rate limit storage backend
+storage = "redis"  # redis, memory
+
+# Rate limit headers in responses
+include_headers = true
+
+# =============================================================================
+# Security and Privacy Configuration
+# =============================================================================
+[security]
+# Data encryption settings
+encryption_enabled = true
+encryption_key = "your_encryption_key_here"
+hash_algorithm = "SHA256"
+salt = "your_hash_salt_here"
+
+# PII (Personally Identifiable Information) handling
+anonymize_user_ids = true
+anonymize_ip_addresses = true
+redact_email_addresses = true
+redact_phone_numbers = true
+
+# Content filtering
+profanity_filter_enabled = true
+spam_detection_enabled = true
+malware_url_detection = true
+
+# Audit logging
+audit_logging_enabled = true
+log_all_requests = true
+log_sensitive_data = false
+
+# API key security
+rotate_api_keys = false
+key_rotation_interval = 2592000  # 30 days
+
+# =============================================================================
+# Monitoring and Logging Configuration
+# =============================================================================
+[monitoring]
+# Logging settings
+log_level = "info"  # trace, debug, info, warn, error
+log_format = "json"  # json, pretty
+log_file = "/var/log/sentinelbert/ingestion.log"
+max_log_size = "100MB"
+max_log_files = 10
+
+# Metrics collection
+metrics_enabled = true
+metrics_port = 9091
+metrics_path = "/metrics"
+
+# Health check settings
+health_check_enabled = true
+health_check_path = "/health"
+health_check_interval = 30
+
+# Distributed tracing
+tracing_enabled = true
+jaeger_endpoint = "http://localhost:14268/api/traces"
+trace_sample_rate = 0.1  # 10% of requests
+
+# Performance monitoring
+slow_query_threshold = 1000  # milliseconds
+memory_usage_threshold = 0.8  # 80%
+cpu_usage_threshold = 0.8     # 80%
+
+# =============================================================================
+# Data Processing Configuration
+# =============================================================================
+[processing]
+# Batch processing settings
+batch_size = 1000
+batch_timeout = 30
+max_concurrent_batches = 5
+
+# Data validation settings
+strict_validation = true
+validate_timestamps = true
+validate_user_ids = true
+validate_content_length = true
+
+# Content processing
+extract_hashtags = true
+extract_mentions = true
+extract_urls = true
+detect_language = true
+normalize_text = true
+
+# Duplicate detection
+enable_deduplication = true
+dedup_window_hours = 24
+dedup_similarity_threshold = 0.95
+
+# Data retention settings
+retention_enabled = true
+retention_period_days = 730  # 2 years
+cleanup_interval_hours = 24
+
+# Geographic data processing
+geocoding_enabled = true
+geocoding_provider = "nominatim"  # nominatim, google, mapbox
+geocoding_cache_ttl = 86400  # 24 hours
+
+# =============================================================================
+# Queue and Message Processing Configuration
+# =============================================================================
+[queue]
+# Message queue settings (using Redis as broker)
+broker_url = "redis://localhost:6379/1"
+result_backend = "redis://localhost:6379/2"
+
+# Queue names
+ingestion_queue = "ingestion_tasks"
+processing_queue = "processing_tasks"
+analysis_queue = "analysis_tasks"
+
+# Worker settings
+max_workers = 4
+prefetch_count = 10
+task_timeout = 300  # 5 minutes
+
+# Retry settings
+max_retries = 3
+retry_delay = 60  # 1 minute
+exponential_backoff = true
+
+# =============================================================================
+# Development and Testing Configuration
+# =============================================================================
+[development]
+# Development mode settings
+debug_mode = false
+mock_apis = false
+test_data_enabled = false
+
+# API simulation settings
+simulate_rate_limits = false
+simulate_api_errors = false
+error_simulation_rate = 0.01  # 1% of requests
+
+# Testing settings
+test_database = "sentinelbert_test"
+test_redis_database = 15
+cleanup_test_data = true
+
+# =============================================================================
+# Feature Flags
+# =============================================================================
+[features]
+# Enable/disable specific features
+real_time_processing = true
+batch_processing = true
+sentiment_analysis = true
+behavioral_analysis = true
+influence_scoring = true
+geographic_analysis = true
+trend_detection = true
+alert_generation = true
+
+# Experimental features (use with caution)
+experimental_ml_models = false
+experimental_apis = false
+beta_features = false
+
+# =============================================================================
+# Backup and Recovery Configuration
+# =============================================================================
+[backup]
+# Backup settings
+backup_enabled = true
+backup_interval_hours = 6
+backup_retention_days = 30
+backup_location = "/var/backups/sentinelbert"
+
+# What to backup
+backup_database = true
+backup_elasticsearch = true
+backup_redis = false  # Cache data, not critical
+backup_logs = true
+backup_config = true
+
+# Compression settings
+compress_backups = true
+compression_level = 6  # 1-9, higher = better compression but slower
+
+# Recovery settings
+auto_recovery_enabled = false
+recovery_verification = true
