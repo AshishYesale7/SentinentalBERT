@@ -460,11 +460,29 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Support
 
-### Documentation
+### 🌐 Documentation Website
+**Visit our comprehensive documentation website**: [https://nano-b-o-t.github.io/SentinentalBERT/](https://nano-b-o-t.github.io/SentinentalBERT/)
+
+The documentation website features:
+- 🎨 **Beautiful Interface**: Responsive design with dark/light themes
+- 🔍 **Advanced Search**: Full-text search across all documentation
+- 🤖 **AI-Generated Content**: Automatically updated with code changes
+- 📱 **Mobile-Optimized**: Perfect experience on all devices
+
+### 📚 Documentation Files
 - [System Design](SYSTEM_DESIGN.md) - Comprehensive system architecture
 - [Architecture Diagrams](ARCHITECTURE_DIAGRAM.md) - Visual system overview
 - [Deployment Guide](DEPLOYMENT_GUIDE.md) - Detailed deployment instructions
+- [Executive Summary](EXECUTIVE_SUMMARY.md) - Business case and ROI analysis
+- [Project Status](PROJECT_STATUS.md) - Development roadmap and status
 - [API Reference](docs/api.md) - Detailed API documentation
+
+### 🤖 AI Documentation System
+Our documentation is powered by an advanced AI system that:
+- **Automatically generates** comprehensive documentation when code changes
+- **Maintains consistency** across all documentation files
+- **Deploys to GitHub Pages** for beautiful online access
+- **Validates accuracy** and keeps content up-to-date
 
 ### Getting Help
 - Create an issue for bug reports
