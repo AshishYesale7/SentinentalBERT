@@ -1,5 +1,5 @@
 # Core ML Libraries
-transformers==4.35.0
+transformers==4.53.0
 torch==2.8.0
 torchvision==0.16.0
 torchaudio==2.1.0
