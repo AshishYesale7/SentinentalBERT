@@ -504,3 +504,15 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 **Built with care for law enforcement and security professionals**
+## 📚 Documentation
+
+- [📋 Documentation Index](docs/INDEX.md) - Complete documentation overview
+- [🚀 Quick Start](docs/QUICK_START.md) - Get started quickly
+- [🔧 Deployment Guide](DEPLOYMENT_GUIDE.md) - Deployment instructions
+- [📡 API Reference](docs/api/API_REFERENCE.md) - API documentation
+- [🏗️ System Design](SYSTEM_DESIGN.md) - Technical architecture
+- [🔒 Security Guide](docs/SECURITY.md) - Security best practices
+
+---
+
+*Documentation is automatically maintained and updated.*
