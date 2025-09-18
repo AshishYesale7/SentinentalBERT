@@ -49,7 +49,7 @@ Our AI Documentation System automatically:
 ## 🚀 Getting Started
 
 ### For Developers
-1. **Clone Repository**: `git clone https://github.com/nano-b-o-t/SentinentalBERT.git`
+1. **Clone Repository**: `git clone https://github.com/AshishYesale7/SentinentalBERT.git`
 2. **Read Documentation**: Start with [README.md](../README.md)
 3. **Follow Deployment Guide**: [DEPLOYMENT_GUIDE.md](../DEPLOYMENT_GUIDE.md)
 4. **Set Up Development Environment**: Use provided setup scripts

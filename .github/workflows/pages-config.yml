@@ -73,7 +73,7 @@ jobs:
           echo "✅ **Status**: GitHub Pages configured for documentation deployment" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 🌐 Documentation Website" >> $GITHUB_STEP_SUMMARY
-          echo "- **URL**: https://nano-b-o-t.github.io/SentinentalBERT/" >> $GITHUB_STEP_SUMMARY
+          echo "- **URL**: https://AshishYesale7.github.io/SentinentalBERT/" >> $GITHUB_STEP_SUMMARY
           echo "- **Source**: GitHub Actions workflow" >> $GITHUB_STEP_SUMMARY
           echo "- **Auto-Deploy**: Enabled on documentation changes" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
