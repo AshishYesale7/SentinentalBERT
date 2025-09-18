@@ -1,19 +1,9 @@
 # =============================================================================
-# Deploy AI-Generated Documentation to GitHub Pages
+# Deploy AI-Generated Documentation to GitHub Pages (Fixed Version)
 # =============================================================================
 # 
 # This workflow automatically deploys AI-generated documentation to GitHub Pages
-# whenever documentation is updated. It creates a beautiful, searchable website
-# for all project documentation.
-# 
-# Features:
-# - Automatic deployment to GitHub Pages
-# - Beautiful documentation website with navigation
-# - Search functionality across all docs
-# - Mobile-responsive design
-# - Automatic table of contents generation
-# - Code syntax highlighting
-# - Dark/light theme support
+# using a Python-based static site generator for better reliability.
 # 
 # =============================================================================
 
@@ -57,90 +47,49 @@ jobs:
         with:
           fetch-depth: 0
       
-      - name: 🔧 Setup Node.js
-        uses: actions/setup-node@v4
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v4
         with:
-          node-version: '18'
-          cache: 'npm'
+          python-version: '3.11'
       
-      - name: 📦 Install Dependencies
+      - name: 📦 Install Python Dependencies
         run: |
-          # Create package.json for documentation site
-          cat > package.json << 'EOF'
-          {
-            "name": "sentinelbert-docs",
-            "version": "1.0.0",
-            "description": "SentinelBERT Documentation Site",
-            "scripts": {
-              "build": "node build-docs.js",
-              "serve": "http-server dist -p 3000"
-            },
-            "dependencies": {
-              "markdown-it": "^13.0.2",
-              "markdown-it-anchor": "^8.6.7",
-              "markdown-it-table-of-contents": "^0.6.0",
-              "prismjs": "^1.29.0",
-              "fs-extra": "^11.1.1",
-              "glob": "^10.3.10"
-            },
-            "devDependencies": {
-              "http-server": "^14.1.1"
-            }
-          }
-          EOF
-          
-          npm install
+          pip install --upgrade pip
+          pip install markdown jinja2 pygments pyyaml pathlib2
       
       - name: 🏗️ Build Documentation Site
         run: |
-          # Create documentation builder script
-          cat > build-docs.js << 'EOF'
-          const fs = require('fs-extra');
-          const path = require('path');
-          const glob = require('glob');
-          const MarkdownIt = require('markdown-it');
-          const markdownItAnchor = require('markdown-it-anchor');
-          const markdownItTOC = require('markdown-it-table-of-contents');
+          # Create Python documentation builder script
+          cat > build_docs.py << 'EOF'
+          #!/usr/bin/env python3
+          """
+          SentinelBERT Documentation Site Builder
           
-          // Initialize markdown processor
-          const md = new MarkdownIt({
-            html: true,
-            linkify: true,
-            typographer: true,
-            highlight: function (str, lang) {
-              if (lang && require('prismjs').languages[lang]) {
-                try {
-                  return '<pre class="language-' + lang + '"><code>' +
-                         require('prismjs').highlight(str, require('prismjs').languages[lang], lang) +
-                         '</code></pre>';
-                } catch (__) {}
-              }
-              return '<pre class="language-text"><code>' + md.utils.escapeHtml(str) + '</code></pre>';
-            }
-          })
-          .use(markdownItAnchor, {
-            permalink: markdownItAnchor.permalink.headerLink()
-          })
-          .use(markdownItTOC, {
-            includeLevel: [1, 2, 3, 4],
-            containerClass: 'table-of-contents'
-          });
+          This script converts Markdown documentation to a beautiful static website
+          optimized for GitHub Pages deployment.
+          """
           
-          // Create output directory
-          fs.ensureDirSync('dist');
+          import os
+          import glob
+          import markdown
+          from pathlib import Path
+          from jinja2 import Template
+          import shutil
+          from datetime import datetime
           
-          // Copy assets
-          fs.ensureDirSync('dist/assets');
+          # Create output directory
+          os.makedirs('dist', exist_ok=True)
+          os.makedirs('dist/assets', exist_ok=True)
           
-          // Create main HTML template
-          const htmlTemplate = `
+          # HTML Template
+          html_template = """
           <!DOCTYPE html>
           <html lang="en">
           <head>
               <meta charset="UTF-8">
               <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              <title>{{TITLE}} - SentinelBERT Documentation</title>
-              <meta name="description" content="{{DESCRIPTION}}">
+              <title>{{ title }} - SentinelBERT Documentation</title>
+              <meta name="description" content="{{ description }}">
               
               <!-- Styles -->
               <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
@@ -157,23 +106,23 @@ jobs:
                           <p>AI-Powered Social Media Analysis</p>
                       </div>
                       <div class="nav-menu">
-                          {{NAVIGATION}}
+                          {{ navigation }}
                       </div>
                   </nav>
                   
                   <main class="content">
                       <div class="content-header">
-                          <h1>{{TITLE}}</h1>
-                          <div class="breadcrumb">{{BREADCRUMB}}</div>
+                          <h1>{{ title }}</h1>
+                          <div class="breadcrumb">Documentation > {{ title }}</div>
                       </div>
                       
                       <article class="markdown-content">
-                          {{CONTENT}}
+                          {{ content }}
                       </article>
                       
                       <footer class="content-footer">
                           <p>Generated by SentinelBERT AI Documentation System</p>
-                          <p>Last updated: {{TIMESTAMP}}</p>
+                          <p>Last updated: {{ timestamp }}</p>
                       </footer>
                   </main>
               </div>
@@ -184,10 +133,10 @@ jobs:
               <script src="assets/script.js"></script>
           </body>
           </html>
-          `;
+          """
           
-          // Create CSS
-          const css = `
+          # CSS Styles
+          css_content = """
           :root {
               --primary-color: #2563eb;
               --secondary-color: #64748b;
@@ -384,27 +333,6 @@ jobs:
               font-weight: 600;
           }
           
-          .table-of-contents {
-              background-color: var(--surface-color);
-              padding: 1rem;
-              border-radius: 0.5rem;
-              margin-bottom: 2rem;
-          }
-          
-          .table-of-contents ul {
-              list-style: none;
-              padding-left: 1rem;
-          }
-          
-          .table-of-contents a {
-              color: var(--primary-color);
-              text-decoration: none;
-          }
-          
-          .table-of-contents a:hover {
-              text-decoration: underline;
-          }
-          
           .content-footer {
               margin-top: 4rem;
               padding-top: 2rem;
@@ -429,10 +357,10 @@ jobs:
                   max-width: 100vw;
               }
           }
-          `;
+          """
           
-          // Create JavaScript
-          const js = `
+          # JavaScript
+          js_content = """
           // Theme toggle
           function toggleTheme() {
               const currentTheme = document.documentElement.getAttribute('data-theme');
@@ -463,52 +391,90 @@ jobs:
                   });
               });
           });
-          `;
+          """
           
-          // Write CSS and JS files
-          fs.writeFileSync('dist/assets/style.css', css);
-          fs.writeFileSync('dist/assets/script.js', js);
+          # Write CSS and JS files
+          with open('dist/assets/style.css', 'w') as f:
+              f.write(css_content)
           
-          // Find all markdown files
-          const markdownFiles = glob.sync('**/*.md', { ignore: ['node_modules/**', 'dist/**'] });
+          with open('dist/assets/script.js', 'w') as f:
+              f.write(js_content)
           
-          // Generate navigation
-          const navigation = markdownFiles.map(file => {
-              const name = path.basename(file, '.md');
-              const title = name.replace(/[-_]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-              const url = file.replace(/\.md$/, '.html');
-              return { file, name, title, url };
-          }).sort((a, b) => {
-              // Sort with README first
-              if (a.name === 'README') return -1;
-              if (b.name === 'README') return 1;
-              return a.title.localeCompare(b.title);
-          });
+          # Find all markdown files
+          markdown_files = []
+          for pattern in ['*.md', 'docs/*.md', 'docs/**/*.md']:
+              markdown_files.extend(glob.glob(pattern, recursive=True))
           
-          const navHTML = navigation.map(item => 
-              `<a href="${item.url}">${item.title}</a>`
-          ).join('');
+          # Remove duplicates and sort
+          markdown_files = list(set(markdown_files))
+          markdown_files.sort()
           
-          // Process each markdown file
-          navigation.forEach(item => {
-              const content = fs.readFileSync(item.file, 'utf8');
-              const html = md.render(content);
-              
-              const finalHTML = htmlTemplate
-                  .replace(/{{TITLE}}/g, item.title)
-                  .replace(/{{DESCRIPTION}}/g, `SentinelBERT Documentation - ${item.title}`)
-                  .replace(/{{NAVIGATION}}/g, navHTML)
-                  .replace(/{{CONTENT}}/g, html)
-                  .replace(/{{BREADCRUMB}}/g, `Documentation > ${item.title}`)
-                  .replace(/{{TIMESTAMP}}/g, new Date().toISOString());
-              
-              const outputPath = path.join('dist', item.url);
-              fs.ensureDirSync(path.dirname(outputPath));
-              fs.writeFileSync(outputPath, finalHTML);
-          });
+          # Process files and create navigation
+          navigation_items = []
           
-          // Create index.html (redirect to README)
-          const indexHTML = `
+          for file_path in markdown_files:
+              if os.path.exists(file_path):
+                  # Get file info
+                  file_name = os.path.basename(file_path)
+                  name_without_ext = os.path.splitext(file_name)[0]
+                  
+                  # Create title
+                  if name_without_ext.upper() == 'README':
+                      title = 'Project Overview'
+                  else:
+                      title = name_without_ext.replace('_', ' ').replace('-', ' ').title()
+                  
+                  # Create output path
+                  output_name = name_without_ext + '.html'
+                  
+                  navigation_items.append({
+                      'file': file_path,
+                      'title': title,
+                      'output': output_name
+                  })
+          
+          # Sort navigation (README first)
+          navigation_items.sort(key=lambda x: (x['title'] != 'Project Overview', x['title']))
+          
+          # Create navigation HTML
+          nav_html = ''
+          for item in navigation_items:
+              nav_html += f'<a href="{item["output"]}">{item["title"]}</a>\\n'
+          
+          # Process each markdown file
+          md = markdown.Markdown(extensions=['codehilite', 'toc', 'tables', 'fenced_code'])
+          template = Template(html_template)
+          
+          for item in navigation_items:
+              try:
+                  # Read markdown content
+                  with open(item['file'], 'r', encoding='utf-8') as f:
+                      content = f.read()
+                  
+                  # Convert to HTML
+                  html_content = md.convert(content)
+                  
+                  # Render template
+                  final_html = template.render(
+                      title=item['title'],
+                      description=f"SentinelBERT Documentation - {item['title']}",
+                      navigation=nav_html,
+                      content=html_content,
+                      timestamp=datetime.now().isoformat()
+                  )
+                  
+                  # Write HTML file
+                  output_path = os.path.join('dist', item['output'])
+                  with open(output_path, 'w', encoding='utf-8') as f:
+                      f.write(final_html)
+                  
+                  print(f"Generated: {output_path}")
+                  
+              except Exception as e:
+                  print(f"Error processing {item['file']}: {e}")
+          
+          # Create index.html (redirect to README)
+          index_html = """
           <!DOCTYPE html>
           <html>
           <head>
@@ -520,16 +486,17 @@ jobs:
               <p>Redirecting to <a href="README.html">documentation</a>...</p>
           </body>
           </html>
-          `;
+          """
           
-          fs.writeFileSync('dist/index.html', indexHTML);
+          with open('dist/index.html', 'w') as f:
+              f.write(index_html)
           
-          console.log('Documentation site built successfully!');
-          console.log(`Generated ${navigation.length} pages`);
+          print(f"Documentation site built successfully!")
+          print(f"Generated {len(navigation_items)} pages")
           EOF
           
-          # Build the documentation site
-          node build-docs.js
+          # Run the documentation builder
+          python build_docs.py
       
       - name: 📤 Upload Pages Artifact
         uses: actions/upload-pages-artifact@v3
