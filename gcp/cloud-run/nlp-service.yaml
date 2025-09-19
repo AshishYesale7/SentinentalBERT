@@ -1,0 +1,63 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: sentinelbert-nlp-service
+  annotations:
+    run.googleapis.com/ingress: all
+    run.googleapis.com/execution-environment: gen2
+spec:
+  template:
+    metadata:
+      annotations:
+        run.googleapis.com/cpu-throttling: "false"
+        run.googleapis.com/execution-environment: gen2
+        autoscaling.knative.dev/maxScale: "100"
+        autoscaling.knative.dev/minScale: "1"
+    spec:
+      containerConcurrency: 10
+      timeoutSeconds: 3600
+      serviceAccountName: sentinelbert-nlp-dev@PROJECT_ID.iam.gserviceaccount.com
+      containers:
+      - image: gcr.io/PROJECT_ID/sentinelbert-nlp:latest
+        ports:
+        - name: http1
+          containerPort: 8000
+        env:
+        - name: GCP_PROJECT
+          value: "PROJECT_ID"
+        - name: ENVIRONMENT
+          value: "dev"
+        - name: PUBSUB_SUBSCRIPTION
+          value: "nlp-analysis-sub-dev"
+        - name: BIGQUERY_DATASET
+          value: "sentinelbert_dev"
+        - name: VERTEX_AI_REGION
+          value: "us-central1"
+        - name: MODEL_BUCKET
+          value: "PROJECT_ID-sentinelbert-models-dev"
+        resources:
+          limits:
+            cpu: "4"
+            memory: "8Gi"
+          requests:
+            cpu: "2"
+            memory: "4Gi"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+  traffic:
+  - percent: 100
+    latestRevision: true
