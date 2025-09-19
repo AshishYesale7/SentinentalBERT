@@ -1,72 +1,59 @@
 """
-SentinelBERT NLP Service - Advanced Sentiment Analysis and Behavioral Pattern Detection
+SentinelBERT NLP Service - Simplified Sentiment Analysis and Behavioral Pattern Detection
 
-This is the core Natural Language Processing service for the SentinelBERT platform.
-It provides high-performance sentiment analysis using fine-tuned BERT models and
-advanced behavioral pattern detection for social media content analysis.
-
-Key Features:
-- Multi-task BERT model for sentiment analysis
-- Behavioral pattern detection (amplification, coordination, astroturfing, etc.)
-- User influence scoring algorithms
-- Real-time processing with caching
-- Prometheus metrics integration
-- Batch processing capabilities
-- Model versioning and A/B testing
-
-Architecture:
-- FastAPI for high-performance async API
-- PyTorch for deep learning inference
-- Redis for caching and session management
-- PostgreSQL for persistent storage
-- Prometheus for monitoring and metrics
-
-Privacy & Security:
-- Input sanitization and validation
-- Rate limiting and authentication
-- Audit logging for all operations
-- Data anonymization capabilities
+This is a simplified version of the SentinelBERT NLP service that provides:
+- BERT-based sentiment analysis
+- Basic behavioral pattern detection
+- User influence scoring
+- REST API with FastAPI
+- Cross-platform compatibility (Linux/macOS)
 
 Author: SentinelBERT Team
 License: MIT
-Version: 1.0.0
+Version: 1.0.0-simplified
 """
 
 # Standard library imports
-import asyncio                          # Asynchronous programming support
-import logging                          # Structured logging
-import os                              # Environment variable access
-from contextlib import asynccontextmanager  # Async context management
-from typing import Dict, List, Optional     # Type hints for better code quality
+import asyncio
+import logging
+import os
+from contextlib import asynccontextmanager
+from typing import Dict, List, Optional
 
-# Third-party imports for ML and web framework
-import torch                           # PyTorch deep learning framework
-import uvicorn                         # ASGI server for FastAPI
-from fastapi import FastAPI, HTTPException, BackgroundTasks, Depends  # Web framework
-from fastapi.middleware.cors import CORSMiddleware      # Cross-origin resource sharing
-from fastapi.middleware.gzip import GZipMiddleware      # Response compression
-from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST  # Metrics
-from prometheus_fastapi_instrumentator import Instrumentator  # FastAPI metrics integration
-from pydantic import BaseModel, Field                   # Data validation and serialization
+# Third-party imports
+import torch
+import uvicorn
+from fastapi import FastAPI, HTTPException, BackgroundTasks, Depends
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
+from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
+from pydantic import BaseModel, Field
 
-# Internal imports - custom modules for ML and business logic
-from models.sentiment_model import SentinelBERTModel           # Custom BERT model
-from models.behavior_analyzer import BehavioralPatternAnalyzer # Behavioral analysis
-from models.influence_calculator import InfluenceCalculator    # User influence scoring
-from services.model_manager import ModelManager               # Model lifecycle management
-from services.cache_service import CacheService               # Redis caching layer
-from services.database import DatabaseService                 # Database operations
-from utils.preprocessing import TextPreprocessor              # Text cleaning and normalization
-from utils.metrics import MetricsCollector                    # Custom metrics collection
+# Internal imports
+from models.sentiment_model import SentinelBERTModel
+from models.behavior_analyzer import BehavioralPatternAnalyzer
+from models.influence_calculator import InfluenceCalculator
+from services.model_manager import ModelManager
+from services.cache_service import CacheService
+from services.database import DatabaseService
+from utils.preprocessing import TextPreprocessor
+from utils.metrics import MetricsCollector
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Prometheus metrics
-REQUEST_COUNT = Counter('nlp_requests_total', 'Total NLP requests', ['endpoint', 'status'])
-REQUEST_DURATION = Histogram('nlp_request_duration_seconds', 'Request duration')
-MODEL_INFERENCE_TIME = Histogram('model_inference_duration_seconds', 'Model inference time')
+# Simplified metrics (avoid conflicts)
+try:
+    REQUEST_COUNT = Counter('nlp_requests_total', 'Total NLP requests', ['endpoint', 'status'])
+    REQUEST_DURATION = Histogram('nlp_request_duration_seconds', 'Request duration')
+    MODEL_INFERENCE_TIME = Histogram('model_inference_duration_seconds', 'Model inference time')
+except ValueError:
+    # Metrics already exist, use existing ones
+    from prometheus_client import REGISTRY
+    REQUEST_COUNT = None
+    REQUEST_DURATION = None
+    MODEL_INFERENCE_TIME = None
 
 # Global services
 model_manager: Optional[ModelManager] = None
@@ -125,9 +112,7 @@ app.add_middleware(
 )
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
-# Prometheus instrumentation
-instrumentator = Instrumentator()
-instrumentator.instrument(app).expose(app)
+# Simplified metrics (no instrumentator for now)
 
 
 # Request/Response Models
@@ -163,7 +148,7 @@ class TextAnalysisResult(BaseModel):
 
 
 class BatchAnalysisResponse(BaseModel):
-    results: List[TextAnalysisResult]
+    results: List[Dict]
     total_processing_time_ms: float
     model_version: str
     cache_hits: int
@@ -242,7 +227,15 @@ async def analyze_texts(
         
         # Process uncached texts
         if uncached_texts:
-            with MODEL_INFERENCE_TIME.time():
+            if MODEL_INFERENCE_TIME:
+                with MODEL_INFERENCE_TIME.time():
+                    new_results = await model_mgr.analyze_batch(
+                        [text for _, text in uncached_texts],
+                        include_behavioral=request.include_behavioral_analysis,
+                        include_influence=request.include_influence_score,
+                        user_metadata=request.user_metadata
+                    )
+            else:
                 new_results = await model_mgr.analyze_batch(
                     [text for _, text in uncached_texts],
                     include_behavioral=request.include_behavioral_analysis,
@@ -268,8 +261,10 @@ async def analyze_texts(
         total_time = (asyncio.get_event_loop().time() - start_time) * 1000
         
         # Update metrics
-        REQUEST_COUNT.labels(endpoint="analyze", status="success").inc()
-        REQUEST_DURATION.observe(total_time / 1000)
+        if REQUEST_COUNT:
+            REQUEST_COUNT.labels(endpoint="analyze", status="success").inc()
+        if REQUEST_DURATION:
+            REQUEST_DURATION.observe(total_time / 1000)
         
         # Log metrics
         background_tasks.add_task(
@@ -281,7 +276,7 @@ async def analyze_texts(
         )
         
         return BatchAnalysisResponse(
-            results=results,
+            results=[result.to_dict() for result in results],
             total_processing_time_ms=total_time,
             model_version=model_mgr.get_current_version(),
             cache_hits=cache_hits,
@@ -289,7 +284,8 @@ async def analyze_texts(
         )
         
     except Exception as e:
-        REQUEST_COUNT.labels(endpoint="analyze", status="error").inc()
+        if REQUEST_COUNT:
+            REQUEST_COUNT.labels(endpoint="analyze", status="error").inc()
         logger.error(f"Error in analyze_texts: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
 
@@ -303,7 +299,8 @@ async def analyze_sentiment_only(
     try:
         results = await model_mgr.analyze_sentiment_batch(request.texts)
         
-        REQUEST_COUNT.labels(endpoint="sentiment", status="success").inc()
+        if REQUEST_COUNT:
+            REQUEST_COUNT.labels(endpoint="sentiment", status="success").inc()
         
         return {
             "results": results,
@@ -311,7 +308,8 @@ async def analyze_sentiment_only(
         }
         
     except Exception as e:
-        REQUEST_COUNT.labels(endpoint="sentiment", status="error").inc()
+        if REQUEST_COUNT:
+            REQUEST_COUNT.labels(endpoint="sentiment", status="error").inc()
         logger.error(f"Error in analyze_sentiment_only: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Sentiment analysis failed: {str(e)}")
 
@@ -328,7 +326,8 @@ async def analyze_behavior_patterns(
             user_metadata=request.user_metadata
         )
         
-        REQUEST_COUNT.labels(endpoint="behavior", status="success").inc()
+        if REQUEST_COUNT:
+            REQUEST_COUNT.labels(endpoint="behavior", status="success").inc()
         
         return {
             "results": results,
@@ -336,7 +335,8 @@ async def analyze_behavior_patterns(
         }
         
     except Exception as e:
-        REQUEST_COUNT.labels(endpoint="behavior", status="error").inc()
+        if REQUEST_COUNT:
+            REQUEST_COUNT.labels(endpoint="behavior", status="error").inc()
         logger.error(f"Error in analyze_behavior_patterns: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Behavior analysis failed: {str(e)}")
 
