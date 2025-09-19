@@ -9,7 +9,7 @@ numpy==1.24.0
 scipy==1.11.0
 
 # NLP Libraries
-nltk==3.8.1
+nltk==3.9
 spacy==3.7.0
 textblob==0.17.1
 langdetect==1.0.9
