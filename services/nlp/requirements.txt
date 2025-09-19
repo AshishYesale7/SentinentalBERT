@@ -56,6 +56,6 @@ flake8==6.1.0
 mypy==1.6.0
 
 # Model Serving
-onnx==1.15.0
+onnx==1.17.0
 onnxruntime==1.16.0
 optimum==1.14.0
