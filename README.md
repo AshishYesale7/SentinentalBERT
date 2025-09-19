@@ -3,6 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](https://www.docker.com/)
 [![Kubernetes](https://img.shields.io/badge/Kubernetes-Ready-blue.svg)](https://kubernetes.io/)
+[![wakatime](https://wakatime.com/badge/user/d1ca8a6d-192f-4863-8ce8-0faf66511e19/project/ba9130ff-e913-4a4e-a7cd-cea9d02aa187.svg)](https://wakatime.com/badge/user/d1ca8a6d-192f-4863-8ce8-0faf66511e19/project/ba9130ff-e913-4a4e-a7cd-cea9d02aa187)
 
 SentinelBERT is a comprehensive social media intelligence platform designed for law enforcement and security agencies to monitor, analyze, and understand sentiment patterns and behavioral trends across multiple social media platforms in real-time.
 
