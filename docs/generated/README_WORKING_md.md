@@ -1,6 +1,6 @@
-# DEPLOYMENT_GUIDE.md
+# README_WORKING.md
 
-> **File Type**: markdown | **Path**: `DEPLOYMENT_GUIDE.md` | **Lines**: 1143
+> **File Type**: markdown | **Path**: `README_WORKING.md` | **Lines**: 198
 
 ## 📋 Overview
 
@@ -24,7 +24,7 @@ This markdown file is a core component of the **SentinelBERT** multi-platform se
 
 ```mermaid
 graph TD
-    A[Social Media APIs] --> B[DEPLOYMENT_GUIDE.md]
+    A[Social Media APIs] --> B[README_WORKING.md]
     B --> C[Data Processing Pipeline]
     C --> D[BERT Sentiment Analysis]
     D --> E[Dashboard & Alerts]
@@ -40,21 +40,27 @@ graph TD
 
 ### Code Structure
 ```markdown
-# SentinelBERT - Complete Deployment Guide
+# SentinelBERT - Working Deployment 🚀
 
-## 🎉 WORKING DEPLOYMENT STATUS
-✅ **NLP Service**: Fully operational with BERT sentiment analysis  
-✅ **React Frontend**: Working dashboard with real-time analysis  
-✅ **API Integration**: All endpoints tested and functional  
-✅ **Cross-Platform**: Tested on Linux, compatible with macOS  
+## ✅ Status: FULLY OPERATIONAL
 
-## Quick Start (Working Configuration)
+This is a **working deployment** of SentinelBERT with:
+- ✅ Complete NLP service with BERT sentiment analysis
+- ✅ React frontend dashboard with real-time analysis
+- ✅ All API endpoints tested and functional
+- ✅ Cross-platform compatibility (Linux/macOS)
+
+## 🚀 Quick Start (5 minutes)
+
+### Prerequisites
+- Python 3.8+
+- Node.js 16+
+- 4GB RAM minimum
+
+### 1. Setup Backend
 ```bash
-# 1. Clone and setup
-git clone https://github.com/case-404/SentinentalBERT.git
-cd SentinentalBERT
-
-# 2. Setup Python en...
+# Clone and setup
+git clone https://github.com/case...
 ```
 
 ### Configuration

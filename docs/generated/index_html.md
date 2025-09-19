@@ -1,15 +1,15 @@
-# DEPLOYMENT_GUIDE.md
+# index.html
 
-> **File Type**: markdown | **Path**: `DEPLOYMENT_GUIDE.md` | **Lines**: 1143
+> **File Type**: unknown | **Path**: `frontend/public/index.html` | **Lines**: 18
 
 ## 📋 Overview
 
-This markdown file is a core component of the **SentinelBERT** multi-platform sentiment analysis system, designed specifically for law enforcement and security applications.
+This unknown file is a core component of the **SentinelBERT** multi-platform sentiment analysis system, designed specifically for law enforcement and security applications.
 
 ## 🎯 Purpose & Functionality
 
 ### Primary Functions
-- **Data Processing**: Handles markdown-specific operations within the SentinelBERT ecosystem
+- **Data Processing**: Handles unknown-specific operations within the SentinelBERT ecosystem
 - **Integration**: Seamlessly connects with other system components
 - **Performance**: Optimized for high-throughput social media analysis
 - **Security**: Implements privacy-compliant data handling procedures
@@ -24,7 +24,7 @@ This markdown file is a core component of the **SentinelBERT** multi-platform se
 
 ```mermaid
 graph TD
-    A[Social Media APIs] --> B[DEPLOYMENT_GUIDE.md]
+    A[Social Media APIs] --> B[index.html]
     B --> C[Data Processing Pipeline]
     C --> D[BERT Sentiment Analysis]
     D --> E[Dashboard & Alerts]
@@ -32,29 +32,29 @@ graph TD
 
 ### Component Relationships
 - **Upstream**: Receives data from social media API connectors
-- **Processing**: Applies markdown-specific transformations and validations
+- **Processing**: Applies unknown-specific transformations and validations
 - **Downstream**: Feeds processed data to ML/NLP analysis pipeline
 - **Monitoring**: Integrates with system health and performance metrics
 
 ## 🔧 Technical Implementation
 
 ### Code Structure
-```markdown
-# SentinelBERT - Complete Deployment Guide
-
-## 🎉 WORKING DEPLOYMENT STATUS
-✅ **NLP Service**: Fully operational with BERT sentiment analysis  
-✅ **React Frontend**: Working dashboard with real-time analysis  
-✅ **API Integration**: All endpoints tested and functional  
-✅ **Cross-Platform**: Tested on Linux, compatible with macOS  
-
-## Quick Start (Working Configuration)
-```bash
-# 1. Clone and setup
-git clone https://github.com/case-404/SentinentalBERT.git
-cd SentinentalBERT
-
-# 2. Setup Python en...
+```unknown
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <meta
+      name="description"
+      content="SentinelBERT - Advanced Social Media Sentiment Analysis Platform"
+    />
+    <title>SentinelBERT Dashboard</title>
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</no...
 ```
 
 ### Configuration

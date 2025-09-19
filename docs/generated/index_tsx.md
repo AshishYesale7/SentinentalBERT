@@ -1,15 +1,15 @@
-# DEPLOYMENT_GUIDE.md
+# index.tsx
 
-> **File Type**: markdown | **Path**: `DEPLOYMENT_GUIDE.md` | **Lines**: 1143
+> **File Type**: react-typescript | **Path**: `frontend/src/index.tsx` | **Lines**: 30
 
 ## 📋 Overview
 
-This markdown file is a core component of the **SentinelBERT** multi-platform sentiment analysis system, designed specifically for law enforcement and security applications.
+This react-typescript file is a core component of the **SentinelBERT** multi-platform sentiment analysis system, designed specifically for law enforcement and security applications.
 
 ## 🎯 Purpose & Functionality
 
 ### Primary Functions
-- **Data Processing**: Handles markdown-specific operations within the SentinelBERT ecosystem
+- **Data Processing**: Handles react-typescript-specific operations within the SentinelBERT ecosystem
 - **Integration**: Seamlessly connects with other system components
 - **Performance**: Optimized for high-throughput social media analysis
 - **Security**: Implements privacy-compliant data handling procedures
@@ -24,7 +24,7 @@ This markdown file is a core component of the **SentinelBERT** multi-platform se
 
 ```mermaid
 graph TD
-    A[Social Media APIs] --> B[DEPLOYMENT_GUIDE.md]
+    A[Social Media APIs] --> B[index.tsx]
     B --> C[Data Processing Pipeline]
     C --> D[BERT Sentiment Analysis]
     D --> E[Dashboard & Alerts]
@@ -32,29 +32,39 @@ graph TD
 
 ### Component Relationships
 - **Upstream**: Receives data from social media API connectors
-- **Processing**: Applies markdown-specific transformations and validations
+- **Processing**: Applies react-typescript-specific transformations and validations
 - **Downstream**: Feeds processed data to ML/NLP analysis pipeline
 - **Monitoring**: Integrates with system health and performance metrics
 
 ## 🔧 Technical Implementation
 
 ### Code Structure
-```markdown
-# SentinelBERT - Complete Deployment Guide
+```react-typescript
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+import App from './App';
 
-## 🎉 WORKING DEPLOYMENT STATUS
-✅ **NLP Service**: Fully operational with BERT sentiment analysis  
-✅ **React Frontend**: Working dashboard with real-time analysis  
-✅ **API Integration**: All endpoints tested and functional  
-✅ **Cross-Platform**: Tested on Linux, compatible with macOS  
+const theme = createTheme({
+  palette: {
+    mode: 'light',
+    primary: {
+      main: '#1976d2',
+    },
+    secondary: {
+      main: '#dc004e',
+    },
+  },
+});
 
-## Quick Start (Working Configuration)
-```bash
-# 1. Clone and setup
-git clone https://github.com/case-404/SentinentalBERT.git
-cd SentinentalBERT
+const root = ReactDOM.createRoot(
+  document.getElementById('root') as HTMLElement
+);
 
-# 2. Setup Python en...
+root.render(
+  <React.StrictMode>
+   ...
 ```
 
 ### Configuration
