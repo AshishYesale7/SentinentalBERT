@@ -1,10 +1,25 @@
-# SentinelBERT - Multi-Platform Sentiment & Behavioral Pattern Analysis
+# SentinentalBERT - Advanced Social Media Sentiment Analysis Platform
+
+<div align="center">
+
+![SentinentalBERT Logo](https://via.placeholder.com/400x100/1f77b4/ffffff?text=SentinentalBERT)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-green.svg)](https://fastapi.tiangolo.com/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](https://www.docker.com/)
-[![Kubernetes](https://img.shields.io/badge/Kubernetes-Ready-blue.svg)](https://kubernetes.io/)
+[![GCP](https://img.shields.io/badge/GCP-Compatible-orange.svg)](https://cloud.google.com/)
+[![GDPR Compliant](https://img.shields.io/badge/GDPR-Compliant-green.svg)](https://gdpr.eu/)
 
-SentinelBERT is a comprehensive social media intelligence platform designed for law enforcement and security agencies to monitor, analyze, and understand sentiment patterns and behavioral trends across multiple social media platforms in real-time.
+**A production-ready, scalable platform for real-time social media sentiment analysis and behavioral pattern detection with privacy compliance and legal authentication support.**
+
+[🚀 Quick Start](#-quick-start) • [📖 Documentation](#-documentation) • [🏗️ Architecture](#️-architecture) • [🔧 API Reference](#-api-reference) • [🤝 Contributing](#-contributing)
+
+</div>
+
+---
+
+SentinentalBERT is an enterprise-grade social media sentiment analysis platform that combines advanced machine learning with privacy-compliant data processing. Built for legal and compliance-sensitive environments, it provides real-time sentiment analysis, behavioral pattern detection, and influence scoring across multiple social media platforms.
 
 ## Key Features
 

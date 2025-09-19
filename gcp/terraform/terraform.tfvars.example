@@ -1,0 +1,48 @@
+# Example Terraform variables file for SentinentalBERT GCP deployment
+# Copy this file to terraform.tfvars and update with your values
+
+# Required variables
+project_id = "your-gcp-project-id"
+
+# Optional variables (uncomment and modify as needed)
+# region = "us-central1"
+# zone = "us-central1-a"
+# environment = "dev"
+
+# Resource configuration
+# bigquery_location = "US"
+# storage_class = "STANDARD"
+# pubsub_message_retention_duration = "604800"
+
+# Scaling configuration
+# dataflow_max_workers = 10
+# cloud_run_cpu_limit = "2"
+# cloud_run_memory_limit = "4Gi"
+# cloud_run_max_instances = 100
+# cloud_run_min_instances = 0
+
+# Security and monitoring
+# enable_monitoring = true
+# enable_security_features = true
+# deletion_protection = true
+# backup_retention_days = 30
+# log_retention_days = 30
+
+# Networking (optional)
+# enable_vpc = false
+# vpc_cidr = "10.0.0.0/16"
+# enable_nat_gateway = false
+# enable_cloud_armor = false
+
+# Notifications and budgets
+# notification_email = "admin@yourcompany.com"
+# budget_amount = 1000
+# enable_budget_alerts = true
+
+# Labels
+# labels = {
+#   project     = "sentinelbert"
+#   managed-by  = "terraform"
+#   team        = "data-engineering"
+#   environment = "dev"
+# }
