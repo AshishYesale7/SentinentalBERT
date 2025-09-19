@@ -1,0 +1,143 @@
+
+> sentinelbert-frontend@1.0.0 start
+> BROWSER=none HOST=0.0.0.0 PORT=12001 react-scripts start
+
+Attempting to bind to HOST environment variable: 0.0.0.0
+If this was unintentional, check that you haven't mistakenly set it in your shell.
+Learn more here: https://cra.link/advanced-config
+
+(node:9748) [DEP_WEBPACK_DEV_SERVER_ON_AFTER_SETUP_MIDDLEWARE] DeprecationWarning: 'onAfterSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:9748) [DEP_WEBPACK_DEV_SERVER_ON_BEFORE_SETUP_MIDDLEWARE] DeprecationWarning: 'onBeforeSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+Starting the development server...
+
+Compiled successfully!
+
+You can now view sentinelbert-frontend in the browser.
+
+  Local:            http://localhost:12001
+  On Your Network:  http://10.2.51.140:12001
+
+Note that the development build is not optimized.
+To create a production build, use npm run build.
+
+webpack compiled successfully
+No issues found.
+Failed to compile.
+
+Error: ENOENT: no such file or directory, open '/workspace/project/SentinentalBERT/frontend/node_modules/@mui/private-theming/index.js'
+LOG from webpack.FileSystemInfo
+<w> Managed item /workspace/project/SentinentalBERT/frontend/node_modules/react-is isn't a directory or doesn't contain a package.json (see snapshot.managedPaths option)
+<w> Managed item /workspace/project/SentinentalBERT/frontend/node_modules/@mui/private-theming isn't a directory or doesn't contain a package.json (see snapshot.managedPaths option)
+<w> Managed item /workspace/project/SentinentalBERT/frontend/node_modules/object-assign isn't a directory or doesn't contain a package.json (see snapshot.managedPaths option)
++ 23 hidden lines
+
+ERROR in ./node_modules/@mui/private-theming/index.js
+Module build failed (from ./node_modules/source-map-loader/dist/cjs.js):
+Error: ENOENT: no such file or directory, open '/workspace/project/SentinentalBERT/frontend/node_modules/@mui/private-theming/index.js'
+
+ERROR in ./node_modules/@mui/styled-engine/index.js
+Module build failed (from ./node_modules/source-map-loader/dist/cjs.js):
+Error: ENOENT: no such file or directory, open '/workspace/project/SentinentalBERT/frontend/node_modules/@mui/styled-engine/index.js'
+
+ERROR in ./node_modules/@popperjs/core/lib/index.js
+Module build failed (from ./node_modules/source-map-loader/dist/cjs.js):
+Error: ENOENT: no such file or directory, open '/workspace/project/SentinentalBERT/frontend/node_modules/@popperjs/core/lib/index.js'
+
+ERROR in ./node_modules/object-assign/index.js
+Module build failed (from ./node_modules/source-map-loader/dist/cjs.js):
+Error: ENOENT: no such file or directory, open '/workspace/project/SentinentalBERT/frontend/node_modules/object-assign/index.js'
+
+ERROR in ./node_modules/prop-types/node_modules/react-is/index.js
+ModFailed to compile.
+
+Error: ENOENT: no such file or directory, open '/workspace/project/SentinentalBERT/frontend/node_modules/@pmmmwh/react-refresh-webpack-plugin/lib/runtime/RefreshUtils.js'
+LOG from webpack.FileSystemInfo
+<w> Managed item /workspace/project/SentinentalBERT/frontend/node_modules/@pmmmwh/react-refresh-webpack-plugin isn't a directory or doesn't contain a package.json (see snapshot.managedPaths option)
++ 13 hidden lines
+
+ERROR in ./node_modules/@pmmmwh/react-refresh-webpack-plugin/lib/runtime/RefreshUtils.js
+Module build failed (from ./node_modules/source-map-loader/dist/cjs.js):
+Error: ENOENT: no such file or directory, open '/workspace/project/SentinentalBERT/frontend/node_modules/@pmmmwh/react-refresh-webpack-plugin/lib/runtime/RefreshUtils.js'
+
+ERROR in ./node_modules/react-router-dom/dist/index.js
+Module build failed (from ./node_modules/source-map-loader/dist/cjs.js):
+Error: ENOENT: no such file or directory, open '/workspace/project/SentinentalBERT/frontend/node_modules/react-router-dom/dist/index.js'
+
+ERROR in ./node_modules/react-transition-group/esm/index.js
+Module build failed (from ./node_modules/source-map-loader/dist/cjs.js):
+Error: ENOENT: no such file or directory, open '/workspace/project/SentinentalBERT/frontend/node_modules/react-transition-group/esm/index.js'
+
+ERROR in ./node_modules/html-entities/dist/esm/index.js
+Module build failed (from ./node_modules/source-map-loader/dist/cjs.js):
+Error: ENOENT: no such file or directory, open '/workspace/project/SentinentalBERT/frontend/node_modules/html-entities/dist/esm/index.js'
+
+ERROR in ./node_modules/stylis/index.js
+Module build failed (from ./node_modules/source-map-loader/dist/cjs.js):
+Error: ENOENT: no such file or directory, open '/workspace/project/SentinentalBERT/frontend/node_modules/stylis/index.js'
+
+ERROR in Module not found: Error: Can't resolve '/workspace/project/SentinentalBERT/frontend/node_modules/@pmmmwh/react-refresh-webpack-plugin/client/ReactRefreshEntry.js' in '/workspace/project/SentinentalBERT/frontend'
+
+webpack compiled with 6 errors
+No issues found.
+Compiling...
+Failed to compile.
+
+Module not found: Error: Can't resolve '/workspace/project/SentinentalBERT/frontend/node_modules/@pmmmwh/react-refresh-webpack-plugin/client/ReactRefreshEntry.js' in '/workspace/project/SentinentalBERT/frontend'
+ERROR in Module not found: Error: Can't resolve '/workspace/project/SentinentalBERT/frontend/node_modules/@pmmmwh/react-refresh-webpack-plugin/client/ReactRefreshEntry.js' in '/workspace/project/SentinentalBERT/frontend'
+
+ERROR in main
+Module not found: Error: Can't resolve '/workspace/project/SentinentalBERT/frontend/node_modules/babel-loader/lib/index.js' in '/workspace/project/SentinentalBERT/frontend'
+
+ERROR in Module not found: Error: Can't resolve '/workspace/project/SentinentalBERT/frontend/node_modules/webpack-dev-server/client/index.js?protocol=ws%3A&hostname=0.0.0.0&portFailed to compile.
+
+Module not found: Error: Can't resolve '/workspace/project/SentinentalBERT/frontend/node_modules/@pmmmwh/react-refresh-webpack-plugin/client/ReactRefreshEntry.js' in '/workspace/project/SentinentalBERT/frontend'
+ERROR in Module not found: Error: Can't resolve '/workspace/project/SentinentalBERT/frontend/node_modules/@pmmmwh/react-refresh-webpack-plugin/client/ReactRefreshEntry.js' in '/workspace/project/SentinentalBERT/frontend'
+
+ERROR in main
+Module not found: Error: Can't resolve '/workspace/project/SentinentalBERT/frontend/node_modules/babel-loader/lib/index.js' in '/workspace/project/SentinentalBERT/frontend'
+
+ERROR in Module not found: Error: Can't resolve '/workspace/project/SentinentalBERT/frontend/node_modules/webpack-dev-server/client/index.js?protocol=ws%3A&hostname=0.0.0.0&port=12001&pathname=%2Fws&logging=none&overlay=%7B%22errors%22%3Atrue%2C%22warnings%22%3Afalse%7D&reconnect=10&hot=true&live-reload=true' in '/workspace/project/SentinentalBERT/frontend'
+
+ERROR in Module not found: Error: Can't resolve '/workspace/project/SentinentalBERT/frontend/node_modules/webpack/hot/dev-server.js' in '/workspace/project/SentinentalBERT/frontend'
+
+ERROR in Error: Child compilation failed:
+Module not found: Error: Can't resolve '/workspace/project/SentinentalBERT/frontend/node_modules/html-webpack-plugin/lib/loader.js' in '/workspace/project/SentinentalBERT/frontend'
+ModuleNotFoundError: Module not found: Error: Can't resolve '/workspace/project/SentinentalBERT/frontend/node_modules/html-webpack-plugin/lib/loader.js' in '/workspace/project/SentinentalBERT/frontend'
+    at /workspace/project/SentinentalBERT/frontend/node_modules/webpack/lib/Compilation.js:2265:28
+    at /workspace/project/SentinentalBERT/frontend/node_modules/webpack/lib/NormalModuleFactory.js:949:13
+    at eval (eval at create (/workspace/project/SentinentalBERT/frontend/node_modules/tapable/lib/HookCodeFactory.js:31:10), <anonymous>:10:1)
+    at /workspace/project/SentinentalBERT/frontend/node_modules/webpack/lib/NormalModuleFactory.js:347:22
+    at eval (eval at create (/workspace/project/SentinentalBERT/frontend/node_modules/tapable/lib/HookCodeFactory.js:31:10), <anonymous>:9:1)
+    at /workspace/project/SentinentalBERT/frontend/node_modules/webpack/lib/NormalModuleFactory.js:532:22
+    at /workspace/project/SentinentalBERT/frontend/node_modules/webpack/lib/NormalModuleFactory.js:163:10
+    at /workspace/project/SentinentalBERT/frontend/node_modules/webpack/lib/NormalModuleFactory.js:769:23
+    at /workspace/project/SentinentalBERT/frontend/node_modules/neo-async/async.js:2830:7
+    at done (/workspace/project/SentinentalBERT/frontend/node_modules/neo-async/async.js:2925:13)
+    at /workspace/project/SentinentalBERT/frontend/node_modules/webpack/lib/NormalModuleFactory.js:1218:23
+    at finishWithoutResolve (/workspace/project/SentinentalBERT/frontend/node_modules/enhanced-resolve/lib/Resolver.js:568:11)
+    at /workspace/project/SentinentalBERT/frontend/node_modules/enhanced-resolve/lib/Resolver.js:657:14
+    at /workspace/project/SentinentalBERT/frontend/node_modules/enhanced-resolve/lib/Resolver.js:718:5
+    at eval (eval at create (/workspace/project/SentinentalBERT/frontend/node_modules/tapable/lib/HookCodeFactory.js:31:10), <anonymous>:16:1)
+    at /workspace/project/SentinentalBERT/frontend/node_modules/enhanced-resolve/lib/Resolver.js:718:5
+    at eval (eval at create (/workspace/project/SentinentalBERT/frontend/node_modules/tapable/lib/HookCodeFactory.js:31:10), <anonymous>:27:1)
+    at /workspace/project/SentinentalBERT/frontend/node_modules/enhanced-resolve/lib/DescriptionFilePlugin.js:89:43
+    at /workspace/project/SentinentalBERT/frontend/node_modules/enhanced-resolve/lib/Resolver.js:718:5
+    at eval (eval at create (/workspace/project/SentinentalBERT/frontend/node_modules/tapable/lib/HookCodeFactory.js:31:10), <anonymous>:15:1)
+    at /workspace/project/SentinentalBERT/frontend/node_modules/enhanced-resolve/lib/Resolver.js:718:5
+    at eval (eval at create (/workspace/project/SentinentalBERT/frontend/node_modules/tapable/lib/HookCodeFactory.js:31:10), <anonymous>:15:1)
+    at /workspace/project/SentinentalBERT/frontend/node_modules/enhanced-resolve/lib/Resolver.js:718:5
+    at eval (eval at create (/workspace/project/SentinentalBERT/frontend/node_modules/tapable/lib/HookCodeFactory.js:31:10), <anonymous>:16:1)
+    at /workspace/project/SentinentalBERT/frontend/node_modules/enhanced-resolve/lib/Resolver.js:718:5
+    at eval (eval at create (/workspace/project/SentinentalBERT/frontend/node_modules/tapable/lib/HookCodeFactory.js:31:10), <anonymous>:27:1)
+    at /workspace/project/SentinentalBERT/frontend/node_modules/enhanced-resolve/lib/DescriptionFilePlugin.js:89:43
+    at /workspace/project/SentinentalBERT/frontend/node_modules/enhanced-resolve/lib/Resolver.js:718:5
+    at eval (eval at create (/workspace/project/SentinentalBERT/frontend/node_modules/tapable/lib/HookCodeFactory.js:31:10), <anonymous>:16:1)
+    at /workspace/project/SentinentalBERT/frontend/node_modules/enhanced-resolve/lib/Resolver.js:718:5
+    at eval (eval at create (/workspace/project/SentinentalBERT/frontend/node_modules/tapable/lib/HookCodeFactory.js:31:10), <anonymous>:15:1)
+    at /workspace/project/SentinentalBERT/frontend/node_modules/enhanced-resolve/lib/DirectoryExistsPlugin.js:43:15
+    at process.processTicksAndRejections (node:internal/process/task_queues:81:21)
+
+1 ERROR in child compilations (Use 'stats.children: true' resp. '--stats-children' for more details)
+webpack compiled with 6 errors
+No issues found.

@@ -1,0 +1,168 @@
+INFO:     Started server process [5397]
+INFO:     Waiting for application startup.
+INFO:main:Starting SentinelBERT NLP Service...
+INFO:services.model_manager:Initializing model manager...
+INFO:models.sentiment_model:Loading model cardiffnlp/twitter-roberta-base-sentiment-latest on cpu
+Some weights of the model checkpoint at cardiffnlp/twitter-roberta-base-sentiment-latest were not used when initializing RobertaForSequenceClassification: ['roberta.pooler.dense.bias', 'roberta.pooler.dense.weight']
+- This IS expected if you are initializing RobertaForSequenceClassification from the checkpoint of a model trained on another task or with another architecture (e.g. initializing a BertForSequenceClassification model from a BertForPreTraining model).
+- This IS NOT expected if you are initializing RobertaForSequenceClassification from the checkpoint of a model that you expect to be exactly identical (initializing a BertForSequenceClassification model from a BertForSequenceClassification model).
+Device set to use cpu
+/openhands/micromamba/envs/openhands/lib/python3.12/site-packages/transformers/pipelines/text_classification.py:111: UserWarning: `return_all_scores` is now deprecated,  if want a similar functionality use `top_k=None` instead of `return_all_scores=True` or `top_k=1` instead of `return_all_scores=False`.
+  warnings.warn(
+INFO:models.sentiment_model:Model loaded successfully
+INFO:services.model_manager:Model manager initialized successfully
+INFO:services.cache_service:Cache service initialized (in-memory)
+INFO:services.database:Database service initialized (placeholder)
+INFO:main:NLP Service initialized successfully
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     127.0.0.1:58796 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60192 - "POST /analyze HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42692 - "OPTIONS /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42722 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42708 - "OPTIONS /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42708 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56558 - "OPTIONS /analyze HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56572 - "POST /analyze HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54964 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54966 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42344 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45366 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34736 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38500 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49610 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55854 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51028 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56922 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41118 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49268 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34170 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54396 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42532 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36162 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38990 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35066 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46704 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42066 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50898 - "OPTIONS /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50898 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50914 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42310 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34878 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38496 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54602 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51682 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35028 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56402 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45366 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34702 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51234 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50396 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56196 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38262 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55778 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58412 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42856 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41734 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38684 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60196 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60006 - "OPTIONS /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60006 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60016 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51372 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36542 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55420 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55822 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54402 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42532 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60194 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57492 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40686 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41102 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34730 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45320 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49182 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45354 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47796 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53976 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41864 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37714 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47350 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54432 - "OPTIONS /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54432 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54446 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33202 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58280 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39504 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55958 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46034 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45994 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49234 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38684 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51568 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46676 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54078 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50358 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40816 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:32858 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50116 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39920 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39154 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47346 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60136 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42398 - "OPTIONS /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42398 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42400 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53024 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40844 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33522 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48168 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37428 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57532 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37300 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33188 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59758 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34134 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47760 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54816 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48490 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39692 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39308 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40682 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54376 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56488 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35388 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38210 - "OPTIONS /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38210 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38212 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43606 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57062 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59558 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49932 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52322 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35044 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42338 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59592 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34694 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37092 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40358 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43126 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55684 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58580 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39148 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33688 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46888 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54720 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56842 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45826 - "OPTIONS /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45826 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45830 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39276 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48426 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40354 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56102 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54560 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60482 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47554 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47610 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51464 - "GET /health HTTP/1.1" 200 OK
