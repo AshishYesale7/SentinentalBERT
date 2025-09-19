@@ -1,15 +1,15 @@
-# DEPLOYMENT_GUIDE.md
+# package.json
 
-> **File Type**: markdown | **Path**: `DEPLOYMENT_GUIDE.md` | **Lines**: 1143
+> **File Type**: json | **Path**: `frontend/package.json` | **Lines**: 76
 
 ## 📋 Overview
 
-This markdown file is a core component of the **SentinelBERT** multi-platform sentiment analysis system, designed specifically for law enforcement and security applications.
+This json file is a core component of the **SentinelBERT** multi-platform sentiment analysis system, designed specifically for law enforcement and security applications.
 
 ## 🎯 Purpose & Functionality
 
 ### Primary Functions
-- **Data Processing**: Handles markdown-specific operations within the SentinelBERT ecosystem
+- **Data Processing**: Handles json-specific operations within the SentinelBERT ecosystem
 - **Integration**: Seamlessly connects with other system components
 - **Performance**: Optimized for high-throughput social media analysis
 - **Security**: Implements privacy-compliant data handling procedures
@@ -24,7 +24,7 @@ This markdown file is a core component of the **SentinelBERT** multi-platform se
 
 ```mermaid
 graph TD
-    A[Social Media APIs] --> B[DEPLOYMENT_GUIDE.md]
+    A[Social Media APIs] --> B[package.json]
     B --> C[Data Processing Pipeline]
     C --> D[BERT Sentiment Analysis]
     D --> E[Dashboard & Alerts]
@@ -32,29 +32,31 @@ graph TD
 
 ### Component Relationships
 - **Upstream**: Receives data from social media API connectors
-- **Processing**: Applies markdown-specific transformations and validations
+- **Processing**: Applies json-specific transformations and validations
 - **Downstream**: Feeds processed data to ML/NLP analysis pipeline
 - **Monitoring**: Integrates with system health and performance metrics
 
 ## 🔧 Technical Implementation
 
 ### Code Structure
-```markdown
-# SentinelBERT - Complete Deployment Guide
-
-## 🎉 WORKING DEPLOYMENT STATUS
-✅ **NLP Service**: Fully operational with BERT sentiment analysis  
-✅ **React Frontend**: Working dashboard with real-time analysis  
-✅ **API Integration**: All endpoints tested and functional  
-✅ **Cross-Platform**: Tested on Linux, compatible with macOS  
-
-## Quick Start (Working Configuration)
-```bash
-# 1. Clone and setup
-git clone https://github.com/case-404/SentinentalBERT.git
-cd SentinentalBERT
-
-# 2. Setup Python en...
+```json
+{
+  "name": "sentinelbert-frontend",
+  "version": "1.0.0",
+  "description": "SentinelBERT Frontend Dashboard",
+  "private": true,
+  "dependencies": {
+    "@emotion/react": "^11.11.0",
+    "@emotion/styled": "^11.11.0",
+    "@mui/icons-material": "^5.14.0",
+    "@mui/lab": "^5.0.0-alpha.140",
+    "@mui/material": "^5.14.0",
+    "@mui/x-data-grid": "^6.10.0",
+    "@mui/x-date-pickers": "^6.10.0",
+    "@reduxjs/toolkit": "^1.9.5",
+    "ajv": "^8.17.1",
+    "axios": "^1.5.0",
+    "date-fns": "^2.30....
 ```
 
 ### Configuration

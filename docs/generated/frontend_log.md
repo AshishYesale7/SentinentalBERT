@@ -1,15 +1,15 @@
-# DEPLOYMENT_GUIDE.md
+# frontend.log
 
-> **File Type**: markdown | **Path**: `DEPLOYMENT_GUIDE.md` | **Lines**: 1143
+> **File Type**: unknown | **Path**: `frontend/frontend.log` | **Lines**: 144
 
 ## 📋 Overview
 
-This markdown file is a core component of the **SentinelBERT** multi-platform sentiment analysis system, designed specifically for law enforcement and security applications.
+This unknown file is a core component of the **SentinelBERT** multi-platform sentiment analysis system, designed specifically for law enforcement and security applications.
 
 ## 🎯 Purpose & Functionality
 
 ### Primary Functions
-- **Data Processing**: Handles markdown-specific operations within the SentinelBERT ecosystem
+- **Data Processing**: Handles unknown-specific operations within the SentinelBERT ecosystem
 - **Integration**: Seamlessly connects with other system components
 - **Performance**: Optimized for high-throughput social media analysis
 - **Security**: Implements privacy-compliant data handling procedures
@@ -24,7 +24,7 @@ This markdown file is a core component of the **SentinelBERT** multi-platform se
 
 ```mermaid
 graph TD
-    A[Social Media APIs] --> B[DEPLOYMENT_GUIDE.md]
+    A[Social Media APIs] --> B[frontend.log]
     B --> C[Data Processing Pipeline]
     C --> D[BERT Sentiment Analysis]
     D --> E[Dashboard & Alerts]
@@ -32,29 +32,24 @@ graph TD
 
 ### Component Relationships
 - **Upstream**: Receives data from social media API connectors
-- **Processing**: Applies markdown-specific transformations and validations
+- **Processing**: Applies unknown-specific transformations and validations
 - **Downstream**: Feeds processed data to ML/NLP analysis pipeline
 - **Monitoring**: Integrates with system health and performance metrics
 
 ## 🔧 Technical Implementation
 
 ### Code Structure
-```markdown
-# SentinelBERT - Complete Deployment Guide
+```unknown
 
-## 🎉 WORKING DEPLOYMENT STATUS
-✅ **NLP Service**: Fully operational with BERT sentiment analysis  
-✅ **React Frontend**: Working dashboard with real-time analysis  
-✅ **API Integration**: All endpoints tested and functional  
-✅ **Cross-Platform**: Tested on Linux, compatible with macOS  
+> sentinelbert-frontend@1.0.0 start
+> BROWSER=none HOST=0.0.0.0 PORT=12001 react-scripts start
 
-## Quick Start (Working Configuration)
-```bash
-# 1. Clone and setup
-git clone https://github.com/case-404/SentinentalBERT.git
-cd SentinentalBERT
+Attempting to bind to HOST environment variable: 0.0.0.0
+If this was unintentional, check that you haven't mistakenly set it in your shell.
+Learn more here: https://cra.link/advanced-config
 
-# 2. Setup Python en...
+(node:9748) [DEP_WEBPACK_DEV_SERVER_ON_AFTER_SETUP_MIDDLEWARE] DeprecationWarning: 'onAfterSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(Use `node --trace-deprecation ...` to s...
 ```
 
 ### Configuration
