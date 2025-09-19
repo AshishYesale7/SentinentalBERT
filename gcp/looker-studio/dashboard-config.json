@@ -1,0 +1,78 @@
+{
+  "dashboardName": "SentinentalBERT Analytics Dashboard",
+  "description": "Comprehensive social media sentiment and behavioral analysis dashboard",
+  "dataSource": {
+    "type": "bigquery",
+    "projectId": "${PROJECT_ID}",
+    "datasetId": "sentinelbert_${ENVIRONMENT}",
+    "tables": [
+      "social_posts",
+      "sentiment_analysis", 
+      "behavioral_patterns",
+      "influence_scores",
+      "geographic_analysis"
+    ]
+  },
+  "pages": [
+    {
+      "name": "Overview",
+      "description": "High-level metrics and trends",
+      "charts": [
+        {
+          "type": "scorecard",
+          "title": "Total Posts Analyzed",
+          "query": "SELECT COUNT(*) as total_posts FROM `${PROJECT_ID}.sentinelbert_${ENVIRONMENT}.social_posts` WHERE DATE(created_at) >= DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY)",
+          "position": {"x": 0, "y": 0, "width": 2, "height": 2}
+        },
+        {
+          "type": "scorecard", 
+          "title": "Average Sentiment Score",
+          "query": "SELECT ROUND(AVG(sentiment_score), 3) as avg_sentiment FROM `${PROJECT_ID}.sentinelbert_${ENVIRONMENT}.sentiment_analysis` WHERE DATE(analyzed_at) >= DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY)",
+          "position": {"x": 2, "y": 0, "width": 2, "height": 2}
+        },
+        {
+          "type": "scorecard",
+          "title": "Unique Authors",
+          "query": "SELECT COUNT(DISTINCT author_id) as unique_authors FROM `${PROJECT_ID}.sentinelbert_${ENVIRONMENT}.social_posts` WHERE DATE(created_at) >= DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY)",
+          "position": {"x": 4, "y": 0, "width": 2, "height": 2}
+        },
+        {
+          "type": "time_series",
+          "title": "Posts Over Time",
+          "query": "SELECT DATE(created_at) as date, COUNT(*) as post_count FROM `${PROJECT_ID}.sentinelbert_${ENVIRONMENT}.social_posts` WHERE DATE(created_at) >= DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY) GROUP BY DATE(created_at) ORDER BY date",
+          "position": {"x": 0, "y": 2, "width": 6, "height": 3}
+        },
+        {
+          "type": "pie_chart",
+          "title": "Sentiment Distribution",
+          "query": "SELECT sentiment_label, COUNT(*) as count FROM `${PROJECT_ID}.sentinelbert_${ENVIRONMENT}.sentiment_analysis` WHERE DATE(analyzed_at) >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY) GROUP BY sentiment_label",
+          "position": {"x": 6, "y": 2, "width": 3, "height": 3}
+        },
+        {
+          "type": "bar_chart",
+          "title": "Top Platforms by Volume",
+          "query": "SELECT platform, COUNT(*) as post_count FROM `${PROJECT_ID}.sentinelbert_${ENVIRONMENT}.social_posts` WHERE DATE(created_at) >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY) GROUP BY platform ORDER BY post_count DESC LIMIT 10",
+          "position": {"x": 9, "y": 2, "width": 3, "height": 3}
+        }
+      ]
+    },
+    {
+      "name": "Sentiment Analysis",
+      "description": "Detailed sentiment analysis and trends",
+      "charts": [
+        {
+          "type": "time_series",
+          "title": "Sentiment Trends Over Time",
+          "query": "SELECT DATE(s.analyzed_at) as date, s.sentiment_label, AVG(s.sentiment_score) as avg_score FROM `${PROJECT_ID}.sentinelbert_${ENVIRONMENT}.sentiment_analysis` s WHERE DATE(s.analyzed_at) >= DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY) GROUP BY DATE(s.analyzed_at), s.sentiment_label ORDER BY date",
+          "position": {"x": 0, "y": 0, "width": 8, "height": 4}
+        },
+        {
+          "type": "heatmap",
+          "title": "Sentiment by Platform and Time",
+          "query": "SELECT p.platform, EXTRACT(HOUR FROM p.created_at) as hour, AVG(s.sentiment_score) as avg_sentiment FROM `${PROJECT_ID}.sentinelbert_${ENVIRONMENT}.social_posts` p JOIN `${PROJECT_ID}.sentinelbert_${ENVIRONMENT}.sentiment_analysis` s ON p.post_id = s.post_id WHERE DATE(p.created_at) >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY) GROUP BY p.platform, EXTRACT(HOUR FROM p.created_at)",
+          "position": {"x": 8, "y": 0, "width": 4, "height": 4}
+        }
+      ]
+    }
+  ]
+}

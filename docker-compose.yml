@@ -1,7 +1,65 @@
+# =============================================================================
+# SentinentalBERT Docker Compose Configuration
+# =============================================================================
+#
+# OVERVIEW:
+# This Docker Compose file defines the complete SentinentalBERT platform
+# architecture with all necessary services for local development and testing.
+# It includes databases, message queues, application services, and monitoring.
+#
+# SERVICES INCLUDED:
+# - PostgreSQL: Primary database for structured data storage
+# - Elasticsearch: Full-text search and analytics engine
+# - Redis: Caching and session management
+# - Kafka + Zookeeper: Message streaming and event processing
+# - NLP Service: Python-based sentiment analysis and ML processing
+# - Backend Service: Java Spring Boot API and business logic
+# - Ingestion Service: Rust-based high-performance data collection
+# - Frontend: React-based user interface
+# - Monitoring: Prometheus, Grafana, and Jaeger for observability
+# - Nginx: Reverse proxy and load balancer
+#
+# USAGE:
+# - Development: docker-compose up -d
+# - Production: docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+# - With GPU: docker-compose -f docker-compose.yml -f docker-compose.gpu.yml up -d
+# - Minimal: docker-compose -f docker-compose.yml -f docker-compose.minimal.yml up -d
+#
+# PRIVACY & SECURITY:
+# - All services are configured with security best practices
+# - Passwords and secrets are managed via environment variables
+# - Network isolation using custom bridge network
+# - Health checks ensure service reliability
+# - Resource limits prevent resource exhaustion
+#
+# LEGAL COMPLIANCE:
+# - GDPR-compliant data processing configurations
+# - Audit logging enabled for all services
+# - Data retention policies configured
+# - Privacy-preserving analytics settings
+#
+# Author: SentinentalBERT Team
+# License: MIT License with Privacy Compliance Addendum
+# Version: 1.0.0
+# Last Updated: 2024-01-15
+# =============================================================================
+
+# Docker Compose file format version
+# Version 3.8 supports all features needed for production deployment
 version: '3.8'
 
 services:
-  # Database Services
+  # =============================================================================
+  # DATABASE SERVICES
+  # =============================================================================
+  # These services provide persistent data storage for the application
+  
+  # PostgreSQL Database Service
+  # Primary relational database for storing structured data including:
+  # - User accounts and authentication data
+  # - Social media posts and metadata
+  # - Analysis results and sentiment scores
+  # - System configuration and audit logs
   postgres:
     image: postgres:15
     container_name: sentinelbert-postgres

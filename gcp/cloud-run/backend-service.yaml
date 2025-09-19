@@ -1,0 +1,65 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: sentinelbert-backend-service
+  annotations:
+    run.googleapis.com/ingress: all
+    run.googleapis.com/execution-environment: gen2
+spec:
+  template:
+    metadata:
+      annotations:
+        run.googleapis.com/cpu-throttling: "false"
+        run.googleapis.com/execution-environment: gen2
+        autoscaling.knative.dev/maxScale: "100"
+        autoscaling.knative.dev/minScale: "1"
+    spec:
+      containerConcurrency: 80
+      timeoutSeconds: 300
+      serviceAccountName: sentinelbert-backend-dev@PROJECT_ID.iam.gserviceaccount.com
+      containers:
+      - image: gcr.io/PROJECT_ID/sentinelbert-backend:latest
+        ports:
+        - name: http1
+          containerPort: 8080
+        env:
+        - name: GCP_PROJECT
+          value: "PROJECT_ID"
+        - name: ENVIRONMENT
+          value: "dev"
+        - name: SPRING_PROFILES_ACTIVE
+          value: "gcp"
+        - name: BIGQUERY_DATASET
+          value: "sentinelbert_dev"
+        - name: FIRESTORE_DATABASE
+          value: "(default)"
+        - name: NLP_SERVICE_URL
+          value: "https://sentinelbert-nlp-service-PROJECT_ID.a.run.app"
+        - name: PUBSUB_TOPIC_PROCESSED
+          value: "social-media-processed-dev"
+        resources:
+          limits:
+            cpu: "2"
+            memory: "4Gi"
+          requests:
+            cpu: "1"
+            memory: "2Gi"
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+  traffic:
+  - percent: 100
+    latestRevision: true

@@ -1,0 +1,242 @@
+# Cloud Build configuration for SentinentalBERT
+# Builds and deploys all services to GCP
+
+steps:
+  # Build NLP Service
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-nlp-service'
+    args:
+      - 'build'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/sentinelbert-nlp:$COMMIT_SHA'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/sentinelbert-nlp:latest'
+      - './services/nlp'
+    waitFor: ['-']
+
+  # Build Backend Service
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-backend-service'
+    args:
+      - 'build'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/sentinelbert-backend:$COMMIT_SHA'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/sentinelbert-backend:latest'
+      - './services/backend'
+    waitFor: ['-']
+
+  # Build Ingestion Service
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-ingestion-service'
+    args:
+      - 'build'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/sentinelbert-ingestion:$COMMIT_SHA'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/sentinelbert-ingestion:latest'
+      - './services/ingestion'
+    waitFor: ['-']
+
+  # Build Frontend
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-frontend'
+    args:
+      - 'build'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/sentinelbert-frontend:$COMMIT_SHA'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/sentinelbert-frontend:latest'
+      - './frontend'
+    waitFor: ['-']
+
+  # Push all images
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-nlp-service'
+    args: ['push', '--all-tags', 'gcr.io/$PROJECT_ID/sentinelbert-nlp']
+    waitFor: ['build-nlp-service']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-backend-service'
+    args: ['push', '--all-tags', 'gcr.io/$PROJECT_ID/sentinelbert-backend']
+    waitFor: ['build-backend-service']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-ingestion-service'
+    args: ['push', '--all-tags', 'gcr.io/$PROJECT_ID/sentinelbert-ingestion']
+    waitFor: ['build-ingestion-service']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-frontend'
+    args: ['push', '--all-tags', 'gcr.io/$PROJECT_ID/sentinelbert-frontend']
+    waitFor: ['build-frontend']
+
+  # Deploy Cloud Functions
+  - name: 'gcr.io/cloud-builders/gcloud'
+    id: 'deploy-twitter-function'
+    args:
+      - 'functions'
+      - 'deploy'
+      - 'twitter-ingestion-${_ENVIRONMENT}'
+      - '--source=./gcp/cloud-functions/twitter-ingestion'
+      - '--entry-point=twitter_ingestion'
+      - '--runtime=python311'
+      - '--trigger=http'
+      - '--allow-unauthenticated'
+      - '--region=${_REGION}'
+      - '--memory=1GB'
+      - '--timeout=540s'
+      - '--set-env-vars=GCP_PROJECT=$PROJECT_ID,ENVIRONMENT=${_ENVIRONMENT},PUBSUB_TOPIC=social-media-raw-${_ENVIRONMENT},STORAGE_BUCKET=$PROJECT_ID-sentinelbert-raw-data-${_ENVIRONMENT}'
+      - '--service-account=sentinelbert-functions-${_ENVIRONMENT}@$PROJECT_ID.iam.gserviceaccount.com'
+    waitFor: ['-']
+
+  # Deploy Dataflow template
+  - name: 'gcr.io/cloud-builders/gcloud'
+    id: 'create-dataflow-template'
+    args:
+      - 'dataflow'
+      - 'flex-template'
+      - 'build'
+      - 'gs://$PROJECT_ID-sentinelbert-cloudbuild-${_ENVIRONMENT}/templates/social-media-pipeline'
+      - '--image=gcr.io/$PROJECT_ID/sentinelbert-dataflow:latest'
+      - '--sdk-language=PYTHON'
+    waitFor: ['build-dataflow-image']
+
+  # Build Dataflow image
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-dataflow-image'
+    args:
+      - 'build'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/sentinelbert-dataflow:latest'
+      - '-f'
+      - './gcp/dataflow/Dockerfile'
+      - './gcp/dataflow'
+    waitFor: ['-']
+
+  # Deploy to Cloud Run - NLP Service
+  - name: 'gcr.io/cloud-builders/gcloud'
+    id: 'deploy-nlp-service'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'sentinelbert-nlp-service'
+      - '--image=gcr.io/$PROJECT_ID/sentinelbert-nlp:$COMMIT_SHA'
+      - '--region=${_REGION}'
+      - '--platform=managed'
+      - '--allow-unauthenticated'
+      - '--service-account=sentinelbert-nlp-${_ENVIRONMENT}@$PROJECT_ID.iam.gserviceaccount.com'
+      - '--set-env-vars=GCP_PROJECT=$PROJECT_ID,ENVIRONMENT=${_ENVIRONMENT}'
+      - '--memory=8Gi'
+      - '--cpu=4'
+      - '--concurrency=10'
+      - '--max-instances=100'
+      - '--min-instances=1'
+      - '--timeout=3600'
+    waitFor: ['push-nlp-service']
+
+  # Deploy to Cloud Run - Backend Service
+  - name: 'gcr.io/cloud-builders/gcloud'
+    id: 'deploy-backend-service'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'sentinelbert-backend-service'
+      - '--image=gcr.io/$PROJECT_ID/sentinelbert-backend:$COMMIT_SHA'
+      - '--region=${_REGION}'
+      - '--platform=managed'
+      - '--allow-unauthenticated'
+      - '--service-account=sentinelbert-backend-${_ENVIRONMENT}@$PROJECT_ID.iam.gserviceaccount.com'
+      - '--set-env-vars=GCP_PROJECT=$PROJECT_ID,ENVIRONMENT=${_ENVIRONMENT},SPRING_PROFILES_ACTIVE=gcp'
+      - '--memory=4Gi'
+      - '--cpu=2'
+      - '--concurrency=80'
+      - '--max-instances=100'
+      - '--min-instances=1'
+      - '--timeout=300'
+    waitFor: ['push-backend-service']
+
+  # Deploy to Cloud Run - Ingestion Service
+  - name: 'gcr.io/cloud-builders/gcloud'
+    id: 'deploy-ingestion-service'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'sentinelbert-ingestion-service'
+      - '--image=gcr.io/$PROJECT_ID/sentinelbert-ingestion:$COMMIT_SHA'
+      - '--region=${_REGION}'
+      - '--platform=managed'
+      - '--allow-unauthenticated'
+      - '--service-account=sentinelbert-ingestion-${_ENVIRONMENT}@$PROJECT_ID.iam.gserviceaccount.com'
+      - '--set-env-vars=GCP_PROJECT=$PROJECT_ID,ENVIRONMENT=${_ENVIRONMENT}'
+      - '--memory=2Gi'
+      - '--cpu=2'
+      - '--concurrency=100'
+      - '--max-instances=50'
+      - '--min-instances=0'
+      - '--timeout=900'
+    waitFor: ['push-ingestion-service']
+
+  # Deploy Frontend to Firebase Hosting
+  - name: 'gcr.io/$PROJECT_ID/firebase'
+    id: 'deploy-frontend'
+    args:
+      - 'deploy'
+      - '--project=$PROJECT_ID'
+      - '--only=hosting'
+    dir: 'frontend'
+    waitFor: ['build-frontend']
+
+  # Run BigQuery schema updates
+  - name: 'gcr.io/cloud-builders/gcloud'
+    id: 'update-bigquery-schema'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        # Replace variables in schema file
+        sed "s/\$${project_id}/$PROJECT_ID/g; s/\$${environment}/${_ENVIRONMENT}/g" gcp/bigquery/schemas.sql > /tmp/schemas.sql
+        
+        # Execute schema updates
+        bq query --use_legacy_sql=false --project_id=$PROJECT_ID < /tmp/schemas.sql
+    waitFor: ['-']
+
+  # Start Dataflow job
+  - name: 'gcr.io/cloud-builders/gcloud'
+    id: 'start-dataflow-job'
+    args:
+      - 'dataflow'
+      - 'flex-template'
+      - 'run'
+      - 'social-media-pipeline-${_ENVIRONMENT}-$BUILD_ID'
+      - '--template-file-gcs-location=gs://$PROJECT_ID-sentinelbert-cloudbuild-${_ENVIRONMENT}/templates/social-media-pipeline'
+      - '--region=${_REGION}'
+      - '--parameters=input_subscription=projects/$PROJECT_ID/subscriptions/social-media-raw-sub-${_ENVIRONMENT},output_table=$PROJECT_ID:sentinelbert_${_ENVIRONMENT}.social_posts'
+      - '--service-account-email=sentinelbert-dataflow-${_ENVIRONMENT}@$PROJECT_ID.iam.gserviceaccount.com'
+    waitFor: ['create-dataflow-template']
+
+# Substitutions
+substitutions:
+  _REGION: 'us-central1'
+  _ENVIRONMENT: 'dev'
+
+# Options
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: 'E2_HIGHCPU_8'
+  diskSizeGb: '100'
+
+# Timeout
+timeout: '3600s'
+
+# Images to be pushed to Container Registry
+images:
+  - 'gcr.io/$PROJECT_ID/sentinelbert-nlp:$COMMIT_SHA'
+  - 'gcr.io/$PROJECT_ID/sentinelbert-nlp:latest'
+  - 'gcr.io/$PROJECT_ID/sentinelbert-backend:$COMMIT_SHA'
+  - 'gcr.io/$PROJECT_ID/sentinelbert-backend:latest'
+  - 'gcr.io/$PROJECT_ID/sentinelbert-ingestion:$COMMIT_SHA'
+  - 'gcr.io/$PROJECT_ID/sentinelbert-ingestion:latest'
+  - 'gcr.io/$PROJECT_ID/sentinelbert-frontend:$COMMIT_SHA'
+  - 'gcr.io/$PROJECT_ID/sentinelbert-frontend:latest'
+  - 'gcr.io/$PROJECT_ID/sentinelbert-dataflow:latest'
