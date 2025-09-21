@@ -1,0 +1,918 @@
+{
+  "security_vulnerabilities": [
+    {
+      "type": "insecure_random",
+      "file": "viral_dashboard.py",
+      "line": 131,
+      "code": "random.randint(",
+      "severity": "medium",
+      "description": "Using insecure random number generation"
+    },
+    {
+      "type": "insecure_random",
+      "file": "viral_dashboard.py",
+      "line": 133,
+      "code": "random.randint(",
+      "severity": "medium",
+      "description": "Using insecure random number generation"
+    },
+    {
+      "type": "insecure_random",
+      "file": "viral_dashboard.py",
+      "line": 134,
+      "code": "random.randint(",
+      "severity": "medium",
+      "description": "Using insecure random number generation"
+    },
+    {
+      "type": "insecure_random",
+      "file": "viral_dashboard.py",
+      "line": 135,
+      "code": "random.randint(",
+      "severity": "medium",
+      "description": "Using insecure random number generation"
+    },
+    {
+      "type": "insecure_random",
+      "file": "viral_dashboard.py",
+      "line": 170,
+      "code": "random.randint(",
+      "severity": "medium",
+      "description": "Using insecure random number generation"
+    },
+    {
+      "type": "insecure_random",
+      "file": "viral_dashboard.py",
+      "line": 175,
+      "code": "random.randint(",
+      "severity": "medium",
+      "description": "Using insecure random number generation"
+    },
+    {
+      "type": "insecure_random",
+      "file": "viral_dashboard.py",
+      "line": 184,
+      "code": "random.randint(",
+      "severity": "medium",
+      "description": "Using insecure random number generation"
+    },
+    {
+      "type": "insecure_random",
+      "file": "viral_dashboard.py",
+      "line": 185,
+      "code": "random.randint(",
+      "severity": "medium",
+      "description": "Using insecure random number generation"
+    },
+    {
+      "type": "insecure_random",
+      "file": "viral_dashboard.py",
+      "line": 189,
+      "code": "random.randint(",
+      "severity": "medium",
+      "description": "Using insecure random number generation"
+    },
+    {
+      "type": "insecure_random",
+      "file": "viral_dashboard.py",
+      "line": 136,
+      "code": "random.choice(",
+      "severity": "medium",
+      "description": "Using insecure random number generation"
+    },
+    {
+      "type": "insecure_random",
+      "file": "viral_dashboard.py",
+      "line": 137,
+      "code": "random.choice(",
+      "severity": "medium",
+      "description": "Using insecure random number generation"
+    },
+    {
+      "type": "insecure_random",
+      "file": "viral_dashboard.py",
+      "line": 162,
+      "code": "random.choice(",
+      "severity": "medium",
+      "description": "Using insecure random number generation"
+    },
+    {
+      "type": "weak_crypto",
+      "file": "viral_dashboard.py",
+      "line": 354,
+      "code": "des(",
+      "severity": "high",
+      "description": "Using weak cryptographic algorithm"
+    },
+    {
+      "type": "weak_crypto",
+      "file": "viral_dashboard.py",
+      "line": 355,
+      "code": "des(",
+      "severity": "high",
+      "description": "Using weak cryptographic algorithm"
+    },
+    {
+      "type": "insecure_random",
+      "file": "test_viral_analysis.py",
+      "line": 595,
+      "code": "random.random()",
+      "severity": "medium",
+      "description": "Using insecure random number generation"
+    },
+    {
+      "type": "insecure_random",
+      "file": "test_viral_analysis.py",
+      "line": 594,
+      "code": "random.randint(",
+      "severity": "medium",
+      "description": "Using insecure random number generation"
+    },
+    {
+      "type": "command_injection",
+      "file": "security_analysis.py",
+      "line": 67,
+      "code": "shell=True",
+      "severity": "critical",
+      "description": "Command injection vulnerability detected"
+    },
+    {
+      "type": "hardcoded_secrets",
+      "file": "services/evidence/main.py",
+      "line": 101,
+      "code": "password='password'",
+      "severity": "high",
+      "description": "Hardcoded secrets can be exposed in version control"
+    },
+    {
+      "type": "hardcoded_secrets",
+      "file": "services/viral_detection/main.py",
+      "line": 75,
+      "code": "password='password'",
+      "severity": "high",
+      "description": "Hardcoded secrets can be exposed in version control"
+    },
+    {
+      "type": "weak_crypto",
+      "file": "services/viral_detection/main.py",
+      "line": 305,
+      "code": "des(",
+      "severity": "high",
+      "description": "Using weak cryptographic algorithm"
+    },
+    {
+      "type": "weak_crypto",
+      "file": "services/viral_detection/main.py",
+      "line": 354,
+      "code": "des(",
+      "severity": "high",
+      "description": "Using weak cryptographic algorithm"
+    },
+    {
+      "type": "weak_crypto",
+      "file": "services/viral_detection/main.py",
+      "line": 358,
+      "code": "des(",
+      "severity": "high",
+      "description": "Using weak cryptographic algorithm"
+    },
+    {
+      "type": "weak_crypto",
+      "file": "services/nlp/services/cache_service.py",
+      "line": 30,
+      "code": "md5(",
+      "severity": "high",
+      "description": "Using weak cryptographic algorithm"
+    }
+  ],
+  "performance_issues": [
+    {
+      "type": "inefficient_loops",
+      "file": "viral_dashboard.py",
+      "line": 381,
+      "code": "for i in range(len(",
+      "impact": "high",
+      "suggestion": "Use enumerate() or direct iteration instead of range(len())"
+    },
+    {
+      "type": "string_concatenation",
+      "file": "viral_dashboard.py",
+      "line": 428,
+      "code": "+ \"...\"",
+      "impact": "medium",
+      "suggestion": "Use f-strings or join() for string concatenation"
+    },
+    {
+      "type": "string_concatenation",
+      "file": "test_viral_analysis.py",
+      "line": 679,
+      "code": "+ \"=\"",
+      "impact": "medium",
+      "suggestion": "Use f-strings or join() for string concatenation"
+    },
+    {
+      "type": "string_concatenation",
+      "file": "test_viral_analysis.py",
+      "line": 360,
+      "code": "\": \"+",
+      "impact": "medium",
+      "suggestion": "Use f-strings or join() for string concatenation"
+    },
+    {
+      "type": "string_concatenation",
+      "file": "test_viral_analysis.py",
+      "line": 679,
+      "code": "\"\\n\" +",
+      "impact": "medium",
+      "suggestion": "Use f-strings or join() for string concatenation"
+    },
+    {
+      "type": "repeated_calculations",
+      "file": "test_viral_analysis.py",
+      "line": 319,
+      "code": "len(self.sample_content) >",
+      "impact": "medium",
+      "suggestion": "Cache calculation results in variables"
+    },
+    {
+      "type": "repeated_calculations",
+      "file": "test_viral_analysis.py",
+      "line": 378,
+      "code": "len(warrant['digital_signature']) <",
+      "impact": "medium",
+      "suggestion": "Cache calculation results in variables"
+    },
+    {
+      "type": "string_concatenation",
+      "file": "security_analysis.py",
+      "line": 115,
+      "code": "+',\n            ],\n            \"",
+      "impact": "medium",
+      "suggestion": "Use f-strings or join() for string concatenation"
+    },
+    {
+      "type": "string_concatenation",
+      "file": "security_analysis.py",
+      "line": 559,
+      "code": "+ \"=\"",
+      "impact": "medium",
+      "suggestion": "Use f-strings or join() for string concatenation"
+    },
+    {
+      "type": "string_concatenation",
+      "file": "security_analysis.py",
+      "line": 559,
+      "code": "\"\\n\" +",
+      "impact": "medium",
+      "suggestion": "Use f-strings or join() for string concatenation"
+    },
+    {
+      "type": "repeated_calculations",
+      "file": "security_analysis.py",
+      "line": 409,
+      "code": "len(node.body) >",
+      "impact": "medium",
+      "suggestion": "Cache calculation results in variables"
+    },
+    {
+      "type": "repeated_calculations",
+      "file": "security_analysis.py",
+      "line": 422,
+      "code": "len(node.body) >",
+      "impact": "medium",
+      "suggestion": "Cache calculation results in variables"
+    },
+    {
+      "type": "repeated_calculations",
+      "file": "security_analysis.py",
+      "line": 196,
+      "code": ".count(imp) =",
+      "impact": "medium",
+      "suggestion": "Cache calculation results in variables"
+    },
+    {
+      "type": "repeated_calculations",
+      "file": "services/evidence/main.py",
+      "line": 179,
+      "code": "len(warrant.digital_signature) <",
+      "impact": "medium",
+      "suggestion": "Cache calculation results in variables"
+    },
+    {
+      "type": "repeated_calculations",
+      "file": "services/viral_detection/main.py",
+      "line": 169,
+      "code": "len(cluster_posts) <",
+      "impact": "medium",
+      "suggestion": "Cache calculation results in variables"
+    },
+    {
+      "type": "repeated_calculations",
+      "file": "services/viral_detection/main.py",
+      "line": 266,
+      "code": "len(posts) >",
+      "impact": "medium",
+      "suggestion": "Cache calculation results in variables"
+    },
+    {
+      "type": "repeated_calculations",
+      "file": "services/nlp/services/cache_service.py",
+      "line": 48,
+      "code": "len(self.cache) >",
+      "impact": "medium",
+      "suggestion": "Cache calculation results in variables"
+    },
+    {
+      "type": "repeated_calculations",
+      "file": "services/nlp/models/behavior_analyzer.py",
+      "line": 53,
+      "code": ".count('!') >",
+      "impact": "medium",
+      "suggestion": "Cache calculation results in variables"
+    },
+    {
+      "type": "string_concatenation",
+      "file": "services/nlp/utils/preprocessing.py",
+      "line": 21,
+      "code": "+', '",
+      "impact": "medium",
+      "suggestion": "Use f-strings or join() for string concatenation"
+    },
+    {
+      "type": "string_concatenation",
+      "file": "services/nlp/utils/preprocessing.py",
+      "line": 24,
+      "code": "+', '",
+      "impact": "medium",
+      "suggestion": "Use f-strings or join() for string concatenation"
+    },
+    {
+      "type": "string_concatenation",
+      "file": "services/nlp/utils/preprocessing.py",
+      "line": 27,
+      "code": "+', '",
+      "impact": "medium",
+      "suggestion": "Use f-strings or join() for string concatenation"
+    }
+  ],
+  "structure_issues": [
+    {
+      "type": "high_complexity",
+      "line": 211,
+      "function": "main",
+      "complexity": 30,
+      "description": "Function 'main' has high cyclomatic complexity (30)",
+      "file": "viral_dashboard.py"
+    },
+    {
+      "type": "high_complexity",
+      "line": 16,
+      "function": "calculate_influence",
+      "complexity": 15,
+      "description": "Function 'calculate_influence' has high cyclomatic complexity (15)",
+      "file": "services/nlp/models/influence_calculator.py"
+    },
+    {
+      "type": "high_complexity",
+      "line": 33,
+      "function": "analyze_patterns",
+      "complexity": 14,
+      "description": "Function 'analyze_patterns' has high cyclomatic complexity (14)",
+      "file": "services/nlp/models/behavior_analyzer.py"
+    }
+  ],
+  "potential_hallucinations": [
+    {
+      "type": "unused_import",
+      "file": "viral_dashboard.py",
+      "import": "streamlit",
+      "description": "Import 'streamlit' appears to be unused"
+    },
+    {
+      "type": "unused_import",
+      "file": "viral_dashboard.py",
+      "import": "pandas",
+      "description": "Import 'pandas' appears to be unused"
+    },
+    {
+      "type": "unused_import",
+      "file": "viral_dashboard.py",
+      "import": "numpy",
+      "description": "Import 'numpy' appears to be unused"
+    },
+    {
+      "type": "unused_import",
+      "file": "viral_dashboard.py",
+      "import": "networkx",
+      "description": "Import 'networkx' appears to be unused"
+    },
+    {
+      "type": "unused_import",
+      "file": "viral_dashboard.py",
+      "import": "json",
+      "description": "Import 'json' appears to be unused"
+    },
+    {
+      "type": "unused_import",
+      "file": "viral_dashboard.py",
+      "import": "requests",
+      "description": "Import 'requests' appears to be unused"
+    },
+    {
+      "type": "unused_import",
+      "file": "test_viral_analysis.py",
+      "import": "asyncio",
+      "description": "Import 'asyncio' appears to be unused"
+    },
+    {
+      "type": "unused_import",
+      "file": "test_viral_analysis.py",
+      "import": "numpy",
+      "description": "Import 'numpy' appears to be unused"
+    },
+    {
+      "type": "unused_import",
+      "file": "test_viral_analysis.py",
+      "import": "pandas",
+      "description": "Import 'pandas' appears to be unused"
+    },
+    {
+      "type": "unused_import",
+      "file": "security_analysis.py",
+      "import": "hashlib",
+      "description": "Import 'hashlib' appears to be unused"
+    },
+    {
+      "type": "unused_import",
+      "file": "services/evidence/main.py",
+      "import": "asyncio",
+      "description": "Import 'asyncio' appears to be unused"
+    },
+    {
+      "type": "unused_import",
+      "file": "services/evidence/main.py",
+      "import": "base64",
+      "description": "Import 'base64' appears to be unused"
+    },
+    {
+      "type": "unused_import",
+      "file": "services/evidence/main.py",
+      "import": "requests",
+      "description": "Import 'requests' appears to be unused"
+    },
+    {
+      "type": "unused_import",
+      "file": "services/viral_detection/main.py",
+      "import": "asyncio",
+      "description": "Import 'asyncio' appears to be unused"
+    },
+    {
+      "type": "unused_import",
+      "file": "services/viral_detection/main.py",
+      "import": "networkx",
+      "description": "Import 'networkx' appears to be unused"
+    },
+    {
+      "type": "unused_import",
+      "file": "services/nlp/services/cache_service.py",
+      "import": "json",
+      "description": "Import 'json' appears to be unused"
+    },
+    {
+      "type": "unused_import",
+      "file": "services/nlp/models/influence_calculator.py",
+      "import": "math",
+      "description": "Import 'math' appears to be unused"
+    },
+    {
+      "type": "unused_import",
+      "file": "services/nlp/models/sentiment_model.py",
+      "import": "numpy",
+      "description": "Import 'numpy' appears to be unused"
+    }
+  ],
+  "dependency_vulnerabilities": {
+    "requirements_files": [
+      "services/evidence/requirements.txt",
+      "services/viral_detection/requirements.txt",
+      "services/nlp/requirements.txt"
+    ],
+    "potential_vulnerabilities": [
+      {
+        "file": "services/evidence/requirements.txt",
+        "package": "requests<2.25.1",
+        "description": "Potentially vulnerable version of requests"
+      }
+    ],
+    "outdated_packages": []
+  },
+  "code_quality_metrics": {
+    "total_files": 152,
+    "total_lines": 3953,
+    "total_functions": 87,
+    "total_classes": 33,
+    "average_complexity": 0,
+    "files_by_type": {
+      ".md": 29,
+      ".py": 17,
+      ".yml": 6,
+      "": 52,
+      ".sh": 2,
+      ".example": 1,
+      ".json": 4,
+      ".conf": 1,
+      ".log": 2,
+      ".sql": 1,
+      ".tsx": 5,
+      ".html": 1,
+      ".ts": 1,
+      ".sample": 13,
+      ".pack": 1,
+      ".idx": 1,
+      ".xml": 1,
+      ".toml": 2,
+      ".txt": 3,
+      ".rs": 8,
+      ".pyc": 1
+    }
+  },
+  "docker_security": [
+    {
+      "type": "root_user",
+      "file": "frontend/Dockerfile",
+      "line": 182,
+      "code": "USER root",
+      "severity": "medium",
+      "description": "Potential Docker security issue: root_user"
+    },
+    {
+      "type": "root_user",
+      "file": "services/backend/Dockerfile",
+      "line": 175,
+      "code": "USER root",
+      "severity": "medium",
+      "description": "Potential Docker security issue: root_user"
+    },
+    {
+      "type": "secrets_in_env",
+      "file": "services/evidence/Dockerfile",
+      "line": 11,
+      "code": "key",
+      "severity": "medium",
+      "description": "Potential Docker security issue: secrets_in_env"
+    },
+    {
+      "type": "root_user",
+      "file": "services/nlp/Dockerfile",
+      "line": 252,
+      "code": "USER root",
+      "severity": "medium",
+      "description": "Potential Docker security issue: root_user"
+    },
+    {
+      "type": "exposed_ports",
+      "file": "docker-compose.yml",
+      "line": 16,
+      "code": "ports:\n      - \"5432:5432\"",
+      "severity": "medium",
+      "description": "Potential Docker security issue: exposed_ports"
+    },
+    {
+      "type": "exposed_ports",
+      "file": "docker-compose.yml",
+      "line": 40,
+      "code": "ports:\n      - \"9200:9200\"",
+      "severity": "medium",
+      "description": "Potential Docker security issue: exposed_ports"
+    },
+    {
+      "type": "exposed_ports",
+      "file": "docker-compose.yml",
+      "line": 57,
+      "code": "ports:\n      - \"6379:6379\"",
+      "severity": "medium",
+      "description": "Potential Docker security issue: exposed_ports"
+    },
+    {
+      "type": "exposed_ports",
+      "file": "docker-compose.yml",
+      "line": 95,
+      "code": "ports:\n      - \"9092:9092\"",
+      "severity": "medium",
+      "description": "Potential Docker security issue: exposed_ports"
+    },
+    {
+      "type": "exposed_ports",
+      "file": "docker-compose.yml",
+      "line": 127,
+      "code": "ports:\n      - \"8081:8080\"",
+      "severity": "medium",
+      "description": "Potential Docker security issue: exposed_ports"
+    },
+    {
+      "type": "exposed_ports",
+      "file": "docker-compose.yml",
+      "line": 157,
+      "code": "ports:\n      - \"8000:8000\"",
+      "severity": "medium",
+      "description": "Potential Docker security issue: exposed_ports"
+    },
+    {
+      "type": "exposed_ports",
+      "file": "docker-compose.yml",
+      "line": 198,
+      "code": "ports:\n      - \"8080:8080\"",
+      "severity": "medium",
+      "description": "Potential Docker security issue: exposed_ports"
+    },
+    {
+      "type": "exposed_ports",
+      "file": "docker-compose.yml",
+      "line": 221,
+      "code": "ports:\n      - \"3000:80\"",
+      "severity": "medium",
+      "description": "Potential Docker security issue: exposed_ports"
+    },
+    {
+      "type": "exposed_ports",
+      "file": "docker-compose.yml",
+      "line": 241,
+      "code": "ports:\n      - \"9090:9090\"",
+      "severity": "medium",
+      "description": "Potential Docker security issue: exposed_ports"
+    },
+    {
+      "type": "exposed_ports",
+      "file": "docker-compose.yml",
+      "line": 258,
+      "code": "ports:\n      - \"3001:3000\"",
+      "severity": "medium",
+      "description": "Potential Docker security issue: exposed_ports"
+    },
+    {
+      "type": "exposed_ports",
+      "file": "docker-compose.yml",
+      "line": 269,
+      "code": "ports:\n      - \"16686:16686\"",
+      "severity": "medium",
+      "description": "Potential Docker security issue: exposed_ports"
+    },
+    {
+      "type": "exposed_ports",
+      "file": "docker-compose.yml",
+      "line": 283,
+      "code": "ports:\n      - \"80:80\"",
+      "severity": "medium",
+      "description": "Potential Docker security issue: exposed_ports"
+    },
+    {
+      "type": "secrets_in_env",
+      "file": "docker-compose.yml",
+      "line": 119,
+      "code": "SECRET",
+      "severity": "medium",
+      "description": "Potential Docker security issue: secrets_in_env"
+    },
+    {
+      "type": "secrets_in_env",
+      "file": "docker-compose.yml",
+      "line": 119,
+      "code": "SECRET",
+      "severity": "medium",
+      "description": "Potential Docker security issue: secrets_in_env"
+    },
+    {
+      "type": "secrets_in_env",
+      "file": "docker-compose.yml",
+      "line": 188,
+      "code": "SECRET",
+      "severity": "medium",
+      "description": "Potential Docker security issue: secrets_in_env"
+    },
+    {
+      "type": "secrets_in_env",
+      "file": "docker-compose.yml",
+      "line": 188,
+      "code": "SECRET",
+      "severity": "medium",
+      "description": "Potential Docker security issue: secrets_in_env"
+    },
+    {
+      "type": "secrets_in_env",
+      "file": "docker-compose.yml",
+      "line": 188,
+      "code": "secret",
+      "severity": "medium",
+      "description": "Potential Docker security issue: secrets_in_env"
+    },
+    {
+      "type": "secrets_in_env",
+      "file": "docker-compose.yml",
+      "line": 188,
+      "code": "key",
+      "severity": "medium",
+      "description": "Potential Docker security issue: secrets_in_env"
+    },
+    {
+      "type": "exposed_ports",
+      "file": "docker-compose.insideout.yml",
+      "line": 15,
+      "code": "ports:\n      - \"5432:5432\"",
+      "severity": "medium",
+      "description": "Potential Docker security issue: exposed_ports"
+    },
+    {
+      "type": "exposed_ports",
+      "file": "docker-compose.insideout.yml",
+      "line": 32,
+      "code": "ports:\n      - \"6379:6379\"",
+      "severity": "medium",
+      "description": "Potential Docker security issue: exposed_ports"
+    },
+    {
+      "type": "exposed_ports",
+      "file": "docker-compose.insideout.yml",
+      "line": 52,
+      "code": "ports:\n      - \"9200:9200\"",
+      "severity": "medium",
+      "description": "Potential Docker security issue: exposed_ports"
+    },
+    {
+      "type": "exposed_ports",
+      "file": "docker-compose.insideout.yml",
+      "line": 74,
+      "code": "ports:\n      - \"7474:7474\"",
+      "severity": "medium",
+      "description": "Potential Docker security issue: exposed_ports"
+    },
+    {
+      "type": "exposed_ports",
+      "file": "docker-compose.insideout.yml",
+      "line": 135,
+      "code": "ports:\n      - \"8000:8000\"",
+      "severity": "medium",
+      "description": "Potential Docker security issue: exposed_ports"
+    },
+    {
+      "type": "exposed_ports",
+      "file": "docker-compose.insideout.yml",
+      "line": 167,
+      "code": "ports:\n      - \"8001:8001\"",
+      "severity": "medium",
+      "description": "Potential Docker security issue: exposed_ports"
+    },
+    {
+      "type": "exposed_ports",
+      "file": "docker-compose.insideout.yml",
+      "line": 201,
+      "code": "ports:\n      - \"8002:8002\"",
+      "severity": "medium",
+      "description": "Potential Docker security issue: exposed_ports"
+    },
+    {
+      "type": "exposed_ports",
+      "file": "docker-compose.insideout.yml",
+      "line": 240,
+      "code": "ports:\n      - \"8080:8080\"",
+      "severity": "medium",
+      "description": "Potential Docker security issue: exposed_ports"
+    },
+    {
+      "type": "exposed_ports",
+      "file": "docker-compose.insideout.yml",
+      "line": 276,
+      "code": "ports:\n      - \"3000:80\"",
+      "severity": "medium",
+      "description": "Potential Docker security issue: exposed_ports"
+    },
+    {
+      "type": "exposed_ports",
+      "file": "docker-compose.insideout.yml",
+      "line": 304,
+      "code": "ports:\n      - \"9090:9090\"",
+      "severity": "medium",
+      "description": "Potential Docker security issue: exposed_ports"
+    },
+    {
+      "type": "exposed_ports",
+      "file": "docker-compose.insideout.yml",
+      "line": 323,
+      "code": "ports:\n      - \"3001:3000\"",
+      "severity": "medium",
+      "description": "Potential Docker security issue: exposed_ports"
+    },
+    {
+      "type": "exposed_ports",
+      "file": "docker-compose.insideout.yml",
+      "line": 337,
+      "code": "ports:\n      - \"16686:16686\"",
+      "severity": "medium",
+      "description": "Potential Docker security issue: exposed_ports"
+    },
+    {
+      "type": "exposed_ports",
+      "file": "docker-compose.insideout.yml",
+      "line": 352,
+      "code": "ports:\n      - \"80:80\"",
+      "severity": "medium",
+      "description": "Potential Docker security issue: exposed_ports"
+    },
+    {
+      "type": "secrets_in_env",
+      "file": "docker-compose.insideout.yml",
+      "line": 99,
+      "code": "SECRET",
+      "severity": "medium",
+      "description": "Potential Docker security issue: secrets_in_env"
+    },
+    {
+      "type": "secrets_in_env",
+      "file": "docker-compose.insideout.yml",
+      "line": 99,
+      "code": "SECRET",
+      "severity": "medium",
+      "description": "Potential Docker security issue: secrets_in_env"
+    },
+    {
+      "type": "secrets_in_env",
+      "file": "docker-compose.insideout.yml",
+      "line": 100,
+      "code": "KEY",
+      "severity": "medium",
+      "description": "Potential Docker security issue: secrets_in_env"
+    },
+    {
+      "type": "secrets_in_env",
+      "file": "docker-compose.insideout.yml",
+      "line": 100,
+      "code": "KEY",
+      "severity": "medium",
+      "description": "Potential Docker security issue: secrets_in_env"
+    },
+    {
+      "type": "secrets_in_env",
+      "file": "docker-compose.insideout.yml",
+      "line": 195,
+      "code": "KEY",
+      "severity": "medium",
+      "description": "Potential Docker security issue: secrets_in_env"
+    },
+    {
+      "type": "secrets_in_env",
+      "file": "docker-compose.insideout.yml",
+      "line": 195,
+      "code": "KEY",
+      "severity": "medium",
+      "description": "Potential Docker security issue: secrets_in_env"
+    },
+    {
+      "type": "secrets_in_env",
+      "file": "docker-compose.insideout.yml",
+      "line": 195,
+      "code": "key",
+      "severity": "medium",
+      "description": "Potential Docker security issue: secrets_in_env"
+    },
+    {
+      "type": "secrets_in_env",
+      "file": "docker-compose.insideout.yml",
+      "line": 234,
+      "code": "SECRET",
+      "severity": "medium",
+      "description": "Potential Docker security issue: secrets_in_env"
+    },
+    {
+      "type": "secrets_in_env",
+      "file": "docker-compose.insideout.yml",
+      "line": 234,
+      "code": "SECRET",
+      "severity": "medium",
+      "description": "Potential Docker security issue: secrets_in_env"
+    },
+    {
+      "type": "secrets_in_env",
+      "file": "docker-compose.insideout.yml",
+      "line": 234,
+      "code": "secret",
+      "severity": "medium",
+      "description": "Potential Docker security issue: secrets_in_env"
+    },
+    {
+      "type": "secrets_in_env",
+      "file": "docker-compose.insideout.yml",
+      "line": 271,
+      "code": "KEY",
+      "severity": "medium",
+      "description": "Potential Docker security issue: secrets_in_env"
+    },
+    {
+      "type": "secrets_in_env",
+      "file": "docker-compose.insideout.yml",
+      "line": 271,
+      "code": "KEY",
+      "severity": "medium",
+      "description": "Potential Docker security issue: secrets_in_env"
+    }
+  ],
+  "database_security": []
+}

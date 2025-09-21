@@ -1,0 +1,39 @@
+{
+  "platform_info": {
+    "system": "Linux",
+    "release": "6.8.0-1026-gke",
+    "version": "#30-Ubuntu SMP Wed May 28 22:51:45 UTC 2025",
+    "machine": "x86_64",
+    "processor": "",
+    "python_version": "3.12.11"
+  },
+  "docker_compatibility": {
+    "docker_available": false,
+    "status": "\u274c Docker not available",
+    "recommendation": "Install Docker Desktop for Mac"
+  },
+  "python_compatibility": {},
+  "dependency_issues": [
+    "torch",
+    "transformers",
+    "streamlit",
+    "plotly",
+    "scikit-learn",
+    "psycopg2-binary",
+    "redis",
+    "fastapi",
+    "uvicorn",
+    "networkx"
+  ],
+  "deployment_issues": [
+    "Docker not installed"
+  ],
+  "recommendations": [],
+  "permission_issues": [],
+  "network_issues": [
+    "https://api.twitter.com: HTTP Error 404: Not Found",
+    "https://graph.facebook.com: HTTP Error 400: Bad Request"
+  ],
+  "macos_issues": [],
+  "compatibility_score": 10
+}
