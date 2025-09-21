@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # Enhanced PostgreSQL with PostGIS for geographic data
   postgres:
@@ -123,7 +121,6 @@ services:
     build:
       context: ./services/nlp
       dockerfile: Dockerfile
-    container_name: insideout-nlp
     environment:
       - PYTHONPATH=/app
       - DATABASE_URL=postgresql://insideout:${POSTGRES_PASSWORD:-insideout_secure_2024}@postgres:5432/insideout
@@ -144,8 +141,6 @@ services:
         condition: service_healthy
     networks:
       - insideout-network
-    deploy:
-      replicas: 2
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
