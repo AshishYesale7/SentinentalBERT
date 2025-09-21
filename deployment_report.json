@@ -1,0 +1,115 @@
+{
+  "timestamp": "2025-09-21T20:32:19.335003",
+  "system_requirements": {
+    "platform": "Linux-6.8.0-1026-gke-x86_64-with-glibc2.36",
+    "python_version": "3.12.11",
+    "architecture": "x86_64",
+    "processor": "",
+    "memory_available": "15.6 GB",
+    "disk_space": "256.0 GB"
+  },
+  "docker_status": {
+    "docker_available": true,
+    "docker_version": "Docker version 28.4.0, build d8eb465",
+    "docker_compose_available": true,
+    "docker_compose_version": "Docker Compose version v2.39.2",
+    "daemon_running": false
+  },
+  "python_dependencies": {
+    "streamlit": {
+      "available": true,
+      "version": "1.49.1"
+    },
+    "plotly": {
+      "available": true,
+      "version": "6.3.0"
+    },
+    "torch": {
+      "available": true,
+      "version": "2.8.0+cu128"
+    },
+    "transformers": {
+      "available": true,
+      "version": "4.56.2"
+    },
+    "scikit-learn": {
+      "available": false,
+      "version": null
+    },
+    "psycopg2": {
+      "available": true,
+      "version": "2.9.10 (dt dec pq3 ext lo64)"
+    },
+    "redis": {
+      "available": true,
+      "version": "6.4.0"
+    },
+    "fastapi": {
+      "available": true,
+      "version": "0.117.1"
+    },
+    "uvicorn": {
+      "available": true,
+      "version": "0.36.0"
+    },
+    "networkx": {
+      "available": true,
+      "version": "3.5"
+    },
+    "pandas": {
+      "available": true,
+      "version": "2.3.2"
+    },
+    "numpy": {
+      "available": true,
+      "version": "2.3.3"
+    },
+    "cryptography": {
+      "available": true,
+      "version": "45.0.7"
+    },
+    "pydantic": {
+      "available": true,
+      "version": "2.11.9"
+    },
+    "requests": {
+      "available": true,
+      "version": "2.32.5"
+    }
+  },
+  "dashboard_status": {
+    "file_exists": true,
+    "syntax_valid": true,
+    "can_import": true,
+    "port_available": false
+  },
+  "algorithm_status": {
+    "viral_scoring": true,
+    "content_similarity": true,
+    "network_analysis": true,
+    "geographic_analysis": true
+  },
+  "security_status": {
+    "environment_variables": {
+      "POSTGRES_PASSWORD": "Not set",
+      "REDIS_PASSWORD": "Not set",
+      "JWT_SECRET": "Not set"
+    },
+    "file_permissions": {},
+    "hardcoded_secrets": [
+      "viral_dashboard.py: key=",
+      "docker-compose.yml: password=",
+      "docker-compose.yml: secret=",
+      "docker-compose.yml: token="
+    ]
+  },
+  "readiness_score": 84.72222222222221,
+  "component_scores": {
+    "system": 1.0,
+    "docker": 1.0,
+    "dependencies": 0.9333333333333333,
+    "dashboard": 0.75,
+    "algorithms": 1.0,
+    "security": 0.4
+  }
+}
