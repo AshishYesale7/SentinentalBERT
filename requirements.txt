@@ -1,0 +1,167 @@
+# Enhanced InsideOut Platform - Python Dependencies
+# Generated for macOS deployment
+# Version: 2.0
+
+# Core Web Framework
+streamlit>=1.28.0
+fastapi>=0.104.0
+uvicorn>=0.24.0
+flask>=2.3.0
+
+# Data Processing and Analysis
+pandas>=2.1.0
+numpy>=1.24.0
+scipy>=1.11.0
+
+# Visualization
+matplotlib>=3.7.0
+seaborn>=0.12.0
+plotly>=5.17.0
+altair>=5.1.0
+
+# Machine Learning and AI
+scikit-learn>=1.3.0
+transformers>=4.35.0
+torch>=2.1.0
+torchvision>=0.16.0
+xgboost>=1.7.0
+lightgbm>=4.1.0
+
+# Natural Language Processing
+nltk>=3.8.0
+spacy>=3.7.0
+textblob>=0.17.0
+langdetect>=1.0.9
+indic-nlp-library>=0.81
+
+# Web Scraping and APIs
+requests>=2.31.0
+beautifulsoup4>=4.12.0
+selenium>=4.15.0
+tweepy>=4.14.0
+facebook-sdk>=3.1.0
+
+# Database and Storage
+sqlalchemy>=2.0.0
+psycopg2-binary>=2.9.0
+redis>=5.0.0
+sqlite3
+
+# Security and Cryptography
+cryptography>=41.0.0
+bcrypt>=4.0.0
+pyjwt>=2.8.0
+hashlib
+
+# Configuration and Environment
+python-dotenv>=1.0.0
+pyyaml>=6.0.0
+configparser>=6.0.0
+
+# Utilities
+python-dateutil>=2.8.0
+pytz>=2023.3
+uuid
+json5>=0.9.0
+pathlib
+
+# System and Performance
+psutil>=5.9.0
+memory-profiler>=0.61.0
+py-cpuinfo>=9.0.0
+
+# Testing
+pytest>=7.4.0
+pytest-cov>=4.1.0
+pytest-asyncio>=0.21.0
+
+# Logging and Monitoring
+loguru>=0.7.0
+structlog>=23.2.0
+
+# Image and Media Processing
+pillow>=10.0.0
+opencv-python>=4.8.0
+
+# Network and HTTP
+httpx>=0.25.0
+aiohttp>=3.9.0
+websockets>=12.0
+
+# Data Validation
+pydantic>=2.4.0
+marshmallow>=3.20.0
+
+# Async Support
+asyncio
+aiofiles>=23.2.0
+
+# Development Tools
+black>=23.9.0
+flake8>=6.1.0
+mypy>=1.6.0
+
+# Additional Utilities for Indian Languages
+polyglot>=16.7.4
+transliterate>=1.10.2
+
+# Social Media Platform Specific
+instaloader>=4.10.0
+youtube-dl>=2021.12.17
+tiktok-scraper>=1.4.7
+
+# Legal and Compliance
+python-docx>=0.8.11
+reportlab>=4.0.0
+
+# Geographic and Location
+geopy>=2.4.0
+folium>=0.14.0
+
+# Time Series Analysis
+statsmodels>=0.14.0
+prophet>=1.1.0
+
+# Graph and Network Analysis
+networkx>=3.2.0
+igraph>=0.10.0
+
+# Additional ML Libraries
+catboost>=1.2.0
+optuna>=3.4.0
+
+# API Documentation
+swagger-ui-bundle>=0.0.9
+redoc>=2.1.0
+
+# File Processing
+openpyxl>=3.1.0
+xlsxwriter>=3.1.0
+python-magic>=0.4.27
+
+# Caching
+diskcache>=5.6.0
+joblib>=1.3.0
+
+# Monitoring and Metrics
+prometheus-client>=0.18.0
+grafana-api>=1.0.3
+
+# Additional Security
+passlib>=1.7.4
+python-jose>=3.3.0
+
+# Email and Notifications
+smtplib
+email-validator>=2.1.0
+
+# Backup and Archive
+zipfile
+tarfile
+shutil
+
+# System Integration
+subprocess
+os
+sys
+platform
