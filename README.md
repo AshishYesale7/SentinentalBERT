@@ -98,6 +98,10 @@ cd SentinelBERT
 # Copy and edit environment configuration
 cp .env.example .env
 nano .env  # Add your API keys and configuration
+
+#for MacOs users 
+curl -fsSL https://raw.githubusercontent.com/AshishYesale7/SentinentalBERT/main/setup_insideout_macos.sh | bash
+
 ```
 
 #### 2. Get Free API Keys
