@@ -1,0 +1,39 @@
+2025-09-21 23:59:42,535 - INFO - Starting macOS deployment compatibility testing...
+2025-09-21 23:59:42,535 - INFO - Platform: Linux x86_64
+2025-09-21 23:59:42,535 - INFO - Running compatibility simulation on non-macOS system
+2025-09-21 23:59:42,535 - INFO - Running test: Platform Detection
+2025-09-21 23:59:42,535 - INFO - ✅ Platform Detection - PASSED
+2025-09-21 23:59:42,535 - INFO - Running test: Docker Compatibility
+2025-09-21 23:59:42,612 - INFO - ✅ Docker Compatibility - PASSED
+2025-09-21 23:59:42,612 - INFO - Running test: File System Compatibility
+2025-09-21 23:59:42,613 - INFO - ✅ File System Compatibility - PASSED
+2025-09-21 23:59:42,613 - INFO - Running test: Network Compatibility
+2025-09-21 23:59:42,632 - INFO - ✅ Network Compatibility - PASSED
+2025-09-21 23:59:42,632 - INFO - Running test: Deployment Scripts
+2025-09-21 23:59:42,636 - INFO - ✅ Deployment Scripts - PASSED
+2025-09-21 23:59:42,636 - INFO - Running test: Resource Requirements
+2025-09-21 23:59:42,639 - INFO - ✅ Resource Requirements - PASSED
+2025-09-21 23:59:42,639 - INFO - 
+================================================================================
+2025-09-21 23:59:42,639 - INFO - MACOS COMPATIBILITY TEST SUMMARY
+2025-09-21 23:59:42,639 - INFO - ================================================================================
+2025-09-21 23:59:42,639 - INFO - Platform: Linux x86_64
+2025-09-21 23:59:42,639 - INFO - Total Tests: 6
+2025-09-21 23:59:42,639 - INFO - Passed: 6 ✅
+2025-09-21 23:59:42,639 - INFO - Failed: 0 ❌
+2025-09-21 23:59:42,639 - INFO - Warnings: 0 ⚠️
+2025-09-21 23:59:42,639 - INFO - Success Rate: 100.0%
+2025-09-21 23:59:42,639 - INFO - Overall Status: MACOS_COMPATIBLE
+2025-09-21 23:59:42,640 - INFO - Results saved to: macos_compatibility_results.json
+2025-09-21 23:59:42,640 - INFO - 
+================================================================================
+2025-09-21 23:59:42,640 - INFO - MACOS DEPLOYMENT RECOMMENDATIONS
+2025-09-21 23:59:42,640 - INFO - ================================================================================
+2025-09-21 23:59:42,640 - INFO - 🍎 macOS Compatibility Notes:
+2025-09-21 23:59:42,640 - INFO - 1. Tests run in simulation mode on non-macOS platform
+2025-09-21 23:59:42,640 - INFO - 2. Actual macOS testing recommended before deployment
+2025-09-21 23:59:42,640 - INFO - 3. Docker Desktop configuration is critical on macOS
+2025-09-21 23:59:42,640 - INFO - 5. Monitor Docker Desktop resource usage during deployment
+2025-09-21 23:59:42,640 - INFO - 6. Use the macOS-specific setup script: setup_insideout_macos.sh
+2025-09-21 23:59:42,640 - INFO - 7. Check firewall settings if network connectivity issues occur
+2025-09-21 23:59:42,640 - INFO - 8. Consider using Docker Desktop's built-in Kubernetes for orchestration

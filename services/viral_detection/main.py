@@ -67,12 +67,27 @@ class ViralDetectionEngine:
         self.bert_model.to(self.device)
         
         # Database connections
-        self.redis_client = redis.Redis(host='redis', port=6379, decode_responses=True)
+        # SECURITY FIX: Use environment variables for database credentials
+        import os
+        db_password = os.getenv('DB_PASSWORD')
+        if not db_password:
+            raise ValueError("DB_PASSWORD environment variable must be set")
+        
+        redis_password = os.getenv('REDIS_PASSWORD')
+        self.redis_client = redis.Redis(
+            host=os.getenv('REDIS_HOST', 'redis'), 
+            port=int(os.getenv('REDIS_PORT', 6379)), 
+            password=redis_password,
+            decode_responses=True,
+            ssl=True if os.getenv('REDIS_SSL', 'false').lower() == 'true' else False
+        )
+        
         self.pg_conn = psycopg2.connect(
-            host='postgres',
-            database='insideout',
-            user='insideout',
-            password='password'
+            host=os.getenv('DB_HOST', 'postgres'),
+            database=os.getenv('DB_NAME', 'insideout'),
+            user=os.getenv('DB_USER', 'insideout'),
+            password=db_password,
+            sslmode='require'  # Enforce SSL connection
         )
         
         logger.info(f"Viral Detection Engine initialized on {self.device}")
