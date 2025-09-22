@@ -1,0 +1,74 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  # - "first_rules.yml"
+  # - "second_rules.yml"
+
+scrape_configs:
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Streamlit Dashboard
+  - job_name: 'streamlit-dashboard'
+    static_configs:
+      - targets: ['streamlit-dashboard:8501']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+
+  # NLP Service
+  - job_name: 'nlp-service'
+    static_configs:
+      - targets: ['nlp-service:8000']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+
+  # Backend Service
+  - job_name: 'backend-service'
+    static_configs:
+      - targets: ['backend-service:8080']
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 30s
+
+  # Evidence Service
+  - job_name: 'evidence-service'
+    static_configs:
+      - targets: ['evidence-service:8000']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+
+  # Ingestion Service
+  - job_name: 'ingestion-service'
+    static_configs:
+      - targets: ['ingestion-service:8080']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+
+  # Viral Detection Service
+  - job_name: 'viral-detection'
+    static_configs:
+      - targets: ['viral-detection:8000']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+
+  # PostgreSQL
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres:5432']
+    scrape_interval: 60s
+
+  # Redis
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+    scrape_interval: 60s
+
+  # Elasticsearch
+  - job_name: 'elasticsearch'
+    static_configs:
+      - targets: ['elasticsearch:9200']
+    metrics_path: '/_prometheus/metrics'
+    scrape_interval: 60s
