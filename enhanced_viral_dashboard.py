@@ -45,8 +45,8 @@ except ImportError as e:
 
 # Page configuration
 st.set_page_config(
-    page_title="InsideOut - Enhanced Viral Content Analysis Platform",
-    page_icon="🔍",
+    page_title="भारत सरकार - साइबर अपराध विश्लेषण प्लेटफॉर्म | Government of India - Cyber Crime Analysis Platform",
+    page_icon="🇮🇳",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -81,6 +81,225 @@ def initialize_services():
             'behavior': MockService(),
             'influence': MockService()
         }
+
+# Language Translation System
+TRANSLATIONS = {
+    'en': {
+        'title': 'Government of India - Cyber Crime Analysis Platform',
+        'subtitle': 'Ministry of Home Affairs - Cyber Crime Investigation Division',
+        'platform_selection': 'Platform Selection',
+        'legal_authorization': 'Legal Authorization',
+        'case_number': 'Case Number',
+        'authorized_officer': 'Authorized Officer',
+        'comprehensive_analysis': 'Comprehensive Analysis',
+        'sentiment_behavior': 'Sentiment & Behavior',
+        'influence_network': 'Influence Network',
+        'geographic_spread': 'Geographic Spread',
+        'evidence_collection': 'Evidence Collection',
+        'viral_timeline': 'Viral Timeline',
+        'analyze_content': 'Analyze Content',
+        'refresh_data': 'Refresh Data',
+        'export_report': 'Export Report',
+        'help_documentation': 'Help & Documentation',
+        'active_clusters': 'Active Clusters',
+        'evidence_packages': 'Evidence Packages',
+        'high_priority': 'High Priority Cases',
+        'officers_active': 'Officers Active',
+        'system_operational': 'System Status: OPERATIONAL',
+        'valid_warrant_active': 'Valid Warrant Active',
+        'legal_framework': 'Legal Framework',
+        'security_classification': 'Security Classification',
+        'restricted_official_use': 'RESTRICTED - For Official Use Only',
+        'all_systems_operational': 'All systems operational',
+        'encryption_active': 'End-to-end encryption active',
+        'it_act_compliant': 'IT Act 2000 compliant',
+        'evidence_act_compliant': 'Evidence Act 1872 compliant',
+        'platforms_active': 'platforms active',
+        'languages_supported': 'languages supported'
+    },
+    'hi': {
+        'title': 'भारत सरकार - साइबर अपराध विश्लेषण प्लेटफॉर्म',
+        'subtitle': 'गृह मंत्रालय - साइबर अपराध जांच प्रभाग',
+        'platform_selection': 'प्लेटफॉर्म चयन',
+        'legal_authorization': 'कानूनी प्राधिकरण',
+        'case_number': 'मामला संख्या',
+        'authorized_officer': 'अधिकृत अधिकारी',
+        'comprehensive_analysis': 'व्यापक विश्लेषण',
+        'sentiment_behavior': 'भावना और व्यवहार',
+        'influence_network': 'प्रभाव नेटवर्क',
+        'geographic_spread': 'भौगोलिक प्रसार',
+        'evidence_collection': 'साक्ष्य संग्रह',
+        'viral_timeline': 'वायरल समयरेखा',
+        'analyze_content': 'सामग्री का विश्लेषण करें',
+        'refresh_data': 'डेटा रीफ्रेश करें',
+        'export_report': 'रिपोर्ट निर्यात करें',
+        'help_documentation': 'सहायता और दस्तावेज़ीकरण',
+        'active_clusters': 'सक्रिय क्लस्टर',
+        'evidence_packages': 'साक्ष्य पैकेज',
+        'high_priority': 'उच्च प्राथमिकता मामले',
+        'officers_active': 'सक्रिय अधिकारी',
+        'system_operational': 'सिस्टम स्थिति: परिचालन',
+        'valid_warrant_active': 'वैध वारंट सक्रिय',
+        'legal_framework': 'कानूनी ढांचा',
+        'security_classification': 'सुरक्षा वर्गीकरण',
+        'restricted_official_use': 'प्रतिबंधित - केवल आधिकारिक उपयोग',
+        'all_systems_operational': 'सभी सिस्टम परिचालन',
+        'encryption_active': 'एंड-टू-एंड एन्क्रिप्शन सक्रिय',
+        'it_act_compliant': 'आईटी अधिनियम 2000 अनुपालन',
+        'evidence_act_compliant': 'साक्ष्य अधिनियम 1872 अनुपालन',
+        'platforms_active': 'प्लेटफॉर्म सक्रिय',
+        'languages_supported': 'भाषाएं समर्थित'
+    }
+}
+
+# Initialize session state for language
+if 'language' not in st.session_state:
+    st.session_state.language = 'en'
+
+def get_text(key):
+    """Get translated text based on current language"""
+    return TRANSLATIONS.get(st.session_state.language, TRANSLATIONS['en']).get(key, key)
+
+# Custom CSS for Indian Government Theme
+def load_government_css():
+    st.markdown("""
+    <style>
+    /* Indian Government Color Scheme */
+    :root {
+        --saffron: #FF9933;
+        --white: #FFFFFF;
+        --green: #138808;
+        --navy: #000080;
+        --ashoka-blue: #6666CC;
+    }
+    
+    /* Main container styling */
+    .main .block-container {
+        padding-top: 2rem;
+        background: linear-gradient(135deg, #FF9933 0%, #FFFFFF 50%, #138808 100%);
+        background-size: 400% 400%;
+        animation: gradient 15s ease infinite;
+    }
+    
+    @keyframes gradient {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+    
+    /* Header styling */
+    .government-header {
+        background: linear-gradient(90deg, #FF9933, #FFFFFF, #138808);
+        padding: 1rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        text-align: center;
+    }
+    
+    .government-title {
+        color: #000080;
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin: 0;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    .government-subtitle {
+        color: #000080;
+        font-size: 1.2rem;
+        margin: 0.5rem 0;
+        font-weight: 600;
+    }
+    
+    /* Sidebar styling */
+    .css-1d391kg {
+        background: linear-gradient(180deg, #FF9933 0%, #FFFFFF 50%, #138808 100%);
+    }
+    
+    /* Metric cards styling */
+    .metric-card {
+        background: white;
+        padding: 1rem;
+        border-radius: 8px;
+        border-left: 4px solid #FF9933;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin: 0.5rem 0;
+    }
+    
+    /* Button styling */
+    .stButton > button {
+        background: linear-gradient(45deg, #FF9933, #138808);
+        color: white;
+        border: none;
+        border-radius: 5px;
+        font-weight: bold;
+        transition: all 0.3s ease;
+    }
+    
+    .stButton > button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    
+    /* Tab styling */
+    .stTabs [data-baseweb="tab-list"] {
+        background: linear-gradient(90deg, #FF9933, #138808);
+        border-radius: 10px;
+    }
+    
+    .stTabs [data-baseweb="tab"] {
+        color: white;
+        font-weight: bold;
+    }
+    
+    /* Alert styling */
+    .stAlert {
+        border-radius: 8px;
+        border-left: 4px solid #138808;
+    }
+    
+    /* Footer styling */
+    .government-footer {
+        background: #000080;
+        color: white;
+        padding: 1rem;
+        border-radius: 10px;
+        margin-top: 2rem;
+        text-align: center;
+    }
+    
+    /* Remove emoji from titles */
+    .no-emoji {
+        font-family: 'Arial', sans-serif;
+    }
+    
+    /* Professional table styling */
+    .dataframe {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    
+    .dataframe th {
+        background: #FF9933;
+        color: white;
+        font-weight: bold;
+    }
+    
+    /* Language selector styling */
+    .language-selector {
+        position: fixed;
+        top: 10px;
+        right: 10px;
+        z-index: 999;
+        background: white;
+        padding: 0.5rem;
+        border-radius: 5px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
 # Initialize all services
 services = initialize_services()
@@ -275,19 +494,35 @@ else:
 
 # Sidebar for language selection
 with st.sidebar:
-    st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/4/41/Flag_of_India.svg/320px-Flag_of_India.svg.png", width=100)
+    st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/Emblem_of_India.svg/200px-Emblem_of_India.svg.png", width=100)
     
-    selected_language = st.selectbox(
-        "🌐 Select Language / भाषा चुनें",
-        options=list(language_options.keys()),
-        format_func=lambda x: language_options[x],
-        index=0 if 'en' in language_options else 0
+    # Simple language options for sidebar
+    sidebar_language_options = {"English": "en", "हिन्दी": "hi"}
+    
+    # Find current language display name
+    current_display = "English"
+    for display, code in sidebar_language_options.items():
+        if code == st.session_state.language:
+            current_display = display
+            break
+    
+    selected_language_display = st.selectbox(
+        "Select Language / भाषा चुनें",
+        options=list(sidebar_language_options.keys()),
+        index=list(sidebar_language_options.keys()).index(current_display),
+        key="sidebar_language_selector"
     )
+    
+    # Update session state when language changes
+    selected_language_code = sidebar_language_options[selected_language_display]
+    if selected_language_code != st.session_state.language:
+        st.session_state.language = selected_language_code
+        st.rerun()
     
     st.markdown("---")
     
     # Platform selection
-    st.subheader("🌍 Platform Selection")
+    st.subheader(get_text('platform_selection'))
     
     # Get platform options
     all_platforms = platform_support.get_supported_platforms()
@@ -340,7 +575,7 @@ with st.sidebar:
     st.markdown("---")
     
     # Legal authorization status
-    st.subheader("⚖️ Legal Authorization")
+    st.subheader(get_text('legal_authorization'))
     
     # Mock authorization for demo
     auth_status = st.selectbox(
@@ -350,11 +585,11 @@ with st.sidebar:
     )
     
     if auth_status != "No Authorization":
-        st.success(f"✅ {auth_status} Active")
-        case_number = st.text_input("Case Number", value="FIR_001_2025_CYBER_CELL")
-        authorized_officer = st.text_input("Authorized Officer", value="Inspector_Sharma")
+        st.success(f"{get_text('valid_warrant_active')}")
+        case_number = st.text_input(get_text('case_number'), value="FIR_001_2025_CYBER_CELL")
+        authorized_officer = st.text_input(get_text('authorized_officer'), value="Inspector_Sharma")
     else:
-        st.error("❌ No valid authorization")
+        st.error("No valid authorization")
         case_number = ""
         authorized_officer = ""
 
@@ -374,27 +609,34 @@ def get_translation(key: str) -> str:
         logger.warning(f"Translation error for key '{key}': {e}")
         # Fallback translations
         fallback_translations = {
-            "dashboard_title": "InsideOut - Enhanced Viral Content Analysis Platform",
-            "government_text": "Government of India - Ministry of Home Affairs",
+            "dashboard_title": "Government of India - Cyber Crime Analysis Platform",
+            "government_text": "Ministry of Home Affairs - Cyber Crime Investigation Division",
             "active_clusters": "Active Clusters",
             "evidence_packages": "Evidence Packages", 
-            "high_priority": "High Priority",
+            "high_priority": "High Priority Cases",
             "officers_active": "Officers Active",
-            "viral_timeline": "🔥 Viral Timeline",
-            "influence_network": "🕸️ Influence Network",
-            "geographic_spread": "🗺️ Geographic Spread",
-            "evidence_collection": "📋 Evidence Collection",
+            "viral_timeline": "Viral Timeline",
+            "influence_network": "Influence Network",
+            "geographic_spread": "Geographic Spread",
+            "evidence_collection": "Evidence Collection",
             "time_range": "Time Range",
             "platform_filter": "Platform Filter",
             "collect_evidence": "Collect Evidence"
         }
         return fallback_translations.get(key, key)
 
-# Header
-col1, col2, col3 = st.columns([1, 2, 1])
-with col2:
-    st.title(get_translation("dashboard_title"))
-    st.markdown(f"**{get_translation('government_text')}**")
+# Load government CSS
+load_government_css()
+
+# Language selector removed from top right - now only in sidebar
+
+# Government Header
+st.markdown(f"""
+<div class="government-header">
+    <h1 class="government-title">{get_text('title')}</h1>
+    <p class="government-subtitle">{get_text('subtitle')}</p>
+</div>
+""", unsafe_allow_html=True)
 
 # Key metrics
 col1, col2, col3, col4 = st.columns(4)
@@ -429,12 +671,12 @@ with col4:
 
 # Main content tabs
 tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
-    get_translation("viral_timeline"),
-    "🧠 Comprehensive Analysis", 
-    "🎭 Sentiment & Behavior",
-    get_translation("influence_network"),
-    get_translation("geographic_spread"),
-    get_translation("evidence_collection")
+    get_text("viral_timeline"),
+    get_text("comprehensive_analysis"), 
+    get_text("sentiment_behavior"),
+    get_text("influence_network"),
+    get_text("geographic_spread"),
+    get_text("evidence_collection")
 ])
 
 # Generate mock data for demonstration
@@ -468,8 +710,19 @@ def generate_mock_viral_data():
         })
         
         # Detect language
-        detected_languages = language_support.detect_language(content)
-        primary_language = detected_languages[0][0] if detected_languages else "en"
+        try:
+            detected_languages = language_support.detect_language(content)
+            if detected_languages and len(detected_languages) > 0:
+                if isinstance(detected_languages[0], (list, tuple)) and len(detected_languages[0]) > 0:
+                    primary_language = detected_languages[0][0]
+                elif isinstance(detected_languages[0], str):
+                    primary_language = detected_languages[0]
+                else:
+                    primary_language = "en"
+            else:
+                primary_language = "en"
+        except Exception:
+            primary_language = "en"
         
         data.append({
             "id": f"post_{i}",
@@ -541,10 +794,10 @@ with tab1:
 
 # Tab 2: Comprehensive Analysis
 with tab2:
-    st.subheader("🧠 Comprehensive Content Analysis")
+    st.subheader(get_text("comprehensive_analysis") + " - Content Analysis")
     
     # Content input for analysis
-    st.markdown("### Analyze Content")
+    st.markdown("### " + get_text("analyze_content"))
     
     col1, col2 = st.columns([2, 1])
     
@@ -561,7 +814,7 @@ with tab2:
         verified = st.checkbox("Verified Account", value=False)
         account_age = st.number_input("Account Age (days)", value=365, min_value=0)
     
-    if st.button("🔍 Analyze Content", type="primary"):
+    if st.button(get_text("analyze_content"), type="primary"):
         if analysis_text.strip():
             user_metadata = {
                 'followers': followers,
@@ -671,7 +924,7 @@ with tab2:
 
 # Tab 3: Sentiment & Behavior Analysis
 with tab3:
-    st.subheader("🎭 Sentiment & Behavior Analysis Dashboard")
+    st.subheader(get_text("sentiment_behavior") + " Analysis Dashboard")
     
     # Batch analysis
     st.markdown("### Batch Content Analysis")
@@ -685,7 +938,7 @@ with tab3:
         "As a concerned citizen, I believe we need to take action immediately."
     ]
     
-    if st.button("🔄 Analyze Sample Content Batch"):
+    if st.button("Analyze Sample Content Batch"):
         with st.spinner("Analyzing batch content..."):
             batch_results = []
             for content in sample_contents:
@@ -705,7 +958,7 @@ with tab3:
                 'Positive': f"{sentiment.get('positive', 0):.2%}",
                 'Negative': f"{sentiment.get('negative', 0):.2%}",
                 'Neutral': f"{sentiment.get('neutral', 0):.2%}",
-                'Influence Score': f"{analysis.get('influence_score', 0):.2f}",
+                'Influence Score': f"{(analysis.get('influence_score', {}).get('score', 0) if isinstance(analysis.get('influence_score', 0), dict) else analysis.get('influence_score', 0)):.2f}",
                 'Patterns Detected': len(patterns)
             })
         
@@ -717,28 +970,54 @@ with tab3:
         
         with col1:
             # Average sentiment distribution
-            avg_sentiment = {
-                'positive': np.mean([r['analysis']['sentiment']['positive'] for r in batch_results]),
-                'negative': np.mean([r['analysis']['sentiment']['negative'] for r in batch_results]),
-                'neutral': np.mean([r['analysis']['sentiment']['neutral'] for r in batch_results])
-            }
-            fig_avg_sentiment = create_sentiment_visualization(avg_sentiment)
-            fig_avg_sentiment.update_layout(title="Average Sentiment Distribution")
-            st.plotly_chart(fig_avg_sentiment, use_container_width=True)
+            try:
+                sentiments = []
+                for r in batch_results:
+                    if 'analysis' in r and 'sentiment' in r['analysis']:
+                        sentiment = r['analysis']['sentiment']
+                        if isinstance(sentiment, dict) and 'positive' in sentiment:
+                            sentiments.append(sentiment)
+                
+                if sentiments:
+                    avg_sentiment = {
+                        'positive': np.mean([s['positive'] for s in sentiments]),
+                        'negative': np.mean([s['negative'] for s in sentiments]),
+                        'neutral': np.mean([s['neutral'] for s in sentiments])
+                    }
+                else:
+                    avg_sentiment = {'positive': 0.33, 'negative': 0.33, 'neutral': 0.34}
+                
+                fig_avg_sentiment = create_sentiment_visualization(avg_sentiment)
+                fig_avg_sentiment.update_layout(title="Average Sentiment Distribution")
+                st.plotly_chart(fig_avg_sentiment, use_container_width=True)
+            except Exception as e:
+                st.error(f"Error creating sentiment visualization: {e}")
+                st.info("Using default sentiment values for visualization")
         
         with col2:
             # Viral potential distribution
-            viral_potentials = [r['analysis']['viral_potential'] for r in batch_results]
-            fig_viral_dist = go.Figure(data=[
-                go.Histogram(x=viral_potentials, nbinsx=10, marker_color='#FF6B6B')
-            ])
-            fig_viral_dist.update_layout(
-                title="Viral Potential Distribution",
-                xaxis_title="Viral Potential",
-                yaxis_title="Count",
-                height=300
-            )
-            st.plotly_chart(fig_viral_dist, use_container_width=True)
+            try:
+                viral_potentials = []
+                for r in batch_results:
+                    if 'analysis' in r and 'viral_potential' in r['analysis']:
+                        viral_potentials.append(r['analysis']['viral_potential'])
+                
+                if not viral_potentials:
+                    viral_potentials = [0.5] * len(batch_results)  # Default values
+                
+                fig_viral_dist = go.Figure(data=[
+                    go.Histogram(x=viral_potentials, nbinsx=10, marker_color='#FF6B6B')
+                ])
+                fig_viral_dist.update_layout(
+                    title="Viral Potential Distribution",
+                    xaxis_title="Viral Potential",
+                    yaxis_title="Count",
+                    height=300
+                )
+                st.plotly_chart(fig_viral_dist, use_container_width=True)
+            except Exception as e:
+                st.error(f"Error creating viral potential visualization: {e}")
+                st.info("Using default viral potential values for visualization")
 
 # Tab 4: Influence Network
 with tab4:
@@ -880,17 +1159,17 @@ with tab5:
     st.subheader(get_translation("evidence_collection"))
     
     if auth_status == "No Authorization":
-        st.error("⚠️ Legal authorization required for evidence collection")
+        st.error("Legal authorization required for evidence collection")
         st.info("Please obtain proper legal authorization (warrant, court order, etc.) before collecting digital evidence.")
     else:
-        st.success(f"✅ Operating under: {auth_status}")
+        st.success(f"Operating under: {auth_status}")
         st.info(f"Case Number: {case_number} | Officer: {authorized_officer}")
         
         # Evidence collection interface
         col1, col2 = st.columns([2, 1])
         
         with col1:
-            st.subheader("📋 Evidence Collection Queue")
+            st.subheader(get_text("evidence_collection") + " Queue")
             
             # Filter high-priority content for evidence collection
             evidence_candidates = viral_data[
@@ -899,7 +1178,7 @@ with tab5:
             ].head(10)
             
             for idx, row in evidence_candidates.iterrows():
-                with st.expander(f"🔍 {row['platform'].upper()} - Priority Evidence"):
+                with st.expander(f"{row['platform'].upper()} - Priority Evidence"):
                     st.write(f"**Content:** {row['content']}")
                     st.write(f"**Viral Score:** {row['viral_score']:.2f}")
                     st.write(f"**Engagement:** {row['engagement']:,}")
@@ -908,7 +1187,7 @@ with tab5:
                     col_a, col_b, col_c = st.columns(3)
                     
                     with col_a:
-                        if st.button(f"🔒 Collect Evidence", key=f"evidence_{idx}"):
+                        if st.button(get_text("collect_evidence"), key=f"evidence_{idx}"):
                             # Simulate evidence collection with legal framework
                             try:
                                 # Create mock authorization
@@ -942,7 +1221,7 @@ with tab5:
                                     )
                                     
                                     if evidence:
-                                        st.success(f"✅ Evidence collected successfully!")
+                                        st.success("Evidence collected successfully!")
                                         st.json({
                                             "evidence_id": evidence.evidence_id,
                                             "collection_time": evidence.collection_timestamp.isoformat(),
@@ -950,25 +1229,25 @@ with tab5:
                                             "section_65b_compliant": bool(evidence.section_65b_certificate)
                                         })
                                     else:
-                                        st.error("❌ Evidence collection failed")
+                                        st.error("Evidence collection failed")
                                 else:
-                                    st.error("❌ Authorization creation failed")
+                                    st.error("Authorization creation failed")
                                     
                             except Exception as e:
-                                st.error(f"❌ Error: {str(e)}")
+                                st.error(f"Error: {str(e)}")
                     
                     with col_b:
-                        if st.button(f"📊 Analyze", key=f"analyze_{idx}"):
+                        if st.button("Analyze", key=f"analyze_{idx}"):
                             # Show detailed analysis
                             analysis = language_support.analyze_multilingual_content(row['content'])
                             st.json(analysis)
                     
                     with col_c:
-                        if st.button(f"🚨 Flag Priority", key=f"flag_{idx}"):
-                            st.warning("⚠️ Flagged for immediate attention")
+                        if st.button("Flag Priority", key=f"flag_{idx}"):
+                            st.warning("Flagged for immediate attention")
         
         with col2:
-            st.subheader("📈 Evidence Statistics")
+            st.subheader("Evidence Statistics")
             
             # Mock evidence statistics
             st.metric("Total Evidence Items", "156", "↑ 12")
@@ -978,14 +1257,14 @@ with tab5:
             
             st.markdown("---")
             
-            st.subheader("⚖️ Legal Compliance Status")
+            st.subheader(get_text("legal_framework") + " Status")
             
             compliance_data = {
-                "IT Act 2000": "✅ Compliant",
-                "CrPC 1973": "✅ Compliant", 
-                "Evidence Act 1872": "✅ Compliant",
-                "Digital Signatures": "✅ Verified",
-                "Chain of Custody": "✅ Maintained"
+                "IT Act 2000": "Compliant",
+                "CrPC 1973": "Compliant", 
+                "Evidence Act 1872": "Compliant",
+                "Digital Signatures": "Verified",
+                "Chain of Custody": "Maintained"
             }
             
             for law, status in compliance_data.items():
@@ -994,53 +1273,58 @@ with tab5:
 # End of dashboard
 
 # Footer
-st.markdown("---")
-col1, col2, col3 = st.columns(3)
-
-with col1:
-    st.markdown("**🏛️ Government of India**")
-    st.markdown("Ministry of Home Affairs")
-
-with col2:
-    st.markdown("**⚖️ Legal Framework**")
-    st.markdown("IT Act 2000 | CrPC 1973 | Evidence Act 1872")
-
-with col3:
-    st.markdown("**🔒 Security Classification**")
-    st.markdown("RESTRICTED - For Official Use Only")
+# Government Footer
+st.markdown(f"""
+<div class="government-footer">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h4>{get_text('title')}</h4>
+            <p>{get_text('subtitle')}</p>
+        </div>
+        <div>
+            <p><strong>{get_text('legal_framework')}</strong></p>
+            <p>IT Act 2000 | CrPC 1973 | Evidence Act 1872</p>
+        </div>
+        <div>
+            <p><strong>{get_text('security_classification')}</strong></p>
+            <p>{get_text('restricted_official_use')}</p>
+        </div>
+    </div>
+</div>
+""", unsafe_allow_html=True)
 
 # Status indicator
 if auth_status != "No Authorization":
-    st.success(f"🟢 System Status: OPERATIONAL | Authorization: {auth_status} | Case: {case_number}")
+    st.success(f"{get_text('system_operational')} | Authorization: {auth_status} | Case: {case_number}")
 else:
-    st.error("🔴 System Status: UNAUTHORIZED ACCESS - Legal authorization required")
+    st.error("System Status: UNAUTHORIZED ACCESS - Legal authorization required")
 
 # Footer
 st.markdown("---")
 col1, col2, col3 = st.columns(3)
 
 with col1:
-    st.markdown("**🔒 Security Status**")
-    st.success("✅ All systems operational")
-    st.info("🔐 End-to-end encryption active")
+    st.markdown("**Security Status**")
+    st.success(get_text('all_systems_operational'))
+    st.info(get_text('encryption_active'))
 
 with col2:
-    st.markdown("**⚖️ Legal Compliance**")
-    st.success("✅ IT Act 2000 compliant")
-    st.success("✅ Evidence Act 1872 compliant")
+    st.markdown("**Legal Compliance**")
+    st.success(get_text('it_act_compliant'))
+    st.success(get_text('evidence_act_compliant'))
 
 with col3:
-    st.markdown("**🌐 Platform Coverage**")
-    st.info(f"📱 {len(selected_platforms)} platforms active")
-    st.info(f"🗣️ {len(languages)} languages supported")
+    st.markdown("**Platform Coverage**")
+    st.info(f"{len(selected_platforms)} " + get_text('platforms_active'))
+    st.info(f"{len(languages)} " + get_text('languages_supported'))
 
 # Real-time updates simulation
-if st.sidebar.button("🔄 Refresh Data"):
+if st.sidebar.button(get_text('refresh_data')):
     st.cache_data.clear()
     st.rerun()
 
 # Export functionality
-if st.sidebar.button("📊 Export Report"):
+if st.sidebar.button(get_text('export_report')):
     # Generate comprehensive report
     report_data = {
         "timestamp": datetime.now().isoformat(),
@@ -1062,37 +1346,37 @@ if st.sidebar.button("📊 Export Report"):
     )
 
 # Help section
-with st.sidebar.expander("❓ Help & Documentation"):
-    st.markdown("""
-    **InsideOut Platform Features:**
+with st.sidebar.expander(get_text("help_documentation")):
+    st.markdown(f"""
+    **{get_text('title')} Features:**
     
-    🔍 **Viral Content Analysis**
+    **{get_text('viral_timeline')}**
     - Real-time monitoring across platforms
     - AI-powered viral prediction
     - Multi-language content support
     
-    ⚖️ **Legal Compliance**
+    **{get_text('legal_framework')}**
     - IT Act 2000 compliance
     - Evidence Act 1872 compliance
     - Chain of custody maintenance
     - Digital evidence collection
     
-    🌐 **Global Platform Support**
+    **Global Platform Support**
     - 8+ major social media platforms
     - Indian regional platforms (Koo, ShareChat)
     - Cross-platform analysis
     
-    🗣️ **Multi-language Support**
+    **Multi-language Support**
     - 5+ Indian languages
     - Automatic language detection
     - Localized user interface
     
-    📊 **Analytics & Reporting**
+    **Analytics & Reporting**
     - Influence network analysis
     - Geographic spread tracking
     - Evidence collection reports
     """)
 
 if __name__ == "__main__":
-    st.sidebar.success("✅ Enhanced InsideOut Platform Active")
-    st.sidebar.info(f"🕒 Last updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    st.sidebar.success(get_text('platform_active'))
+    st.sidebar.info(f"Last updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
