@@ -1,0 +1,63 @@
+# Docker Compose Override for Local Development
+# This file is automatically loaded by docker-compose and provides
+# development-specific overrides to the main docker-compose.dev.yml
+
+version: '3.8'
+
+services:
+  # Override for Streamlit Dashboard with development settings
+  streamlit-dashboard:
+    environment:
+      - STREAMLIT_SERVER_RUN_ON_SAVE=true
+      - STREAMLIT_SERVER_ALLOW_RUN_ON_SAVE=true
+      - STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
+      - STREAMLIT_GLOBAL_DEVELOPMENT_MODE=true
+    volumes:
+      # Mount source code for hot reload
+      - ./enhanced_viral_dashboard.py:/app/enhanced_viral_dashboard.py
+      - ./services:/app/services
+    command: ["streamlit", "run", "enhanced_viral_dashboard.py", 
+              "--server.port=8501", 
+              "--server.address=0.0.0.0", 
+              "--server.enableCORS=true", 
+              "--server.enableXsrfProtection=false",
+              "--browser.gatherUsageStats=false",
+              "--server.runOnSave=true",
+              "--server.allowRunOnSave=true"]
+
+  # Development overrides for NLP Service
+  nlp-service:
+    environment:
+      - PYTHONPATH=/app
+      - RELOAD=true
+    volumes:
+      - ./services/nlp:/app
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+
+  # Development overrides for Backend Service
+  backend-service:
+    environment:
+      - SPRING_PROFILES_ACTIVE=development
+      - SPRING_DEVTOOLS_RESTART_ENABLED=true
+    volumes:
+      - ./services/backend:/app
+
+  # Development database with exposed ports
+  postgres:
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_LOG_STATEMENT=all  # Log all SQL statements for debugging
+
+  # Development Redis with exposed port
+  redis:
+    ports:
+      - "6379:6379"
+
+  # Development Elasticsearch with exposed ports
+  elasticsearch:
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"  # Reduced memory for development
