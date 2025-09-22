@@ -26,34 +26,291 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for Indian Government theme
+# Custom CSS for Indian Government Police Dashboard
 st.markdown("""
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap');
+    
+    /* Global App Styling - Clean White Background */
+    .stApp {
+        background-color: #ffffff !important;
+        font-family: 'Roboto', sans-serif !important;
+    }
+    
+    /* Main content container */
+    .main .block-container {
+        background-color: #ffffff !important;
+        padding: 1rem !important;
+        max-width: 1400px !important;
+    }
+    
+    /* Sidebar styling - Government Blue */
+    .css-1d391kg, .css-1cypcdb, .css-17eq0hr {
+        background-color: #1e3a8a !important;
+        color: white !important;
+    }
+    
+    .css-1d391kg .stSelectbox label, 
+    .css-1d391kg .stTextInput label,
+    .css-1d391kg h3 {
+        color: white !important;
+        font-weight: 500 !important;
+    }
+    
+    /* Header styling - Indian Tricolor */
     .main-header {
         background: linear-gradient(90deg, #FF6600 0%, #FFFFFF 50%, #138808 100%);
-        padding: 1rem;
-        border-radius: 10px;
-        margin-bottom: 2rem;
-        text-align: center;
-    }
-    .metric-card {
-        background: white;
-        padding: 1rem;
+        padding: 1.5rem;
         border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        border-left: 4px solid #FF6600;
+        margin-bottom: 1.5rem;
+        text-align: center;
+        border: 2px solid #ddd;
     }
+    
+    .main-header h1 {
+        color: #1f2937 !important;
+        font-weight: 700 !important;
+        font-size: 2.2rem !important;
+        margin-bottom: 0.5rem !important;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+    }
+    
+    .main-header p {
+        color: #374151 !important;
+        font-weight: 600 !important;
+        font-size: 1rem !important;
+    }
+    
+    /* Metric cards styling - Clean White Cards */
+    .metric-card {
+        background-color: #ffffff !important;
+        padding: 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        border-left: 4px solid #1e3a8a;
+        margin-bottom: 1rem;
+    }
+    
+    .metric-card:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    /* Priority colors */
     .priority-high {
-        border-left-color: #FF4444 !important;
+        border-left-color: #dc2626 !important;
+        background-color: #fef2f2 !important;
     }
+    
     .priority-medium {
-        border-left-color: #FFAA00 !important;
+        border-left-color: #d97706 !important;
+        background-color: #fffbeb !important;
     }
+    
     .priority-low {
-        border-left-color: #44AA44 !important;
+        border-left-color: #059669 !important;
+        background-color: #f0fdf4 !important;
     }
-    .stSelectbox > div > div {
-        background-color: #f8f9fa;
+    
+    /* Tab styling - Government Blue Theme */
+    .stTabs [data-baseweb="tab-list"] {
+        background-color: #1e3a8a !important;
+        border-radius: 8px !important;
+        padding: 0.5rem !important;
+        margin-bottom: 1.5rem !important;
+    }
+    
+    .stTabs [data-baseweb="tab"] {
+        background-color: transparent !important;
+        color: white !important;
+        border-radius: 6px !important;
+        font-weight: 500 !important;
+        padding: 0.75rem 1.5rem !important;
+        margin: 0.25rem !important;
+    }
+    
+    .stTabs [data-baseweb="tab"]:hover {
+        background-color: rgba(255,255,255,0.1) !important;
+    }
+    
+    .stTabs [data-baseweb="tab"][aria-selected="true"] {
+        background-color: #ffffff !important;
+        color: #1e3a8a !important;
+        font-weight: 600 !important;
+    }
+    
+    /* Tab content panels - Clean White */
+    .stTabs [data-baseweb="tab-panel"] {
+        background-color: #ffffff !important;
+        border-radius: 8px !important;
+        padding: 1.5rem !important;
+        border: 1px solid #e5e7eb !important;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+    }
+    
+    /* Form controls - Clean styling */
+    .stSelectbox > div > div, .stTextInput > div > div > input {
+        background-color: #ffffff !important;
+        border: 2px solid #d1d5db !important;
+        border-radius: 6px !important;
+        color: #374151 !important;
+        font-weight: 400 !important;
+    }
+    
+    .stSelectbox > div > div:focus, .stTextInput > div > div > input:focus {
+        border-color: #1e3a8a !important;
+        box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1) !important;
+    }
+    
+    /* Buttons - Government Blue */
+    .stButton > button {
+        background-color: #1e3a8a !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 6px !important;
+        padding: 0.75rem 1.5rem !important;
+        font-weight: 600 !important;
+        transition: all 0.2s ease !important;
+    }
+    
+    .stButton > button:hover {
+        background-color: #1e40af !important;
+        transform: translateY(-1px) !important;
+    }
+    
+    /* Data tables - Clean white background */
+    .stDataFrame {
+        background-color: #ffffff !important;
+        border-radius: 8px !important;
+        overflow: hidden !important;
+        border: 1px solid #e5e7eb !important;
+    }
+    
+    /* Plotly charts - Clean styling */
+    .js-plotly-plot {
+        background-color: #ffffff !important;
+        border-radius: 8px !important;
+        border: 1px solid #e5e7eb !important;
+    }
+    
+    /* Text styling for better readability */
+    h1, h2, h3, h4, h5, h6 {
+        color: #1f2937 !important;
+        font-weight: 600 !important;
+    }
+    
+    p, span, div {
+        color: #374151 !important;
+    }
+    
+    /* Metrics text styling */
+    .metric-value {
+        font-size: 2.5rem !important;
+        font-weight: 700 !important;
+        color: #1f2937 !important;
+        line-height: 1 !important;
+    }
+    
+    .metric-label {
+        font-size: 0.875rem !important;
+        font-weight: 600 !important;
+        color: #6b7280 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.05em !important;
+    }
+    
+    .metric-delta {
+        font-size: 0.875rem !important;
+        font-weight: 500 !important;
+        margin-top: 0.5rem !important;
+    }
+    
+    /* Content cards styling */
+    .content-card {
+        background-color: #ffffff !important;
+        border: 1px solid #e5e7eb !important;
+        border-radius: 8px !important;
+        padding: 1.5rem !important;
+        margin-bottom: 1rem !important;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+    }
+    
+    .content-card h3 {
+        color: #1f2937 !important;
+        font-weight: 600 !important;
+        margin-bottom: 1rem !important;
+    }
+    
+    .content-card p {
+        color: #4b5563 !important;
+        line-height: 1.5 !important;
+    }
+    
+    /* Footer - Government styling */
+    .footer {
+        background-color: #1e3a8a !important;
+        color: white !important;
+        padding: 2rem !important;
+        border-radius: 8px !important;
+        margin-top: 2rem !important;
+        text-align: center !important;
+    }
+    
+    .footer h3 {
+        color: white !important;
+        margin-bottom: 1rem !important;
+    }
+    
+    .footer p {
+        color: rgba(255,255,255,0.9) !important;
+    }
+    
+    /* Alert styling */
+    .stAlert {
+        border-radius: 8px !important;
+    }
+    
+    /* Success messages */
+    .stSuccess {
+        background-color: #f0fdf4 !important;
+        border: 1px solid #bbf7d0 !important;
+        color: #166534 !important;
+    }
+    
+    /* Info messages */
+    .stInfo {
+        background-color: #eff6ff !important;
+        border: 1px solid #bfdbfe !important;
+        color: #1e40af !important;
+    }
+    
+    /* Warning messages */
+    .stWarning {
+        background-color: #fffbeb !important;
+        border: 1px solid #fed7aa !important;
+        color: #92400e !important;
+    }
+    
+    /* Error messages */
+    .stError {
+        background-color: #fef2f2 !important;
+        border: 1px solid #fecaca !important;
+        color: #991b1b !important;
+    }
+    
+    /* Responsive design */
+    @media (max-width: 768px) {
+        .main .block-container {
+            padding: 0.5rem !important;
+        }
+        
+        .main-header h1 {
+            font-size: 1.8rem !important;
+        }
+        
+        .metric-card {
+            padding: 1rem !important;
+        }
     }
 </style>
 """, unsafe_allow_html=True)
@@ -396,8 +653,7 @@ def main():
         ))
         
         fig.update_layout(
-            title="Influence Network Graph",
-            titlefont_size=16,
+            title=dict(text="Influence Network Graph", font=dict(size=16)),
             showlegend=False,
             hovermode='closest',
             margin=dict(b=20,l=5,r=5,t=40),
@@ -542,11 +798,16 @@ def main():
                 st.info("🔗 Blockchain hash: 0x1a2b3c4d5e6f7890abcdef...")
     
     # Footer
-    st.markdown("---")
     st.markdown("""
-    <div style="text-align: center; color: #666; padding: 1rem;">
-        <p>InsideOut Platform v1.0 | Developed for Indian Law Enforcement</p>
-        <p>🔒 Secure • 🌐 Multi-lingual • ⚖️ Legally Compliant</p>
+    <div class="footer">
+        <h3 style="margin-bottom: 1rem; color: white;">InsideOut Platform v1.0</h3>
+        <p style="margin-bottom: 0.5rem; color: rgba(255,255,255,0.9);">Developed for Indian Law Enforcement Agencies</p>
+        <p style="color: rgba(255,255,255,0.8); font-size: 0.9rem;">🔒 Secure • 🌐 Multi-lingual • ⚖️ Legally Compliant • 🛡️ Government Certified</p>
+        <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.2);">
+            <p style="color: rgba(255,255,255,0.7); font-size: 0.8rem;">
+                Ministry of Home Affairs | भारत सरकार | Government of India
+            </p>
+        </div>
     </div>
     """, unsafe_allow_html=True)
 

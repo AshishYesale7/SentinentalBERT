@@ -1,4 +1,5 @@
 import axios from 'axios';
+import authService from './auth';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 
@@ -8,6 +9,30 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+// Add request interceptor to include auth token
+api.interceptors.request.use(async (config) => {
+  const token = await authService.getValidToken();
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+}, (error) => {
+  return Promise.reject(error);
+});
+
+// Add response interceptor to handle auth errors
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Clear invalid token
+      authService.clearToken();
+      console.error('Authentication failed. Please refresh the page.');
+    }
+    return Promise.reject(error);
+  }
+);
 
 export interface SentimentResult {
   positive: number;
