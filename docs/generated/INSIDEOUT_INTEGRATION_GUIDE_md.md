@@ -1,15 +1,15 @@
-# .env.example
+# INSIDEOUT_INTEGRATION_GUIDE.md
 
-> **File Type**: unknown | **Path**: `.env.example` | **Lines**: 373
+> **File Type**: markdown | **Path**: `INSIDEOUT_INTEGRATION_GUIDE.md` | **Lines**: 257
 
 ## 📋 Overview
 
-This unknown file is a core component of the **SentinelBERT** multi-platform sentiment analysis system, designed specifically for law enforcement and security applications.
+This markdown file is a core component of the **SentinelBERT** multi-platform sentiment analysis system, designed specifically for law enforcement and security applications.
 
 ## 🎯 Purpose & Functionality
 
 ### Primary Functions
-- **Data Processing**: Handles unknown-specific operations within the SentinelBERT ecosystem
+- **Data Processing**: Handles markdown-specific operations within the SentinelBERT ecosystem
 - **Integration**: Seamlessly connects with other system components
 - **Performance**: Optimized for high-throughput social media analysis
 - **Security**: Implements privacy-compliant data handling procedures
@@ -24,7 +24,7 @@ This unknown file is a core component of the **SentinelBERT** multi-platform sen
 
 ```mermaid
 graph TD
-    A[Social Media APIs] --> B[.env.example]
+    A[Social Media APIs] --> B[INSIDEOUT_INTEGRATION_GUIDE.md]
     B --> C[Data Processing Pipeline]
     C --> D[BERT Sentiment Analysis]
     D --> E[Dashboard & Alerts]
@@ -32,23 +32,26 @@ graph TD
 
 ### Component Relationships
 - **Upstream**: Receives data from social media API connectors
-- **Processing**: Applies unknown-specific transformations and validations
+- **Processing**: Applies markdown-specific transformations and validations
 - **Downstream**: Feeds processed data to ML/NLP analysis pipeline
 - **Monitoring**: Integrates with system health and performance metrics
 
 ## 🔧 Technical Implementation
 
 ### Code Structure
-```unknown
-# =============================================================================
-# InsideOut Platform Environment Configuration Template
-# =============================================================================
-# 
-# This file contains all environment variables needed to run the InsideOut platform.
-# Copy this file to .env and fill in your actual values.
-# 
-# SECURITY WARNING: Never commit the actual .env file to version control!
-# The .env file contains sensitive information like API keys a...
+```markdown
+# InsideOut Secure Platform Integration Guide
+
+## Overview
+The `INSIDEOUT_SECURE_SKELETON/` directory contains a complete, production-ready secure platform for law enforcement social media analysis. This guide explains how it integrates with and enhances the existing SentinentalBERT project.
+
+## 🏗️ Integration Architecture
+
+### Directory Structure Integration
+```
+SentinentalBERT/
+├── services/                    # Existing services (being secured)
+│   ├── nlp/                    # ✅ SECURED with...
 ```
 
 ### Configuration

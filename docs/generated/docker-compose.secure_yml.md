@@ -1,15 +1,15 @@
-# .env.example
+# docker-compose.secure.yml
 
-> **File Type**: unknown | **Path**: `.env.example` | **Lines**: 373
+> **File Type**: yaml | **Path**: `INSIDEOUT_SECURE_SKELETON/docker-compose.secure.yml` | **Lines**: 611
 
 ## 📋 Overview
 
-This unknown file is a core component of the **SentinelBERT** multi-platform sentiment analysis system, designed specifically for law enforcement and security applications.
+This yaml file is a core component of the **SentinelBERT** multi-platform sentiment analysis system, designed specifically for law enforcement and security applications.
 
 ## 🎯 Purpose & Functionality
 
 ### Primary Functions
-- **Data Processing**: Handles unknown-specific operations within the SentinelBERT ecosystem
+- **Data Processing**: Handles yaml-specific operations within the SentinelBERT ecosystem
 - **Integration**: Seamlessly connects with other system components
 - **Performance**: Optimized for high-throughput social media analysis
 - **Security**: Implements privacy-compliant data handling procedures
@@ -24,7 +24,7 @@ This unknown file is a core component of the **SentinelBERT** multi-platform sen
 
 ```mermaid
 graph TD
-    A[Social Media APIs] --> B[.env.example]
+    A[Social Media APIs] --> B[docker-compose.secure.yml]
     B --> C[Data Processing Pipeline]
     C --> D[BERT Sentiment Analysis]
     D --> E[Dashboard & Alerts]
@@ -32,23 +32,31 @@ graph TD
 
 ### Component Relationships
 - **Upstream**: Receives data from social media API connectors
-- **Processing**: Applies unknown-specific transformations and validations
+- **Processing**: Applies yaml-specific transformations and validations
 - **Downstream**: Feeds processed data to ML/NLP analysis pipeline
 - **Monitoring**: Integrates with system health and performance metrics
 
 ## 🔧 Technical Implementation
 
 ### Code Structure
-```unknown
-# =============================================================================
-# InsideOut Platform Environment Configuration Template
-# =============================================================================
-# 
-# This file contains all environment variables needed to run the InsideOut platform.
-# Copy this file to .env and fill in your actual values.
-# 
-# SECURITY WARNING: Never commit the actual .env file to version control!
-# The .env file contains sensitive information like API keys a...
+```yaml
+version: '3.8'
+
+# InsideOut Platform - Secure Production Deployment
+# This configuration implements all security best practices
+
+services:
+  # Secure PostgreSQL with encryption
+  postgres:
+    image: postgres:15-alpine
+    container_name: insideout-postgres-secure
+    environment:
+      POSTGRES_DB: insideout
+      POSTGRES_USER: insideout
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C --auth-host=scram-sha-256"
+    volumes:
+ ...
 ```
 
 ### Configuration
