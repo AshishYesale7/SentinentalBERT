@@ -26,6 +26,44 @@ sys.path.append(os.path.join(os.path.dirname(__file__), 'services'))
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Import required services
+try:
+    from realtime.realtime_data_service import RealTimeDataService
+    from nlp.models.sentiment_model import SentinelBERTModel
+    from realtime.realtime_search_service import RealTimeSearchService
+except ImportError as e:
+    logger.error(f"Failed to import services: {e}")
+    # Create mock classes to prevent crashes
+    class RealTimeDataService:
+        def __init__(self):
+            pass
+        def get_comprehensive_analysis_data(self, *args, **kwargs):
+            return None
+    
+    class SentinelBERTModel:
+        def __init__(self):
+            pass
+    
+    class RealTimeSearchService:
+        def __init__(self):
+            pass
+
+# Exception handling utilities
+def show_error_popup(error_message: str, error_type: str = "Error"):
+    """Display error popup with details"""
+    st.error(f"🚨 **{error_type}**: {error_message}")
+    with st.expander("🔍 Error Details", expanded=False):
+        st.code(str(error_message))
+
+def safe_execute(func, *args, error_message="An error occurred", **kwargs):
+    """Safely execute a function with error handling"""
+    try:
+        return func(*args, **kwargs)
+    except Exception as e:
+        logger.error(f"Error in {func.__name__}: {str(e)}")
+        show_error_popup(f"{error_message}: {str(e)}", "Execution Error")
+        return None
+
 # Import services with fallback
 try:
     from services.legal_compliance.indian_legal_framework import IndianLegalFramework, LegalAuthority, EvidenceType
@@ -34,6 +72,10 @@ try:
     from services.nlp.models.sentiment_model import SentinelBERTModel
     from services.nlp.models.behavior_analyzer import BehavioralPatternAnalyzer
     from services.nlp.models.influence_calculator import InfluenceCalculator
+    # Import new real-time services
+    from services.realtime.realtime_search_service import RealTimeSearchService, SearchQuery
+    from services.realtime.social_media_connectors import SocialMediaAggregator
+    from services.realtime.realtime_data_service import RealTimeDataService
 except ImportError as e:
     logger.warning(f"Some services not available: {e}")
     # Create mock classes for missing services
@@ -42,6 +84,12 @@ except ImportError as e:
             pass
         def __getattr__(self, name):
             return lambda *args, **kwargs: {"status": "mock", "data": []}
+    
+    # Create mock SearchQuery class
+    class SearchQuery:
+        def __init__(self, **kwargs):
+            for key, value in kwargs.items():
+                setattr(self, key, value)
 
 # Page configuration
 st.set_page_config(
@@ -63,13 +111,19 @@ def initialize_services():
         behavior_analyzer = BehavioralPatternAnalyzer()
         influence_calculator = InfluenceCalculator()
         
+        # Initialize real-time services
+        realtime_search = RealTimeSearchService()
+        social_aggregator = SocialMediaAggregator()
+        
         return {
             'legal': legal_framework,
             'language': language_support,
             'platform': platform_support,
             'sentiment': sentiment_model,
             'behavior': behavior_analyzer,
-            'influence': influence_calculator
+            'influence': influence_calculator,
+            'realtime_search': realtime_search,
+            'social_aggregator': social_aggregator
         }
     except Exception as e:
         logger.error(f"Error initializing services: {e}")
@@ -79,7 +133,9 @@ def initialize_services():
             'platform': MockService(),
             'sentiment': MockService(),
             'behavior': MockService(),
-            'influence': MockService()
+            'influence': MockService(),
+            'realtime_search': MockService(),
+            'social_aggregator': MockService()
         }
 
 # Language Translation System
@@ -97,6 +153,7 @@ TRANSLATIONS = {
         'geographic_spread': 'Geographic Spread',
         'evidence_collection': 'Evidence Collection',
         'viral_timeline': 'Viral Timeline',
+        'realtime_search': 'Real-time Search',
         'analyze_content': 'Analyze Content',
         'refresh_data': 'Refresh Data',
         'export_report': 'Export Report',
@@ -530,16 +587,13 @@ with st.sidebar:
     
     platform_scope = st.radio(
         "Platform Scope",
-        ["Indian Platforms", "Global Platforms", "All Platforms"],
-        index=0
+        ["Global Platforms"],
+        index=0,
+        help="Real-time analysis across global social media platforms"
     )
     
-    if platform_scope == "Indian Platforms":
-        available_platforms = indian_platforms
-    elif platform_scope == "Global Platforms":
-        available_platforms = {k: v for k, v in all_platforms.items() if k not in indian_platforms}
-    else:
-        available_platforms = all_platforms
+    # Use only global platforms (excluding Indian-specific ones)
+    available_platforms = {k: v for k, v in all_platforms.items() if k not in indian_platforms}
     
     # Handle platform format safely
     if available_platforms and isinstance(available_platforms, dict):
@@ -550,7 +604,8 @@ with st.sidebar:
                 "Select Platforms",
                 options=platform_keys,
                 default=platform_keys[:5],
-                format_func=lambda x: available_platforms[x]['name']
+                format_func=lambda x: available_platforms[x]['name'],
+                key="main_platform_select_1"
             )
         else:
             # Fallback format
@@ -558,7 +613,8 @@ with st.sidebar:
                 "Select Platforms",
                 options=platform_keys,
                 default=platform_keys[:5],
-                format_func=lambda x: str(available_platforms[x]) if x in available_platforms else x
+                format_func=lambda x: str(available_platforms[x]) if x in available_platforms else x,
+                key="main_platform_select_2"
             )
     else:
         # Default fallback platforms
@@ -567,7 +623,8 @@ with st.sidebar:
             "Select Platforms",
             options=default_platforms,
             default=default_platforms,
-            format_func=lambda x: x.title()
+            format_func=lambda x: x.title(),
+            key="main_platform_select_3"
         )
         # Create mock available_platforms for consistency
         available_platforms = {p: {'name': p.title(), 'type': 'social', 'region': 'global'} for p in default_platforms}
@@ -597,7 +654,9 @@ with st.sidebar:
 def get_translation(key: str) -> str:
     """Get translation for current language"""
     try:
-        translation = language_support.get_ui_translation(selected_language, key)
+        # Use session state language or default to English
+        current_language = st.session_state.get('language', 'en')
+        translation = language_support.get_ui_translation(current_language, key)
         # Handle different return formats
         if isinstance(translation, dict):
             return str(translation.get('text', key))
@@ -670,81 +729,33 @@ with col4:
     )
 
 # Main content tabs
-tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
-    get_text("viral_timeline"),
-    get_text("comprehensive_analysis"), 
-    get_text("sentiment_behavior"),
-    get_text("influence_network"),
-    get_text("geographic_spread"),
-    get_text("evidence_collection")
-])
+try:
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
+        get_text("viral_timeline"),
+        get_text("comprehensive_analysis"), 
+        get_text("sentiment_behavior"),
+        get_text("influence_network"),
+        get_text("geographic_spread"),
+        get_text("evidence_collection"),
+        get_text("realtime_search")
+    ])
+except Exception as e:
+    logger.error(f"Failed to create main tabs: {e}")
+    show_error_popup(f"Failed to initialize dashboard tabs: {str(e)}", "UI Initialization Error")
+    st.stop()
 
-# Generate mock data for demonstration
-@st.cache_data
-def generate_mock_viral_data():
-    """Generate mock viral content data"""
-    np.random.seed(42)
-    
-    platforms = selected_platforms if selected_platforms else list(available_platforms.keys())[:5]
-    
-    data = []
-    for i in range(100):
-        platform = np.random.choice(platforms)
-        timestamp = datetime.now() - timedelta(hours=np.random.randint(0, 72))
-        
-        # Generate content based on platform
-        if platform == "twitter":
-            content = f"Breaking news! #ViralContent #{np.random.choice(['India', 'Politics', 'Sports'])} spreading fast @user{i}"
-        elif platform == "facebook":
-            content = f"Shared post about {np.random.choice(['current events', 'social issues', 'entertainment'])} - please share!"
-        elif platform == "koo":
-            content = f"भारत में वायरल हो रहा है #{np.random.choice(['समाचार', 'राजनीति', 'खेल'])} @user{i}"
-        else:
-            content = f"Viral content on {platform} #{np.random.choice(['trending', 'viral', 'news'])}"
-        
-        # Extract metadata using platform support
-        metadata = platform_support.extract_content_metadata(platform, content, {
-            "like_count": np.random.randint(10, 10000),
-            "share_count": np.random.randint(5, 5000),
-            "comment_count": np.random.randint(1, 1000)
-        })
-        
-        # Detect language
-        try:
-            detected_languages = language_support.detect_language(content)
-            if detected_languages and len(detected_languages) > 0:
-                if isinstance(detected_languages[0], (list, tuple)) and len(detected_languages[0]) > 0:
-                    primary_language = detected_languages[0][0]
-                elif isinstance(detected_languages[0], str):
-                    primary_language = detected_languages[0]
-                else:
-                    primary_language = "en"
-            else:
-                primary_language = "en"
-        except Exception:
-            primary_language = "en"
-        
-        data.append({
-            "id": f"post_{i}",
-            "platform": platform,
-            "content": content,
-            "timestamp": timestamp,
-            "viral_score": metadata.get("viral_potential", {}).get("score", 0),
-            "engagement": sum([
-                metadata.get("viral_metrics", {}).get("like_count", 0),
-                metadata.get("viral_metrics", {}).get("share_count", 0),
-                metadata.get("viral_metrics", {}).get("comment_count", 0)
-            ]),
-            "language": primary_language,
-            "content_type": metadata.get("content_classification", "general"),
-            "location": np.random.choice(["Delhi", "Mumbai", "Bangalore", "Chennai", "Kolkata", "Hyderabad"]),
-            "extracted_elements": metadata.get("extracted_elements", {}),
-            "legal_status": "authorized" if auth_status != "No Authorization" else "unauthorized"
-        })
-    
-    return pd.DataFrame(data)
+# Initialize real-time data service
+@st.cache_resource
+def get_realtime_data_service():
+    """Get real-time data service instance"""
+    return RealTimeDataService()
 
-viral_data = generate_mock_viral_data()
+# Get real-time data service
+try:
+    realtime_service = get_realtime_data_service()
+except Exception as e:
+    logger.error(f"Failed to initialize real-time service: {e}")
+    realtime_service = None
 
 # Tab 1: Viral Timeline
 with tab1:
@@ -759,404 +770,933 @@ with tab1:
         )
     
     with col2:
+        # Get available platforms from selected platforms
+        available_platform_list = list(selected_platforms) if selected_platforms else ["twitter", "youtube", "reddit"]
         platform_filter = st.multiselect(
             get_translation("platform_filter"),
-            options=viral_data['platform'].unique(),
-            default=viral_data['platform'].unique()
+            options=available_platform_list,
+            default=available_platform_list,
+            key="viral_timeline_platform_filter"
         )
     
-    # Filter data
-    filtered_data = viral_data[viral_data['platform'].isin(platform_filter)]
-    
-    # Timeline chart
-    timeline_data = filtered_data.groupby([
-        filtered_data['timestamp'].dt.floor('H'), 'platform'
-    ]).agg({
-        'viral_score': 'mean',
-        'engagement': 'sum',
-        'id': 'count'
-    }).reset_index()
-    
-    fig_timeline = px.line(
-        timeline_data,
-        x='timestamp',
-        y='viral_score',
-        color='platform',
-        title="Viral Content Timeline by Platform",
-        labels={'viral_score': 'Average Viral Score', 'timestamp': 'Time'}
-    )
-    st.plotly_chart(fig_timeline, use_container_width=True)
-    
-    # Top viral content
-    st.subheader("Top Viral Content")
-    top_content = filtered_data.nlargest(5, 'viral_score')[['content', 'platform', 'viral_score', 'engagement', 'timestamp']]
-    st.dataframe(top_content, use_container_width=True)
+    # Get real-time viral timeline data
+    if realtime_service and st.button("🔄 Refresh Timeline Data"):
+        with st.spinner("Fetching real-time viral timeline data..."):
+            try:
+                viral_data = asyncio.run(realtime_service.get_viral_timeline_data(
+                    time_range=time_range,
+                    platforms=platform_filter
+                ))
+                
+                if not viral_data.empty:
+                    st.success(f"✅ Loaded {len(viral_data)} real-time posts")
+                    
+                    # Timeline chart
+                    timeline_data = viral_data.groupby([
+                        viral_data['timestamp'].dt.floor('H'), 'platform'
+                    ]).agg({
+                        'viral_score': 'mean',
+                        'engagement': 'sum',
+                        'id': 'count'
+                    }).reset_index()
+                    
+                    fig_timeline = px.line(
+                        timeline_data,
+                        x='timestamp',
+                        y='viral_score',
+                        color='platform',
+                        title="Real-time Viral Content Timeline by Platform",
+                        labels={'viral_score': 'Average Viral Score', 'timestamp': 'Time'}
+                    )
+                    st.plotly_chart(fig_timeline, use_container_width=True)
+                    
+                    # Top viral content
+                    st.subheader("Top Viral Content")
+                    top_content = viral_data.nlargest(5, 'viral_score')[['content', 'platform', 'viral_score', 'engagement', 'timestamp']]
+                    st.dataframe(top_content, use_container_width=True)
+                    
+                else:
+                    st.warning("⚠️ No real-time data available. Please check API connections.")
+                    
+            except Exception as e:
+                logger.error(f"Timeline data error: {e}")
+                show_error_popup(f"Failed to fetch real-time viral timeline data: {str(e)}", "Data Fetch Error")
+    else:
+        st.info("👆 Click 'Refresh Timeline Data' to load real-time viral content data")
+        
+        # Show placeholder message
+        st.markdown("""
+        ### 🔄 Real-time Viral Timeline
+        
+        This tab shows real-time viral content analysis across global social media platforms:
+        
+        - **Live Data**: Fetches current trending content from Twitter/X, YouTube, and Reddit
+        - **Timeline Visualization**: Interactive charts showing viral score trends over time
+        - **Platform Comparison**: Compare viral activity across different platforms
+        - **Top Content**: Table of highest-scoring viral posts with engagement metrics
+        
+        **Note**: Real-time data requires valid API keys for social media platforms.
+        """)
 
 # Tab 2: Comprehensive Analysis
 with tab2:
-    st.subheader(get_text("comprehensive_analysis") + " - Content Analysis")
+    st.subheader("🔍 Real-time Comprehensive Analysis")
     
-    # Content input for analysis
-    st.markdown("### " + get_text("analyze_content"))
+    # Search parameters for real-time analysis
+    st.markdown("### Search Parameters")
     
     col1, col2 = st.columns([2, 1])
     
     with col1:
-        analysis_text = st.text_area(
-            "Enter content to analyze:",
-            value="This is breaking news! Everyone should share this important information immediately. #Viral #Breaking",
-            height=100
+        search_keywords = st.text_input(
+            "🔍 Keywords for Analysis:",
+            value="trending, viral, breaking news",
+            help="Enter keywords separated by commas"
         )
     
     with col2:
-        st.markdown("**User Metadata (Optional)**")
-        followers = st.number_input("Followers", value=1000, min_value=0)
-        verified = st.checkbox("Verified Account", value=False)
-        account_age = st.number_input("Account Age (days)", value=365, min_value=0)
+        analysis_platforms = st.multiselect(
+            "📱 Platforms to Analyze:",
+            options=["twitter", "youtube", "reddit"],
+            default=["twitter", "youtube", "reddit"],
+            key="comprehensive_analysis_platforms"
+        )
     
-    if st.button(get_text("analyze_content"), type="primary"):
-        if analysis_text.strip():
-            user_metadata = {
-                'followers': followers,
-                'verified': verified,
-                'account_age_days': account_age
-            }
+    if st.button("🔍 Analyze Real-time Data", type="primary"):
+        if search_keywords.strip() and analysis_platforms:
+            keywords_list = [k.strip() for k in search_keywords.split(",")]
             
-            # Perform comprehensive analysis
-            with st.spinner("Analyzing content..."):
-                analysis_results = analyze_content_comprehensive(analysis_text, user_metadata)
-            
-            # Display results
-            st.markdown("### Analysis Results")
-            
-            # Overall viral potential
-            viral_potential = analysis_results['analysis'].get('viral_potential', 0)
-            col1, col2, col3 = st.columns(3)
-            
-            with col1:
-                st.metric("Viral Potential", f"{viral_potential:.2%}", 
-                         delta=f"{'High' if viral_potential > 0.7 else 'Medium' if viral_potential > 0.4 else 'Low'} Risk")
-            
-            with col2:
-                influence_score = analysis_results['analysis'].get('influence_score', 0)
-                # Handle different influence_score formats
-                if isinstance(influence_score, dict):
-                    influence_value = influence_score.get('score', 0)
-                elif isinstance(influence_score, (int, float)):
-                    influence_value = influence_score
-                else:
-                    influence_value = 0
-                    
-                st.metric("Influence Score", f"{influence_value:.2f}", 
-                         delta=f"{'High' if influence_value > 0.7 else 'Medium' if influence_value > 0.4 else 'Low'} Influence")
-            
-            with col3:
-                sentiment = analysis_results['analysis'].get('sentiment', {})
-                # Handle different sentiment formats safely
+            with st.spinner("Fetching and analyzing real-time data..."):
                 try:
-                    if isinstance(sentiment, dict) and sentiment:
-                        dominant_sentiment = max(sentiment, key=sentiment.get)
-                        confidence = sentiment.get(dominant_sentiment, 0)
-                    elif isinstance(sentiment, list) and sentiment:
-                        # If it's a list, take the first item or convert to dict
-                        dominant_sentiment = str(sentiment[0]) if sentiment else 'neutral'
-                        confidence = 0.5  # Default confidence
-                    else:
-                        dominant_sentiment = 'neutral'
-                        confidence = 0.0
-                except Exception as e:
-                    logger.warning(f"Sentiment processing error: {e}")
-                    dominant_sentiment = 'neutral'
-                    confidence = 0.0
+                    # Get comprehensive analysis data
+                    analysis_data = asyncio.run(realtime_service.get_comprehensive_analysis_data(
+                        keywords=keywords_list,
+                        platforms=analysis_platforms
+                    ))
                     
-                st.metric("Dominant Sentiment", dominant_sentiment.title(), 
-                         delta=f"{confidence:.2%} confidence")
-            
-            # Detailed visualizations
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                # Sentiment visualization
-                sentiment_data = analysis_results['analysis'].get('sentiment', {})
-                if sentiment_data:
-                    fig_sentiment = create_sentiment_visualization(sentiment_data)
-                    st.plotly_chart(fig_sentiment, use_container_width=True)
-            
-            with col2:
-                # Influence gauge
-                influence_score = analysis_results['analysis'].get('influence_score', 0)
-                # Handle different influence_score formats for gauge
-                if isinstance(influence_score, dict):
-                    influence_value = influence_score.get('score', 0)
-                elif isinstance(influence_score, (int, float)):
-                    influence_value = influence_score
-                else:
-                    influence_value = 0
-                    
-                fig_influence = create_influence_gauge(influence_value)
-                st.plotly_chart(fig_influence, use_container_width=True)
-            
-            # Behavioral patterns
-            patterns = analysis_results['analysis'].get('behavior_patterns', [])
-            if patterns:
-                st.markdown("### Behavioral Patterns Detected")
-                fig_patterns = create_behavior_patterns_chart(patterns)
-                st.plotly_chart(fig_patterns, use_container_width=True)
-                
-                # Pattern details
-                for pattern in patterns:
-                    if isinstance(pattern, dict):
-                        pattern_type = pattern.get('pattern_type', 'Unknown')
-                        score = pattern.get('score', 0)
-                        confidence = pattern.get('confidence', 0)
-                        indicators = pattern.get('indicators', [])
-                    else:
-                        pattern_type = str(pattern)
-                        score = 0.5
-                        confidence = 0.5
-                        indicators = []
+                    if analysis_data["posts"]:
+                        st.success(f"✅ Analyzed {len(analysis_data['posts'])} real-time posts")
                         
-                    with st.expander(f"{pattern_type.title()} Pattern (Score: {score:.2f})"):
-                        st.write(f"**Confidence:** {confidence:.2%}")
-                        st.write(f"**Indicators:** {', '.join(indicators) if indicators else 'No specific indicators'}")
-            else:
-                st.info("No significant behavioral patterns detected.")
+                        # Display summary metrics
+                        st.markdown("### 📊 Analysis Summary")
+                        summary = analysis_data["summary"]
+                        
+                        col1, col2, col3, col4 = st.columns(4)
+                        
+                        with col1:
+                            st.metric("Total Posts", summary.get("total_posts", 0))
+                        
+                        with col2:
+                            avg_sentiment = summary.get("avg_sentiment", 0)
+                            sentiment_label = "Positive" if avg_sentiment > 0.1 else "Negative" if avg_sentiment < -0.1 else "Neutral"
+                            st.metric("Avg Sentiment", f"{avg_sentiment:.2f}", delta=sentiment_label)
+                        
+                        with col3:
+                            avg_viral = summary.get("avg_viral_score", 0)
+                            viral_level = "High" if avg_viral > 0.7 else "Medium" if avg_viral > 0.4 else "Low"
+                            st.metric("Avg Viral Score", f"{avg_viral:.2f}", delta=viral_level)
+                        
+                        with col4:
+                            risk_dist = summary.get("risk_distribution", {})
+                            high_risk = risk_dist.get("high", 0)
+                            st.metric("High Risk Posts", high_risk, delta="⚠️" if high_risk > 0 else "✅")
+                        
+                        # Platform and language distribution
+                        col1, col2 = st.columns(2)
+                        
+                        with col1:
+                            st.markdown("#### 📱 Platform Distribution")
+                            platform_dist = summary.get("platform_distribution", {})
+                            if platform_dist:
+                                fig_platform = px.pie(
+                                    values=list(platform_dist.values()),
+                                    names=list(platform_dist.keys()),
+                                    title="Posts by Platform"
+                                )
+                                st.plotly_chart(fig_platform, use_container_width=True)
+                        
+                        with col2:
+                            st.markdown("#### 🌍 Language Distribution")
+                            lang_dist = summary.get("language_distribution", {})
+                            if lang_dist:
+                                fig_lang = px.bar(
+                                    x=list(lang_dist.keys()),
+                                    y=list(lang_dist.values()),
+                                    title="Posts by Language"
+                                )
+                                st.plotly_chart(fig_lang, use_container_width=True)
+                        
+                        # Trending topics
+                        st.markdown("#### 🔥 Trending Topics")
+                        trends = analysis_data.get("trends", [])
+                        if trends:
+                            trend_df = pd.DataFrame(trends[:10])  # Top 10 trends
+                            fig_trends = px.bar(
+                                trend_df,
+                                x="term",
+                                y="count",
+                                color="type",
+                                title="Top Trending Terms",
+                                labels={"term": "Term", "count": "Mentions"}
+                            )
+                            st.plotly_chart(fig_trends, use_container_width=True)
+                        
+                        # Recent high-impact posts
+                        st.markdown("#### 🚀 High-Impact Posts")
+                        high_impact_posts = sorted(analysis_data["posts"], key=lambda x: x.viral_score, reverse=True)[:5]
+                        
+                        for i, post in enumerate(high_impact_posts):
+                            with st.expander(f"Post {i+1}: {post.platform.title()} - Viral Score: {post.viral_score:.2f}"):
+                                col1, col2 = st.columns([3, 1])
+                                with col1:
+                                    st.write(f"**Content:** {post.content[:200]}...")
+                                    st.write(f"**Author:** {post.author}")
+                                    st.write(f"**Timestamp:** {post.timestamp}")
+                                with col2:
+                                    st.metric("Engagement", sum(post.engagement.values()))
+                                    st.metric("Sentiment", f"{post.sentiment_score:.2f}")
+                                    st.write(f"**Risk Level:** {post.risk_level.upper()}")
+                    
+                    else:
+                        st.warning("⚠️ No real-time data found for the specified keywords and platforms.")
+                        
+                except Exception as e:
+                    logger.error(f"Comprehensive analysis error: {e}")
+                    show_error_popup(f"Failed to perform comprehensive analysis: {str(e)}", "Analysis Error")
+        else:
+            st.warning("⚠️ Please enter keywords and select at least one platform.")
+    
+    else:
+        st.info("👆 Click 'Analyze Real-time Data' to fetch and analyze current social media content")
+        
+        # Show information about comprehensive analysis
+        st.markdown("""
+        ### 🔍 Real-time Comprehensive Analysis
+        
+        This analysis provides:
+        
+        - **Live Content Analysis**: Real-time posts from selected platforms
+        - **Sentiment Tracking**: Average sentiment scores across all posts
+        - **Viral Potential**: Identification of high-viral-potential content
+        - **Risk Assessment**: Detection of potentially harmful or misleading content
+        - **Trending Topics**: Most mentioned hashtags and keywords
+        - **Platform Insights**: Distribution and engagement patterns across platforms
+        - **High-Impact Posts**: Top-performing content with detailed metrics
+        
+        **Usage**: Enter relevant keywords and select platforms to analyze current social media activity.
+        """)
 
 # Tab 3: Sentiment & Behavior Analysis
 with tab3:
-    st.subheader(get_text("sentiment_behavior") + " Analysis Dashboard")
+    st.subheader("💭 Real-time Sentiment & Behavior Analysis")
     
-    # Batch analysis
-    st.markdown("### Batch Content Analysis")
+    # Search parameters for sentiment analysis
+    st.markdown("### Search Parameters")
     
-    # Sample content for batch analysis
-    sample_contents = [
-        "This is amazing news! Everyone should know about this! #Viral #Share",
-        "I'm not sure about this information. Seems suspicious to me.",
-        "Breaking: Important announcement from the government. Please verify before sharing.",
-        "Join our movement! Together we can make a difference! #Unity #Action",
-        "As a concerned citizen, I believe we need to take action immediately."
-    ]
+    col1, col2 = st.columns([2, 1])
     
-    if st.button("Analyze Sample Content Batch"):
-        with st.spinner("Analyzing batch content..."):
-            batch_results = []
-            for content in sample_contents:
-                result = analyze_content_comprehensive(content)
-                batch_results.append(result)
-        
-        # Create summary dataframe
-        summary_data = []
-        for i, result in enumerate(batch_results):
-            analysis = result['analysis']
-            sentiment = analysis.get('sentiment', {})
-            patterns = analysis.get('behavior_patterns', [])
+    with col1:
+        sentiment_keywords = st.text_input(
+            "🔍 Keywords for Sentiment Analysis:",
+            value="trending, news, opinion",
+            help="Enter keywords to analyze sentiment patterns"
+        )
+    
+    with col2:
+        sentiment_platforms = st.multiselect(
+            "📱 Platforms for Analysis:",
+            options=["twitter", "youtube", "reddit"],
+            default=["twitter", "reddit"],
+            key="sentiment_platforms"
+        )
+    
+    if st.button("📊 Analyze Sentiment & Behavior", type="primary"):
+        if sentiment_keywords.strip() and sentiment_platforms:
+            keywords_list = [k.strip() for k in sentiment_keywords.split(",")]
             
-            summary_data.append({
-                'Content': sample_contents[i][:50] + "..." if len(sample_contents[i]) > 50 else sample_contents[i],
-                'Viral Potential': f"{analysis.get('viral_potential', 0):.2%}",
-                'Positive': f"{sentiment.get('positive', 0):.2%}",
-                'Negative': f"{sentiment.get('negative', 0):.2%}",
-                'Neutral': f"{sentiment.get('neutral', 0):.2%}",
-                'Influence Score': f"{(analysis.get('influence_score', {}).get('score', 0) if isinstance(analysis.get('influence_score', 0), dict) else analysis.get('influence_score', 0)):.2f}",
-                'Patterns Detected': len(patterns)
-            })
+            with st.spinner("Analyzing real-time sentiment and behavior patterns..."):
+                try:
+                    # Get sentiment and behavior data
+                    sentiment_data = asyncio.run(realtime_service.get_sentiment_behavior_data(
+                        keywords=keywords_list,
+                        platforms=sentiment_platforms
+                    ))
+                    
+                    if sentiment_data["posts"]:
+                        st.success(f"✅ Analyzed sentiment from {len(sentiment_data['posts'])} real-time posts")
+                        
+                        # Sentiment timeline
+                        st.markdown("### 📈 Sentiment Timeline")
+                        timeline = sentiment_data.get("sentiment_timeline", [])
+                        
+                        if timeline:
+                            timeline_df = pd.DataFrame(timeline)
+                            fig_timeline = px.line(
+                                timeline_df,
+                                x="timestamp",
+                                y="sentiment_score",
+                                title="Sentiment Score Over Time",
+                                labels={"sentiment_score": "Sentiment Score", "timestamp": "Time"}
+                            )
+                            fig_timeline.add_hline(y=0, line_dash="dash", line_color="gray", annotation_text="Neutral")
+                            st.plotly_chart(fig_timeline, use_container_width=True)
+                        
+                        # Behavior patterns
+                        st.markdown("### 🔍 Behavior Patterns")
+                        patterns = sentiment_data.get("behavior_patterns", {})
+                        
+                        col1, col2 = st.columns(2)
+                        
+                        with col1:
+                            st.markdown("#### ⏰ Posting Frequency by Hour")
+                            posting_freq = patterns.get("posting_frequency", {})
+                            if posting_freq:
+                                hours = list(posting_freq.keys())
+                                counts = list(posting_freq.values())
+                                fig_freq = px.bar(
+                                    x=hours,
+                                    y=counts,
+                                    title="Posts by Hour of Day",
+                                    labels={"x": "Hour", "y": "Number of Posts"}
+                                )
+                                st.plotly_chart(fig_freq, use_container_width=True)
+                        
+                        with col2:
+                            st.markdown("#### 🚀 Engagement Patterns")
+                            engagement_patterns = patterns.get("engagement_patterns", {})
+                            if engagement_patterns:
+                                st.metric("High Engagement Posts", engagement_patterns.get("high_engagement_count", 0))
+                                st.metric("Avg High Engagement", f"{engagement_patterns.get('avg_high_engagement', 0):.0f}")
+                        
+                        # Sentiment distribution by platform
+                        st.markdown("### 📱 Sentiment by Platform")
+                        posts = sentiment_data["posts"]
+                        
+                        # Create sentiment distribution data
+                        platform_sentiment = {}
+                        for post in posts:
+                            platform = post.platform
+                            if platform not in platform_sentiment:
+                                platform_sentiment[platform] = {"positive": 0, "negative": 0, "neutral": 0, "total": 0}
+                            
+                            if post.sentiment_score > 0.1:
+                                platform_sentiment[platform]["positive"] += 1
+                            elif post.sentiment_score < -0.1:
+                                platform_sentiment[platform]["negative"] += 1
+                            else:
+                                platform_sentiment[platform]["neutral"] += 1
+                            platform_sentiment[platform]["total"] += 1
+                        
+                        # Create visualization
+                        sentiment_viz_data = []
+                        for platform, sentiments in platform_sentiment.items():
+                            total = sentiments["total"]
+                            if total > 0:
+                                sentiment_viz_data.extend([
+                                    {"Platform": platform, "Sentiment": "Positive", "Percentage": sentiments["positive"] / total * 100},
+                                    {"Platform": platform, "Sentiment": "Negative", "Percentage": sentiments["negative"] / total * 100},
+                                    {"Platform": platform, "Sentiment": "Neutral", "Percentage": sentiments["neutral"] / total * 100}
+                                ])
+                        
+                        if sentiment_viz_data:
+                            sentiment_df = pd.DataFrame(sentiment_viz_data)
+                            fig_platform_sentiment = px.bar(
+                                sentiment_df,
+                                x="Platform",
+                                y="Percentage",
+                                color="Sentiment",
+                                title="Sentiment Distribution by Platform",
+                                color_discrete_map={"Positive": "green", "Negative": "red", "Neutral": "gray"}
+                            )
+                            st.plotly_chart(fig_platform_sentiment, use_container_width=True)
+                        
+                        # Recent posts with extreme sentiment
+                        st.markdown("### 🎯 Posts with Extreme Sentiment")
+                        
+                        # Sort posts by absolute sentiment score
+                        extreme_posts = sorted(posts, key=lambda x: abs(x.sentiment_score), reverse=True)[:5]
+                        
+                        for i, post in enumerate(extreme_posts):
+                            sentiment_emoji = "😊" if post.sentiment_score > 0.1 else "😠" if post.sentiment_score < -0.1 else "😐"
+                            with st.expander(f"{sentiment_emoji} Post {i+1}: {post.platform.title()} - Sentiment: {post.sentiment_score:.2f}"):
+                                col1, col2 = st.columns([3, 1])
+                                with col1:
+                                    st.write(f"**Content:** {post.content[:200]}...")
+                                    st.write(f"**Author:** {post.author}")
+                                    st.write(f"**Timestamp:** {post.timestamp}")
+                                with col2:
+                                    st.metric("Sentiment Score", f"{post.sentiment_score:.2f}")
+                                    st.metric("Viral Score", f"{post.viral_score:.2f}")
+                                    st.write(f"**Engagement:** {sum(post.engagement.values())}")
+                    
+                    else:
+                        st.warning("⚠️ No real-time data found for sentiment analysis.")
+                        
+                except Exception as e:
+                    logger.error(f"Sentiment analysis error: {e}")
+                    show_error_popup(f"Failed to perform sentiment analysis: {str(e)}", "Sentiment Analysis Error")
+        else:
+            st.warning("⚠️ Please enter keywords and select at least one platform.")
+    
+    else:
+        st.info("👆 Click 'Analyze Sentiment & Behavior' to start real-time sentiment analysis")
         
-        summary_df = pd.DataFrame(summary_data)
-        st.dataframe(summary_df, use_container_width=True)
+        # Show information about sentiment analysis
+        st.markdown("""
+        ### 💭 Real-time Sentiment & Behavior Analysis
         
-        # Aggregate visualizations
-        col1, col2 = st.columns(2)
+        This analysis provides:
         
-        with col1:
-            # Average sentiment distribution
-            try:
-                sentiments = []
-                for r in batch_results:
-                    if 'analysis' in r and 'sentiment' in r['analysis']:
-                        sentiment = r['analysis']['sentiment']
-                        if isinstance(sentiment, dict) and 'positive' in sentiment:
-                            sentiments.append(sentiment)
-                
-                if sentiments:
-                    avg_sentiment = {
-                        'positive': np.mean([s['positive'] for s in sentiments]),
-                        'negative': np.mean([s['negative'] for s in sentiments]),
-                        'neutral': np.mean([s['neutral'] for s in sentiments])
-                    }
-                else:
-                    avg_sentiment = {'positive': 0.33, 'negative': 0.33, 'neutral': 0.34}
-                
-                fig_avg_sentiment = create_sentiment_visualization(avg_sentiment)
-                fig_avg_sentiment.update_layout(title="Average Sentiment Distribution")
-                st.plotly_chart(fig_avg_sentiment, use_container_width=True)
-            except Exception as e:
-                st.error(f"Error creating sentiment visualization: {e}")
-                st.info("Using default sentiment values for visualization")
+        - **Sentiment Timeline**: Track sentiment changes over time
+        - **Behavior Patterns**: Identify posting frequency and engagement patterns
+        - **Platform Comparison**: Compare sentiment across different social media platforms
+        - **Extreme Sentiment Detection**: Find posts with strongly positive or negative sentiment
+        - **Engagement Correlation**: Analyze relationship between sentiment and engagement
+        - **Temporal Patterns**: Understand when different sentiments are most prevalent
         
-        with col2:
-            # Viral potential distribution
-            try:
-                viral_potentials = []
-                for r in batch_results:
-                    if 'analysis' in r and 'viral_potential' in r['analysis']:
-                        viral_potentials.append(r['analysis']['viral_potential'])
-                
-                if not viral_potentials:
-                    viral_potentials = [0.5] * len(batch_results)  # Default values
-                
-                fig_viral_dist = go.Figure(data=[
-                    go.Histogram(x=viral_potentials, nbinsx=10, marker_color='#FF6B6B')
-                ])
-                fig_viral_dist.update_layout(
-                    title="Viral Potential Distribution",
-                    xaxis_title="Viral Potential",
-                    yaxis_title="Count",
-                    height=300
-                )
-                st.plotly_chart(fig_viral_dist, use_container_width=True)
-            except Exception as e:
-                st.error(f"Error creating viral potential visualization: {e}")
-                st.info("Using default viral potential values for visualization")
+        **Usage**: Enter keywords related to topics you want to analyze for sentiment patterns.
+        """)
 
 # Tab 4: Influence Network
 with tab4:
-    st.subheader(get_translation("influence_network"))
+    st.subheader("🕸️ Real-time Influence Network with Origin Tracking")
     
-    # Create network graph
-    G = nx.Graph()
+    # Input options for network analysis
+    st.markdown("### Network Analysis Options")
     
-    # Add nodes and edges based on viral data
-    for idx, row in viral_data.head(20).iterrows():
-        G.add_node(row['id'], 
-                  platform=row['platform'],
-                  viral_score=row['viral_score'],
-                  engagement=row['engagement'])
-        
-        # Add edges based on similar content or platform
-        for idx2, row2 in viral_data.head(20).iterrows():
-            if idx != idx2 and (row['platform'] == row2['platform'] or 
-                               abs(row['viral_score'] - row2['viral_score']) < 0.2):
-                G.add_edge(row['id'], row2['id'])
-    
-    # Network visualization
-    pos = nx.spring_layout(G, k=1, iterations=50)
-    
-    edge_x = []
-    edge_y = []
-    for edge in G.edges():
-        x0, y0 = pos[edge[0]]
-        x1, y1 = pos[edge[1]]
-        edge_x.extend([x0, x1, None])
-        edge_y.extend([y0, y1, None])
-    
-    edge_trace = go.Scatter(x=edge_x, y=edge_y,
-                           line=dict(width=0.5, color='#888'),
-                           hoverinfo='none',
-                           mode='lines')
-    
-    node_x = []
-    node_y = []
-    node_text = []
-    node_color = []
-    
-    for node in G.nodes():
-        x, y = pos[node]
-        node_x.append(x)
-        node_y.append(y)
-        
-        node_info = G.nodes[node]
-        node_text.append(f"Platform: {node_info['platform']}<br>"
-                        f"Viral Score: {node_info['viral_score']:.2f}<br>"
-                        f"Engagement: {node_info['engagement']:,}")
-        node_color.append(node_info['viral_score'])
-    
-    node_trace = go.Scatter(x=node_x, y=node_y,
-                           mode='markers',
-                           hoverinfo='text',
-                           text=node_text,
-                           marker=dict(showscale=True,
-                                     colorscale='Viridis',
-                                     color=node_color,
-                                     size=10,
-                                     colorbar=dict(thickness=15,
-                                                 xanchor="left",
-                                                 title="Viral Score")))
-    
-    fig_network = go.Figure(data=[edge_trace, node_trace],
-                           layout=go.Layout(
-                               title=dict(text='Viral Content Influence Network', font=dict(size=16)),
-                               showlegend=False,
-                               hovermode='closest',
-                               margin=dict(b=20,l=5,r=5,t=40),
-                               annotations=[ dict(
-                                   text="Network shows connections between viral content based on platform and viral score similarity",
-                                   showarrow=False,
-                                   xref="paper", yref="paper",
-                                   x=0.005, y=-0.002,
-                                   xanchor='left', yanchor='bottom',
-                                   font=dict(size=12)
-                               )],
-                               xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
-                               yaxis=dict(showgrid=False, zeroline=False, showticklabels=False)))
-    
-    st.plotly_chart(fig_network, use_container_width=True)
-
-# Tab 3: Geographic Spread
-with tab3:
-    st.subheader(get_translation("geographic_spread"))
-    
-    # Geographic distribution
-    geo_data = viral_data.groupby('location').agg({
-        'viral_score': 'mean',
-        'engagement': 'sum',
-        'id': 'count'
-    }).reset_index()
-    
-    # Map visualization
-    fig_map = px.scatter_mapbox(
-        geo_data,
-        lat=[28.6139, 19.0760, 12.9716, 13.0827, 22.5726, 17.3850],  # Coordinates for cities
-        lon=[77.2090, 72.8777, 77.5946, 80.2707, 88.3639, 78.4867],
-        size='engagement',
-        color='viral_score',
-        hover_name='location',
-        hover_data={'viral_score': ':.2f', 'engagement': ':,', 'id': True},
-        mapbox_style="open-street-map",
-        title="Geographic Distribution of Viral Content",
-        zoom=4,
-        center={"lat": 20.5937, "lon": 78.9629}  # Center of India
-    )
-    
-    fig_map.update_layout(height=500)
-    st.plotly_chart(fig_map, use_container_width=True)
-    
-    # City-wise breakdown
-    col1, col2 = st.columns(2)
+    col1, col2 = st.columns([2, 1])
     
     with col1:
-        fig_city = px.bar(
-            geo_data.sort_values('engagement', ascending=False),
-            x='location',
-            y='engagement',
-            title="Total Engagement by City",
-            color='viral_score'
+        analysis_type = st.radio(
+            "Analysis Type:",
+            ["Hashtag Tracking", "Post URL Analysis", "Keyword Network"],
+            help="Choose the type of network analysis to perform"
         )
-        st.plotly_chart(fig_city, use_container_width=True)
+        
+        if analysis_type == "Hashtag Tracking":
+            hashtag_input = st.text_input(
+                "🏷️ Hashtag to Track:",
+                value="#trending",
+                help="Enter a hashtag to track its spread and origin"
+            )
+        elif analysis_type == "Post URL Analysis":
+            post_url_input = st.text_input(
+                "🔗 Post URL:",
+                placeholder="https://twitter.com/user/status/123456789",
+                help="Enter a specific post URL to analyze its influence network"
+            )
+        else:  # Keyword Network
+            network_keywords = st.text_input(
+                "🔍 Keywords for Network:",
+                value="viral, trending",
+                help="Enter keywords to build influence network"
+            )
     
     with col2:
-        fig_viral_city = px.bar(
-            geo_data.sort_values('viral_score', ascending=False),
-            x='location',
-            y='viral_score',
-            title="Average Viral Score by City",
-            color='viral_score'
+        network_platforms = st.multiselect(
+            "📱 Platforms:",
+            options=["twitter", "youtube", "reddit"],
+            default=["twitter", "reddit"],
+            key="influence_network_platforms"
         )
-        st.plotly_chart(fig_viral_city, use_container_width=True)
+        
+        max_nodes = st.slider(
+            "Max Network Nodes:",
+            min_value=10,
+            max_value=100,
+            value=50,
+            help="Maximum number of nodes to display in network"
+        )
+    
+    if st.button("🕸️ Build Influence Network", type="primary"):
+        with st.spinner("Building real-time influence network..."):
+            try:
+                # Prepare parameters based on analysis type
+                if analysis_type == "Hashtag Tracking" and hashtag_input.strip():
+                    network_data = asyncio.run(realtime_service.get_influence_network_data(
+                        hashtag=hashtag_input.strip(),
+                        keywords=None
+                    ))
+                elif analysis_type == "Post URL Analysis" and post_url_input.strip():
+                    network_data = asyncio.run(realtime_service.get_influence_network_data(
+                        post_url=post_url_input.strip(),
+                        keywords=None
+                    ))
+                elif analysis_type == "Keyword Network" and network_keywords.strip():
+                    keywords_list = [k.strip() for k in network_keywords.split(",")]
+                    network_data = asyncio.run(realtime_service.get_influence_network_data(
+                        keywords=keywords_list
+                    ))
+                else:
+                    st.warning("⚠️ Please provide valid input for the selected analysis type.")
+                    network_data = None
+                
+                if network_data and network_data["nodes"]:
+                    st.success(f"✅ Built network with {len(network_data['nodes'])} nodes and {len(network_data['edges'])} connections")
+                    
+                    # Network statistics
+                    st.markdown("### 📊 Network Statistics")
+                    stats = network_data["network_stats"]
+                    
+                    col1, col2, col3, col4 = st.columns(4)
+                    with col1:
+                        st.metric("Total Nodes", stats.get("total_nodes", 0))
+                    with col2:
+                        st.metric("Total Edges", stats.get("total_edges", 0))
+                    with col3:
+                        st.metric("Origin Nodes", stats.get("origin_nodes", 0))
+                    with col4:
+                        density = stats.get("density", 0)
+                        st.metric("Network Density", f"{density:.3f}")
+                    
+                    # Origin nodes section
+                    origin_nodes = network_data.get("origin_nodes", [])
+                    if origin_nodes:
+                        st.markdown("### 🎯 Origin Nodes (Viral Content Sources)")
+                        st.info(f"Found {len(origin_nodes)} potential origin nodes where viral content may have started")
+                        
+                        # Display origin node details
+                        nodes = network_data["nodes"]
+                        origin_node_details = [node for node in nodes if node.user_id in origin_nodes]
+                        
+                        for i, node in enumerate(origin_node_details[:5]):  # Show top 5 origin nodes
+                            with st.expander(f"🌟 Origin Node {i+1}: @{node.username} ({node.platform})"):
+                                col1, col2 = st.columns([2, 1])
+                                with col1:
+                                    st.write(f"**Platform:** {node.platform.title()}")
+                                    st.write(f"**Influence Score:** {node.influence_score:.2f}")
+                                    st.write(f"**Post Count:** {node.post_count}")
+                                    st.write(f"**Location:** {node.location or 'Unknown'}")
+                                with col2:
+                                    st.metric("Engagement Rate", f"{node.engagement_rate:.1f}")
+                                    st.write(f"**Verified:** {'✅' if node.verified else '❌'}")
+                                    st.write(f"**Followers:** {node.follower_count:,}")
+                    
+                    # Build network visualization
+                    st.markdown("### 🕸️ Influence Network Visualization")
+                    
+                    # Create networkx graph for visualization
+                    G = nx.DiGraph()
+                    
+                    # Add nodes
+                    for node in network_data["nodes"][:max_nodes]:  # Limit nodes for performance
+                        G.add_node(node.user_id, 
+                                  username=node.username,
+                                  platform=node.platform,
+                                  influence_score=node.influence_score,
+                                  is_origin=node.is_origin,
+                                  verified=node.verified,
+                                  engagement_rate=node.engagement_rate)
+                    
+                    # Add edges
+                    for edge in network_data["edges"]:
+                        if edge.source_user in G.nodes and edge.target_user in G.nodes:
+                            G.add_edge(edge.source_user, edge.target_user, 
+                                     weight=edge.weight,
+                                     interaction_type=edge.interaction_type)
+                    
+                    # Create layout
+                    pos = nx.spring_layout(G, k=2, iterations=50)
+                    
+                    # Prepare visualization data
+                    edge_x = []
+                    edge_y = []
+                    for edge in G.edges():
+                        if edge[0] in pos and edge[1] in pos:
+                            x0, y0 = pos[edge[0]]
+                            x1, y1 = pos[edge[1]]
+                            edge_x.extend([x0, x1, None])
+                            edge_y.extend([y0, y1, None])
+                    
+                    edge_trace = go.Scatter(x=edge_x, y=edge_y,
+                                           line=dict(width=1, color='rgba(125,125,125,0.3)'),
+                                           hoverinfo='none',
+                                           mode='lines')
+                    
+                    # Prepare node data
+                    node_x = []
+                    node_y = []
+                    node_text = []
+                    node_color = []
+                    node_size = []
+                    
+                    for node_id in G.nodes():
+                        if node_id in pos:
+                            x, y = pos[node_id]
+                            node_x.append(x)
+                            node_y.append(y)
+                            
+                            node_info = G.nodes[node_id]
+                            node_text.append(f"@{node_info['username']}<br>"
+                                            f"Platform: {node_info['platform']}<br>"
+                                            f"Influence: {node_info['influence_score']:.2f}<br>"
+                                            f"Origin: {'Yes' if node_info['is_origin'] else 'No'}<br>"
+                                            f"Verified: {'Yes' if node_info['verified'] else 'No'}")
+                            
+                            # Color by origin status and influence
+                            if node_info['is_origin']:
+                                node_color.append(1.0)  # Origin nodes in red
+                            else:
+                                node_color.append(node_info['influence_score'])
+                            
+                            # Size by engagement rate
+                            base_size = 15 if node_info['is_origin'] else 10
+                            node_size.append(base_size + node_info['engagement_rate'] * 5)
+                    
+                    node_trace = go.Scatter(x=node_x, y=node_y,
+                                           mode='markers',
+                                           hoverinfo='text',
+                                           text=node_text,
+                                           marker=dict(showscale=True,
+                                                     colorscale='RdYlBu_r',
+                                                     color=node_color,
+                                                     size=node_size,
+                                                     colorbar=dict(thickness=15,
+                                                                 xanchor="left",
+                                                                 title="Influence Score"),
+                                                     line=dict(width=2, color='white')))
+                    
+                    fig_network = go.Figure(data=[edge_trace, node_trace],
+                                           layout=go.Layout(
+                                               title=dict(text=f'Real-time Influence Network - {analysis_type}', font=dict(size=16)),
+                                               showlegend=False,
+                                               hovermode='closest',
+                                               margin=dict(b=20,l=5,r=5,t=40),
+                                               annotations=[dict(
+                                                   text="🔴 Large nodes = Origin sources | Node size = Engagement rate | Color = Influence score",
+                                                   showarrow=False,
+                                                   xref="paper", yref="paper",
+                                                   x=0.005, y=-0.002,
+                                                   xanchor='left', yanchor='bottom',
+                                                   font=dict(size=10)
+                                               )],
+                                               xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+                                               yaxis=dict(showgrid=False, zeroline=False, showticklabels=False)))
+                    
+                    st.plotly_chart(fig_network, use_container_width=True)
+                    
+                    # Spread pattern analysis
+                    st.markdown("### 📈 Viral Spread Patterns")
+                    
+                    edges = network_data["edges"]
+                    if edges:
+                        # Analyze interaction types
+                        interaction_counts = {}
+                        for edge in edges:
+                            interaction_counts[edge.interaction_type] = interaction_counts.get(edge.interaction_type, 0) + 1
+                        
+                        col1, col2 = st.columns(2)
+                        
+                        with col1:
+                            st.markdown("#### 🔄 Interaction Types")
+                            interaction_df = pd.DataFrame(list(interaction_counts.items()), columns=['Type', 'Count'])
+                            fig_interactions = px.pie(interaction_df, values='Count', names='Type', 
+                                                    title="Distribution of Interaction Types")
+                            st.plotly_chart(fig_interactions, use_container_width=True)
+                        
+                        with col2:
+                            st.markdown("#### ⏰ Spread Timeline")
+                            # Create timeline of interactions
+                            edge_times = [edge.timestamp for edge in edges if hasattr(edge, 'timestamp')]
+                            if edge_times:
+                                timeline_df = pd.DataFrame({'timestamp': edge_times})
+                                timeline_df['hour'] = timeline_df['timestamp'].dt.floor('H')
+                                hourly_counts = timeline_df.groupby('hour').size().reset_index(name='interactions')
+                                
+                                fig_timeline = px.line(hourly_counts, x='hour', y='interactions',
+                                                     title="Viral Spread Over Time")
+                                st.plotly_chart(fig_timeline, use_container_width=True)
+                
+                else:
+                    st.warning("⚠️ No network data found. Please check your input parameters.")
+                    
+            except Exception as e:
+                logger.error(f"Influence network error: {e}")
+                show_error_popup(f"Failed to build influence network: {str(e)}", "Network Analysis Error")
+    
+    else:
+        st.info("👆 Configure analysis parameters and click 'Build Influence Network' to start")
+        
+        # Show information about influence network analysis
+        st.markdown("""
+        ### 🕸️ Real-time Influence Network Analysis
+        
+        This analysis provides:
+        
+        - **Origin Tracking**: Identify the original sources of viral content
+        - **Spread Patterns**: Visualize how content spreads through social networks
+        - **Influence Scoring**: Measure user influence based on engagement and reach
+        - **Network Topology**: Understand the structure of viral content propagation
+        - **Interaction Analysis**: Analyze types of interactions (retweets, shares, mentions)
+        - **Temporal Patterns**: Track how viral content spreads over time
+        
+        **Analysis Types:**
+        - **Hashtag Tracking**: Follow a specific hashtag's spread across platforms
+        - **Post URL Analysis**: Analyze the influence network of a specific post
+        - **Keyword Network**: Build networks around trending keywords
+        
+        **Origin Nodes**: Large red nodes indicate potential sources where viral content originated.
+        """)
 
-# Tab 5: Evidence Collection  
+# Tab 5: Geographic Spread
 with tab5:
-    st.subheader(get_translation("evidence_collection"))
+    st.subheader("🌍 Real-time Geographic Spread Analysis")
+    
+    # Geographic analysis parameters
+    st.markdown("### Geographic Analysis Parameters")
+    
+    col1, col2 = st.columns([2, 1])
+    
+    with col1:
+        geo_keywords = st.text_input(
+            "🔍 Keywords for Geographic Analysis:",
+            value="trending, viral, news",
+            help="Enter keywords to analyze geographic spread patterns"
+        )
+    
+    with col2:
+        geo_platforms = st.multiselect(
+            "📱 Platforms:",
+            options=["twitter", "youtube", "reddit"],
+            default=["twitter", "reddit"],
+            key="geographic_platforms"
+        )
+    
+    # Map style selection
+    map_style = st.selectbox(
+        "🗺️ Map Style:",
+        options=["open-street-map", "carto-positron", "carto-darkmatter", "stamen-terrain"],
+        index=0
+    )
+    
+    if st.button("🌍 Analyze Geographic Spread", type="primary"):
+        if geo_keywords.strip() and geo_platforms:
+            keywords_list = [k.strip() for k in geo_keywords.split(",")]
+            
+            with st.spinner("Analyzing real-time geographic spread..."):
+                try:
+                    # Get geographic data
+                    geo_data = asyncio.run(realtime_service.get_geographic_data(
+                        keywords=keywords_list,
+                        platforms=geo_platforms
+                    ))
+                    
+                    if geo_data["locations"]:
+                        st.success(f"✅ Analyzed geographic data from {len(geo_data['locations'])} locations")
+                        
+                        # Geographic statistics
+                        st.markdown("### 📊 Geographic Statistics")
+                        
+                        col1, col2, col3, col4 = st.columns(4)
+                        with col1:
+                            st.metric("Total Locations", len(geo_data["locations"]))
+                        with col2:
+                            total_posts = sum(loc.post_count for loc in geo_data["locations"])
+                            st.metric("Total Posts", total_posts)
+                        with col3:
+                            avg_viral_score = sum(loc.viral_score for loc in geo_data["locations"]) / len(geo_data["locations"])
+                            st.metric("Avg Viral Score", f"{avg_viral_score:.2f}")
+                        with col4:
+                            total_engagement = sum(loc.engagement_count for loc in geo_data["locations"])
+                            st.metric("Total Engagement", f"{total_engagement:,}")
+                        
+                        # Create map visualization
+                        st.markdown("### 🗺️ Geographic Distribution Map")
+                        
+                        # Prepare data for map
+                        map_data = []
+                        for location in geo_data["locations"]:
+                            if location.latitude and location.longitude:
+                                map_data.append({
+                                    'location': location.location_name,
+                                    'country': location.country,
+                                    'lat': location.latitude,
+                                    'lon': location.longitude,
+                                    'post_count': location.post_count,
+                                    'viral_score': location.viral_score,
+                                    'engagement': location.engagement_count,
+                                    'sentiment_score': location.sentiment_score
+                                })
+                        
+                        if map_data:
+                            map_df = pd.DataFrame(map_data)
+                            
+                            # Create scatter mapbox
+                            fig_map = px.scatter_mapbox(
+                                map_df,
+                                lat='lat',
+                                lon='lon',
+                                size='post_count',
+                                color='viral_score',
+                                hover_name='location',
+                                hover_data={
+                                    'country': True,
+                                    'post_count': ':,',
+                                    'viral_score': ':.2f',
+                                    'engagement': ':,',
+                                    'sentiment_score': ':.2f'
+                                },
+                                mapbox_style=map_style,
+                                title="Real-time Geographic Distribution of Viral Content",
+                                zoom=1,
+                                height=600,
+                                color_continuous_scale="Viridis"
+                            )
+                            
+                            fig_map.update_layout(
+                                mapbox=dict(
+                                    center=dict(lat=20, lon=0),  # World center
+                                    zoom=1
+                                )
+                            )
+                            
+                            st.plotly_chart(fig_map, use_container_width=True)
+                        
+                        # Geographic breakdown charts
+                        st.markdown("### 📈 Geographic Analysis")
+                        
+                        col1, col2 = st.columns(2)
+                        
+                        with col1:
+                            st.markdown("#### 🏙️ Top Locations by Post Count")
+                            top_locations = sorted(geo_data["locations"], key=lambda x: x.post_count, reverse=True)[:10]
+                            
+                            location_data = []
+                            for loc in top_locations:
+                                location_data.append({
+                                    'Location': f"{loc.location_name}, {loc.country}",
+                                    'Posts': loc.post_count,
+                                    'Viral Score': loc.viral_score
+                                })
+                            
+                            if location_data:
+                                location_df = pd.DataFrame(location_data)
+                                fig_locations = px.bar(
+                                    location_df,
+                                    x='Posts',
+                                    y='Location',
+                                    color='Viral Score',
+                                    orientation='h',
+                                    title="Posts by Location"
+                                )
+                                st.plotly_chart(fig_locations, use_container_width=True)
+                        
+                        with col2:
+                            st.markdown("#### 🌍 Engagement by Country")
+                            # Group by country
+                            country_data = {}
+                            for loc in geo_data["locations"]:
+                                country = loc.country
+                                if country not in country_data:
+                                    country_data[country] = {'engagement': 0, 'posts': 0, 'viral_score': []}
+                                country_data[country]['engagement'] += loc.engagement_count
+                                country_data[country]['posts'] += loc.post_count
+                                country_data[country]['viral_score'].append(loc.viral_score)
+                            
+                            # Create country visualization
+                            country_viz_data = []
+                            for country, data in country_data.items():
+                                avg_viral = sum(data['viral_score']) / len(data['viral_score']) if data['viral_score'] else 0
+                                country_viz_data.append({
+                                    'Country': country,
+                                    'Engagement': data['engagement'],
+                                    'Posts': data['posts'],
+                                    'Avg Viral Score': avg_viral
+                                })
+                            
+                            if country_viz_data:
+                                country_df = pd.DataFrame(country_viz_data)
+                                country_df = country_df.sort_values('Engagement', ascending=False).head(10)
+                                
+                                fig_countries = px.bar(
+                                    country_df,
+                                    x='Country',
+                                    y='Engagement',
+                                    color='Avg Viral Score',
+                                    title="Engagement by Country"
+                                )
+                                fig_countries.update_xaxes(tickangle=45)
+                                st.plotly_chart(fig_countries, use_container_width=True)
+                        
+                        # Temporal geographic patterns
+                        st.markdown("### ⏰ Temporal Geographic Patterns")
+                        
+                        temporal_data = geo_data.get("temporal_patterns", [])
+                        if temporal_data:
+                            temporal_df = pd.DataFrame([
+                                {
+                                    'timestamp': pattern.timestamp,
+                                    'location': pattern.location,
+                                    'post_count': pattern.post_count,
+                                    'viral_score': pattern.viral_score
+                                }
+                                for pattern in temporal_data
+                            ])
+                            
+                            # Create timeline by location
+                            fig_temporal = px.line(
+                                temporal_df,
+                                x='timestamp',
+                                y='post_count',
+                                color='location',
+                                title="Viral Content Spread Over Time by Location"
+                            )
+                            st.plotly_chart(fig_temporal, use_container_width=True)
+                        
+                        # Location details
+                        st.markdown("### 📍 Location Details")
+                        
+                        # Show detailed information for top locations
+                        for i, location in enumerate(top_locations[:5]):
+                            with st.expander(f"📍 {location.location_name}, {location.country}"):
+                                col1, col2 = st.columns([2, 1])
+                                with col1:
+                                    st.write(f"**Country:** {location.country}")
+                                    st.write(f"**Coordinates:** {location.latitude:.4f}, {location.longitude:.4f}")
+                                    st.write(f"**Timezone:** {location.timezone or 'Unknown'}")
+                                with col2:
+                                    st.metric("Posts", location.post_count)
+                                    st.metric("Viral Score", f"{location.viral_score:.2f}")
+                                    st.metric("Engagement", f"{location.engagement_count:,}")
+                                    st.metric("Sentiment", f"{location.sentiment_score:.2f}")
+                    
+                    else:
+                        st.warning("⚠️ No geographic data found for the specified keywords.")
+                        
+                except Exception as e:
+                    logger.error(f"Geographic analysis error: {e}")
+                    show_error_popup(f"Failed to perform geographic analysis: {str(e)}", "Geographic Analysis Error")
+        else:
+            st.warning("⚠️ Please enter keywords and select at least one platform.")
+    
+    else:
+        st.info("👆 Click 'Analyze Geographic Spread' to start real-time geographic analysis")
+        
+        # Show information about geographic analysis
+        st.markdown("""
+        ### 🌍 Real-time Geographic Spread Analysis
+        
+        This analysis provides:
+        
+        - **Global Distribution**: Interactive world map showing viral content spread
+        - **Location Ranking**: Top locations by post count and engagement
+        - **Country Analysis**: Engagement patterns by country
+        - **Temporal Patterns**: How viral content spreads geographically over time
+        - **Sentiment Mapping**: Geographic distribution of sentiment scores
+        - **Timezone Analysis**: Understanding viral patterns across time zones
+        
+        **Features:**
+        - Real-time location data from social media posts
+        - Interactive maps with multiple visualization styles
+        - Country and city-level analysis
+        - Temporal geographic spread patterns
+        
+        **Usage**: Enter keywords to analyze how viral content spreads across different geographic regions.
+        """)
+
+# Tab 6: Evidence Collection  
+with tab6:
+    st.subheader("📋 Real-time Evidence Collection")
     
     if auth_status == "No Authorization":
         st.error("Legal authorization required for evidence collection")
@@ -1165,106 +1705,286 @@ with tab5:
         st.success(f"Operating under: {auth_status}")
         st.info(f"Case Number: {case_number} | Officer: {authorized_officer}")
         
-        # Evidence collection interface
+        # Evidence collection parameters
+        st.markdown("### Evidence Collection Parameters")
+        
         col1, col2 = st.columns([2, 1])
         
         with col1:
-            st.subheader(get_text("evidence_collection") + " Queue")
+            evidence_keywords = st.text_input(
+                "🔍 Keywords for Evidence Collection:",
+                value="misinformation, fake news, viral",
+                help="Enter keywords to identify content for evidence collection"
+            )
             
-            # Filter high-priority content for evidence collection
-            evidence_candidates = viral_data[
-                (viral_data['viral_score'] > 0.7) & 
-                (viral_data['legal_status'] == 'authorized')
-            ].head(10)
-            
-            for idx, row in evidence_candidates.iterrows():
-                with st.expander(f"{row['platform'].upper()} - Priority Evidence"):
-                    st.write(f"**Content:** {row['content']}")
-                    st.write(f"**Viral Score:** {row['viral_score']:.2f}")
-                    st.write(f"**Engagement:** {row['engagement']:,}")
-                    st.write(f"**Language:** {languages.get(row['language'], {}).get('name', 'Unknown')}")
-                    
-                    col_a, col_b, col_c = st.columns(3)
-                    
-                    with col_a:
-                        if st.button(get_text("collect_evidence"), key=f"evidence_{idx}"):
-                            # Simulate evidence collection with legal framework
-                            try:
-                                # Create mock authorization
-                                auth_data = {
-                                    "authority_type": "magistrate_warrant",
-                                    "issuing_authority": "Chief Metropolitan Magistrate, Delhi",
-                                    "case_number": case_number,
-                                    "sections_invoked": ["IT_Act_66", "IT_Act_67", "CrPC_156"],
-                                    "validity_start": "2025-09-21T00:00:00",
-                                    "validity_end": "2025-12-21T23:59:59",
-                                    "scope_description": "Investigation of viral misinformation campaign",
-                                    "target_platforms": [row['platform']],
-                                    "authorized_officers": [authorized_officer]
-                                }
-                                
-                                authorization = legal_framework.create_legal_authorization(auth_data)
-                                
-                                if authorization:
-                                    evidence = legal_framework.collect_digital_evidence(
-                                        content=row['content'],
-                                        platform=row['platform'],
-                                        evidence_type=EvidenceType.ELECTRONIC_RECORD,
-                                        collecting_officer=authorized_officer,
-                                        authorization_id=authorization.auth_id,
-                                        metadata={
-                                            "viral_score": row['viral_score'],
-                                            "engagement": row['engagement'],
-                                            "language": row['language'],
-                                            "location": row['location']
-                                        }
-                                    )
-                                    
-                                    if evidence:
-                                        st.success("Evidence collected successfully!")
-                                        st.json({
-                                            "evidence_id": evidence.evidence_id,
-                                            "collection_time": evidence.collection_timestamp.isoformat(),
-                                            "integrity_verified": evidence.integrity_verified,
-                                            "section_65b_compliant": bool(evidence.section_65b_certificate)
-                                        })
-                                    else:
-                                        st.error("Evidence collection failed")
-                                else:
-                                    st.error("Authorization creation failed")
-                                    
-                            except Exception as e:
-                                st.error(f"Error: {str(e)}")
-                    
-                    with col_b:
-                        if st.button("Analyze", key=f"analyze_{idx}"):
-                            # Show detailed analysis
-                            analysis = language_support.analyze_multilingual_content(row['content'])
-                            st.json(analysis)
-                    
-                    with col_c:
-                        if st.button("Flag Priority", key=f"flag_{idx}"):
-                            st.warning("Flagged for immediate attention")
+            evidence_type = st.selectbox(
+                "📋 Evidence Type:",
+                options=["High Viral Score Posts", "Hashtag Tracking", "URL Evidence", "User Activity"],
+                help="Select the type of evidence to collect"
+            )
         
         with col2:
-            st.subheader("Evidence Statistics")
+            evidence_platforms = st.multiselect(
+                "📱 Target Platforms:",
+                options=["twitter", "youtube", "reddit"],
+                default=["twitter", "reddit"],
+                key="evidence_collection_platforms"
+            )
             
+            min_viral_score = st.slider(
+                "Minimum Viral Score:",
+                min_value=0.0,
+                max_value=1.0,
+                value=0.7,
+                help="Minimum viral score for evidence collection"
+            )
+        
+        if st.button("📋 Collect Evidence", type="primary"):
+            if evidence_keywords.strip() and evidence_platforms:
+                keywords_list = [k.strip() for k in evidence_keywords.split(",")]
+                
+                with st.spinner("Collecting real-time evidence..."):
+                    try:
+                        # Get evidence data
+                        evidence_data = asyncio.run(realtime_service.get_evidence_collection_data(
+                            keywords=keywords_list,
+                            platforms=evidence_platforms,
+                            min_viral_score=min_viral_score,
+                            evidence_type=evidence_type
+                        ))
+                        
+                        if evidence_data["evidence_items"]:
+                            st.success(f"✅ Collected {len(evidence_data['evidence_items'])} evidence items")
+                            
+                            # Evidence statistics
+                            st.markdown("### 📊 Evidence Collection Statistics")
+                            
+                            col1, col2, col3, col4 = st.columns(4)
+                            with col1:
+                                st.metric("Evidence Items", len(evidence_data["evidence_items"]))
+                            with col2:
+                                high_priority = sum(1 for item in evidence_data["evidence_items"] if item.priority == "high")
+                                st.metric("High Priority", high_priority)
+                            with col3:
+                                unique_urls = len(set(item.source_url for item in evidence_data["evidence_items"] if item.source_url))
+                                st.metric("Unique URLs", unique_urls)
+                            with col4:
+                                unique_hashtags = len(set(tag for item in evidence_data["evidence_items"] for tag in item.hashtags))
+                                st.metric("Unique Hashtags", unique_hashtags)
+                            
+                            # Evidence items display
+                            st.markdown("### 📋 Evidence Collection Queue")
+                            
+                            # Sort by priority and viral score
+                            sorted_evidence = sorted(
+                                evidence_data["evidence_items"],
+                                key=lambda x: (x.priority == "high", x.viral_score),
+                                reverse=True
+                            )
+                            
+                            for i, evidence_item in enumerate(sorted_evidence[:10]):  # Show top 10
+                                priority_emoji = "🔴" if evidence_item.priority == "high" else "🟡" if evidence_item.priority == "medium" else "🟢"
+                                
+                                with st.expander(f"{priority_emoji} Evidence #{i+1}: {evidence_item.platform.title()} - Viral Score: {evidence_item.viral_score:.2f}"):
+                                    col1, col2 = st.columns([3, 1])
+                                    
+                                    with col1:
+                                        st.write(f"**Content:** {evidence_item.content[:200]}...")
+                                        st.write(f"**Author:** @{evidence_item.author}")
+                                        st.write(f"**Platform:** {evidence_item.platform.title()}")
+                                        st.write(f"**Timestamp:** {evidence_item.timestamp}")
+                                        
+                                        if evidence_item.source_url:
+                                            st.write(f"**Source URL:** {evidence_item.source_url}")
+                                        
+                                        if evidence_item.hashtags:
+                                            st.write(f"**Hashtags:** {', '.join(evidence_item.hashtags)}")
+                                        
+                                        if evidence_item.location:
+                                            st.write(f"**Location:** {evidence_item.location}")
+                                    
+                                    with col2:
+                                        st.metric("Viral Score", f"{evidence_item.viral_score:.2f}")
+                                        st.metric("Engagement", f"{evidence_item.engagement_count:,}")
+                                        st.metric("Priority", evidence_item.priority.title())
+                                        
+                                        # Evidence collection actions
+                                        col_a, col_b = st.columns(2)
+                                        
+                                        with col_a:
+                                            if st.button("📋 Collect", key=f"collect_{i}"):
+                                                try:
+                                                    # Simulate evidence collection with legal framework
+                                                    auth_data = {
+                                                        "authority_type": "magistrate_warrant",
+                                                        "issuing_authority": "Chief Metropolitan Magistrate, Delhi",
+                                                        "case_number": case_number,
+                                                        "sections_invoked": ["IT_Act_66", "IT_Act_67", "CrPC_156"],
+                                                        "validity_start": "2025-09-21T00:00:00",
+                                                        "validity_end": "2025-12-21T23:59:59",
+                                                        "scope_description": "Investigation of viral misinformation campaign",
+                                                        "target_platforms": [evidence_item.platform],
+                                                        "authorized_officers": [authorized_officer]
+                                                    }
+                                                    
+                                                    authorization = legal_framework.create_legal_authorization(auth_data)
+                                                    
+                                                    if authorization:
+                                                        evidence = legal_framework.collect_digital_evidence(
+                                                            content=evidence_item.content,
+                                                            platform=evidence_item.platform,
+                                                            evidence_type=EvidenceType.ELECTRONIC_RECORD,
+                                                            collecting_officer=authorized_officer,
+                                                            authorization_id=authorization.auth_id,
+                                                            metadata={
+                                                                "viral_score": evidence_item.viral_score,
+                                                                "engagement": evidence_item.engagement_count,
+                                                                "priority": evidence_item.priority,
+                                                                "source_url": evidence_item.source_url,
+                                                                "hashtags": evidence_item.hashtags,
+                                                                "location": evidence_item.location
+                                                            }
+                                                        )
+                                                        
+                                                        if evidence:
+                                                            st.success("✅ Evidence collected successfully!")
+                                                            st.json({
+                                                                "evidence_id": evidence.evidence_id,
+                                                                "collection_time": evidence.collection_timestamp.isoformat(),
+                                                                "integrity_verified": evidence.integrity_verified,
+                                                                "section_65b_compliant": bool(evidence.section_65b_certificate)
+                                                            })
+                                                        else:
+                                                            st.error("❌ Evidence collection failed")
+                                                    else:
+                                                        st.error("❌ Authorization creation failed")
+                                                        
+                                                except Exception as e:
+                                                    logger.error(f"Evidence collection error: {e}")
+                                                    show_error_popup(f"Failed to collect evidence for URL: {str(e)}", "URL Evidence Error")
+                                        
+                                        with col_b:
+                                            if st.button("🔍 Analyze", key=f"analyze_{i}"):
+                                                # Show detailed analysis
+                                                analysis = language_support.analyze_multilingual_content(evidence_item.content)
+                                                st.json(analysis)
+                            
+                            # URL tracking section
+                            if evidence_type == "URL Evidence":
+                                st.markdown("### 🔗 URL Evidence Tracking")
+                                
+                                url_evidence = evidence_data.get("url_tracking", [])
+                                if url_evidence:
+                                    url_df = pd.DataFrame([
+                                        {
+                                            'URL': url.url,
+                                            'Share Count': url.share_count,
+                                            'First Seen': url.first_seen,
+                                            'Last Seen': url.last_seen,
+                                            'Platforms': ', '.join(url.platforms)
+                                        }
+                                        for url in url_evidence
+                                    ])
+                                    
+                                    st.dataframe(url_df, use_container_width=True)
+                            
+                            # Hashtag tracking section
+                            if evidence_type == "Hashtag Tracking":
+                                st.markdown("### 🏷️ Hashtag Evidence Tracking")
+                                
+                                hashtag_evidence = evidence_data.get("hashtag_tracking", [])
+                                if hashtag_evidence:
+                                    hashtag_df = pd.DataFrame([
+                                        {
+                                            'Hashtag': hashtag.hashtag,
+                                            'Usage Count': hashtag.usage_count,
+                                            'Viral Score': hashtag.viral_score,
+                                            'First Seen': hashtag.first_seen,
+                                            'Peak Usage': hashtag.peak_usage_time
+                                        }
+                                        for hashtag in hashtag_evidence
+                                    ])
+                                    
+                                    st.dataframe(hashtag_df, use_container_width=True)
+                                    
+                                    # Hashtag timeline
+                                    if hashtag_evidence:
+                                        timeline_data = []
+                                        for hashtag in hashtag_evidence:
+                                            if hasattr(hashtag, 'timeline') and hashtag.timeline:
+                                                for point in hashtag.timeline:
+                                                    timeline_data.append({
+                                                        'hashtag': hashtag.hashtag,
+                                                        'timestamp': point.timestamp,
+                                                        'usage_count': point.usage_count
+                                                    })
+                                        
+                                        if timeline_data:
+                                            timeline_df = pd.DataFrame(timeline_data)
+                                            fig_hashtag_timeline = px.line(
+                                                timeline_df,
+                                                x='timestamp',
+                                                y='usage_count',
+                                                color='hashtag',
+                                                title="Hashtag Usage Timeline"
+                                            )
+                                            st.plotly_chart(fig_hashtag_timeline, use_container_width=True)
+                        
+                        else:
+                            st.warning("⚠️ No evidence items found for the specified criteria.")
+                            
+                    except Exception as e:
+                        logger.error(f"Evidence collection error: {e}")
+                        show_error_popup(f"Failed to collect evidence: {str(e)}", "Evidence Collection Error")
+            else:
+                st.warning("⚠️ Please enter keywords and select at least one platform.")
+        
+        else:
+            st.info("👆 Configure evidence collection parameters and click 'Collect Evidence' to start")
+            
+            # Show information about evidence collection
+            st.markdown("""
+            ### 📋 Real-time Evidence Collection
+            
+            This system provides:
+            
+            - **Legal Compliance**: All evidence collection follows IT Act 2000, CrPC 1973, and Evidence Act 1872
+            - **Real-time Collection**: Live monitoring and collection of viral content
+            - **URL Tracking**: Track specific URLs and their spread across platforms
+            - **Hashtag Evidence**: Monitor hashtag usage and viral patterns
+            - **Chain of Custody**: Maintain complete evidence integrity
+            - **Section 65B Compliance**: Generate court-admissible digital evidence
+            
+            **Evidence Types:**
+            - **High Viral Score Posts**: Content with significant viral potential
+            - **Hashtag Tracking**: Monitor specific hashtags and their spread
+            - **URL Evidence**: Track shared URLs and their propagation
+            - **User Activity**: Monitor specific user accounts and their content
+            
+            **Legal Framework**: All evidence collection is performed under proper legal authorization.
+            """)
+        
+        # Evidence statistics sidebar
+        st.markdown("### 📊 Evidence Collection Statistics")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
             # Mock evidence statistics
             st.metric("Total Evidence Items", "156", "↑ 12")
             st.metric("Section 65B Compliant", "142", "91%")
             st.metric("Chain of Custody Complete", "156", "100%")
             st.metric("Court-Ready Packages", "23", "↑ 3")
-            
-            st.markdown("---")
-            
-            st.subheader(get_text("legal_framework") + " Status")
+        
+        with col2:
+            st.markdown("#### Legal Framework Status")
             
             compliance_data = {
-                "IT Act 2000": "Compliant",
-                "CrPC 1973": "Compliant", 
-                "Evidence Act 1872": "Compliant",
-                "Digital Signatures": "Verified",
-                "Chain of Custody": "Maintained"
+                "IT Act 2000": "✅ Compliant",
+                "CrPC 1973": "✅ Compliant", 
+                "Evidence Act 1872": "✅ Compliant",
+                "Digital Signatures": "✅ Verified",
+                "Chain of Custody": "✅ Maintained"
             }
             
             for law, status in compliance_data.items():
@@ -1325,25 +2045,308 @@ if st.sidebar.button(get_text('refresh_data')):
 
 # Export functionality
 if st.sidebar.button(get_text('export_report')):
-    # Generate comprehensive report
-    report_data = {
-        "timestamp": datetime.now().isoformat(),
-        "case_number": case_number,
-        "authorized_officer": authorized_officer,
-        "platforms_analyzed": selected_platforms,
-        "total_content_items": len(viral_data),
-        "high_priority_items": len(viral_data[viral_data['viral_score'] > 0.7]),
-        "language_distribution": viral_data['language'].value_counts().to_dict(),
-        "platform_distribution": viral_data['platform'].value_counts().to_dict(),
-        "legal_compliance_status": "compliant" if auth_status != "No Authorization" else "requires_authorization"
-    }
+    try:
+        # Generate comprehensive report
+        report_data = {
+            "timestamp": datetime.now().isoformat(),
+            "case_number": case_number,
+            "authorized_officer": authorized_officer,
+            "platforms_analyzed": selected_platforms,
+            "total_content_items": len(viral_data),
+            "high_priority_items": len(viral_data[viral_data['viral_score'] > 0.7]),
+            "language_distribution": viral_data['language'].value_counts().to_dict(),
+            "platform_distribution": viral_data['platform'].value_counts().to_dict(),
+            "legal_compliance_status": "compliant" if auth_status != "No Authorization" else "requires_authorization"
+        }
+        
+        st.sidebar.download_button(
+            label="📥 Download Report",
+            data=json.dumps(report_data, indent=2),
+            file_name=f"insideout_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
+            mime="application/json"
+        )
+    except Exception as e:
+        logger.error(f"Report export error: {e}")
+        show_error_popup(f"Failed to generate report: {str(e)}", "Report Export Error")
+
+# Real-time Search Tab Implementation
+with tab7:
+    st.header("🔍 Real-time Social Media Search & Analysis")
+    st.markdown("**Search across X.com, YouTube, and Reddit with real-time sentiment and viral analysis**")
     
-    st.sidebar.download_button(
-        label="📥 Download Report",
-        data=json.dumps(report_data, indent=2),
-        file_name=f"insideout_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
-        mime="application/json"
-    )
+    # Search interface
+    col1, col2 = st.columns([2, 1])
+    
+    with col1:
+        search_keywords = st.text_input(
+            "🔍 Search Keywords",
+            placeholder="Enter keywords, phrases, or hashtags (e.g., 'climate change', 'government policy')",
+            help="Use boolean operators: AND, OR, NOT. Use quotes for exact phrases."
+        )
+    
+    with col2:
+        search_region = st.selectbox(
+            "🌍 Region Filter",
+            options=["India", "Global", "Delhi", "Mumbai", "Bangalore", "Chennai"],
+            index=0
+        )
+    
+    # Advanced search options
+    with st.expander("⚙️ Advanced Search Options"):
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            time_window = st.selectbox(
+                "⏰ Time Window",
+                options=["Last 24 hours", "Last 3 days", "Last week", "Last month"],
+                index=0
+            )
+            
+            # Convert to hours
+            time_mapping = {
+                "Last 24 hours": 24,
+                "Last 3 days": 72,
+                "Last week": 168,
+                "Last month": 720
+            }
+            time_hours = time_mapping[time_window]
+        
+        with col2:
+            selected_platforms = st.multiselect(
+                "📱 Platforms",
+                options=["twitter", "youtube", "reddit"],
+                default=["twitter", "youtube", "reddit"],
+                key="admin_monitoring_platforms"
+            )
+        
+        with col3:
+            max_results = st.slider(
+                "📊 Max Results",
+                min_value=10,
+                max_value=200,
+                value=50,
+                step=10
+            )
+    
+    # Search button
+    if st.button("🚀 Start Real-time Search", type="primary", use_container_width=True):
+        if not search_keywords:
+            st.error("Please enter search keywords")
+        elif not selected_platforms:
+            st.error("Please select at least one platform")
+        else:
+            # Create search query
+            search_query = SearchQuery(
+                keywords=search_keywords,
+                region=search_region if search_region != "Global" else None,
+                platforms=selected_platforms,
+                max_results=max_results,
+                case_number=case_number,
+                officer_id=authorized_officer
+            )
+            
+            # Show search progress
+            with st.spinner(f"🔍 Searching {', '.join(selected_platforms)} for '{search_keywords}'..."):
+                try:
+                    # Perform real-time search
+                    search_results = asyncio.run(services['realtime_search'].search_and_analyze(search_query))
+                    
+                    # Store results in session state
+                    st.session_state.search_results = search_results
+                    st.success(f"✅ Search completed! Found {search_results.total_found} posts in {search_results.search_duration:.2f} seconds")
+                    
+                except Exception as e:
+                    logger.error(f"Real-time search error: {e}")
+                    show_error_popup(f"Real-time search failed: {str(e)}", "Search Error")
+    
+    # Display search results if available
+    if hasattr(st.session_state, 'search_results') and st.session_state.search_results:
+        results = st.session_state.search_results
+        
+        # Results summary
+        st.subheader("📊 Search Results Summary")
+        
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            st.metric("Total Posts", results.total_found)
+        with col2:
+            avg_sentiment = results.analysis_summary.get('average_sentiment', 0)
+            sentiment_label = "Positive" if avg_sentiment > 0.1 else "Negative" if avg_sentiment < -0.1 else "Neutral"
+            st.metric("Avg Sentiment", f"{avg_sentiment:.2f}", sentiment_label)
+        with col3:
+            avg_viral = results.analysis_summary.get('average_viral_potential', 0)
+            st.metric("Avg Viral Score", f"{avg_viral:.2f}")
+        with col4:
+            high_risk = results.analysis_summary.get('high_risk_posts', 0)
+            st.metric("High Risk Posts", high_risk, "⚠️" if high_risk > 0 else "✅")
+        
+        # Chronological Timeline
+        st.subheader("⏰ Chronological Timeline")
+        
+        if results.timeline_data:
+            # Create timeline DataFrame
+            timeline_df = pd.DataFrame(results.timeline_data)
+            timeline_df['timestamp'] = pd.to_datetime(timeline_df['timestamp'])
+            timeline_df = timeline_df.sort_values('timestamp')
+            
+            # Timeline visualization
+            fig_timeline = px.scatter(
+                timeline_df,
+                x='timestamp',
+                y='sentiment_score',
+                color='platform',
+                size='engagement_total',
+                hover_data=['author', 'viral_potential'],
+                title="Content Timeline - Sentiment vs Time",
+                labels={'sentiment_score': 'Sentiment Score', 'timestamp': 'Time'}
+            )
+            fig_timeline.add_hline(y=0, line_dash="dash", line_color="gray")
+            st.plotly_chart(fig_timeline, use_container_width=True)
+            
+            # Timeline table
+            st.subheader("📋 Detailed Timeline")
+            
+            # Format timeline for display
+            display_timeline = timeline_df.copy()
+            display_timeline['Time'] = display_timeline['timestamp'].dt.strftime('%Y-%m-%d %H:%M')
+            display_timeline['Platform'] = display_timeline['platform'].str.title()
+            display_timeline['Content'] = display_timeline['content_preview']
+            display_timeline['Sentiment'] = display_timeline['sentiment_label'].str.title()
+            display_timeline['Viral Score'] = display_timeline['viral_potential'].round(2)
+            display_timeline['Engagement'] = display_timeline['engagement_total']
+            display_timeline['Risk'] = display_timeline['risk_indicators'].apply(
+                lambda x: "⚠️ High" if x and len(x) > 0 else "✅ Low"
+            )
+            
+            # Display table
+            st.dataframe(
+                display_timeline[['Time', 'Platform', 'Content', 'Sentiment', 'Viral Score', 'Engagement', 'Risk']],
+                use_container_width=True,
+                height=400
+            )
+        
+        # Viral Actors Analysis
+        if results.viral_actors:
+            st.subheader("👥 Viral Actors & Influencers")
+            
+            viral_actors_df = pd.DataFrame(results.viral_actors[:10])  # Top 10
+            
+            # Viral actors chart
+            fig_actors = px.bar(
+                viral_actors_df,
+                x='handle',
+                y='influence_score',
+                color='platform',
+                title="Top Viral Actors by Influence Score",
+                labels={'influence_score': 'Influence Score', 'handle': 'Account Handle'}
+            )
+            fig_actors.update_xaxes(tickangle=45)
+            st.plotly_chart(fig_actors, use_container_width=True)
+            
+            # Actors table
+            display_actors = viral_actors_df.copy()
+            display_actors['Handle'] = display_actors['handle']
+            display_actors['Platform'] = display_actors['platform'].str.title()
+            display_actors['Posts'] = display_actors['post_count']
+            display_actors['Engagement'] = display_actors['total_engagement']
+            display_actors['Influence'] = display_actors['influence_score'].round(3)
+            display_actors['Avg Sentiment'] = display_actors['avg_sentiment'].round(2)
+            display_actors['Risk Level'] = display_actors['risk_indicators'].apply(
+                lambda x: "⚠️ High" if x and len(x) > 2 else "🔶 Medium" if x and len(x) > 0 else "✅ Low"
+            )
+            
+            st.dataframe(
+                display_actors[['Handle', 'Platform', 'Posts', 'Engagement', 'Influence', 'Avg Sentiment', 'Risk Level']],
+                use_container_width=True
+            )
+        
+        # Platform Analysis
+        st.subheader("📱 Platform Distribution")
+        
+        platform_dist = results.analysis_summary.get('platform_distribution', {})
+        if platform_dist:
+            fig_platforms = px.pie(
+                values=list(platform_dist.values()),
+                names=list(platform_dist.keys()),
+                title="Content Distribution by Platform"
+            )
+            st.plotly_chart(fig_platforms, use_container_width=True)
+        
+        # Export functionality
+        st.subheader("📥 Export Results")
+        
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            if st.button("📄 Export as JSON"):
+                try:
+                    json_data = services['realtime_search'].export_results(results, format='json')
+                    st.download_button(
+                        label="Download JSON Report",
+                        data=json_data,
+                        file_name=f"realtime_search_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
+                        mime="application/json"
+                    )
+                except Exception as e:
+                    logger.error(f"JSON export error: {e}")
+                    show_error_popup(f"Failed to export JSON report: {str(e)}", "Export Error")
+        
+        with col2:
+            if st.button("📊 Export as CSV"):
+                try:
+                    csv_data = services['realtime_search'].export_results(results, format='csv')
+                    st.download_button(
+                        label="Download CSV Report",
+                        data=csv_data,
+                        file_name=f"realtime_search_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+                        mime="text/csv"
+                    )
+                except Exception as e:
+                    logger.error(f"CSV export error: {e}")
+                    show_error_popup(f"Failed to export CSV report: {str(e)}", "Export Error")
+        
+        with col3:
+            if st.button("🔄 Clear Results"):
+                if hasattr(st.session_state, 'search_results'):
+                    del st.session_state.search_results
+                st.rerun()
+    
+    else:
+        # Show example when no search has been performed
+        st.info("👆 Enter search keywords above and click 'Start Real-time Search' to begin analysis")
+        
+        st.subheader("🎯 Search Examples")
+        
+        examples = [
+            {
+                "title": "🌍 Climate Change Discussion",
+                "keywords": "climate change OR global warming",
+                "description": "Track climate-related discussions across platforms"
+            },
+            {
+                "title": "🏛️ Government Policy Analysis", 
+                "keywords": "government policy AND india",
+                "description": "Monitor government policy discussions"
+            },
+            {
+                "title": "📱 Technology Trends",
+                "keywords": "artificial intelligence OR AI OR machine learning",
+                "description": "Follow AI and technology conversations"
+            },
+            {
+                "title": "🚨 Breaking News Monitoring",
+                "keywords": "breaking news OR urgent OR alert",
+                "description": "Track breaking news and urgent updates"
+            }
+        ]
+        
+        for example in examples:
+            with st.expander(example["title"]):
+                st.code(f"Keywords: {example['keywords']}")
+                st.write(example["description"])
+                if st.button(f"Use this example", key=f"example_{example['title']}"):
+                    st.session_state.example_keywords = example['keywords']
+                    st.rerun()
 
 # Help section
 with st.sidebar.expander(get_text("help_documentation")):
@@ -1378,5 +2381,10 @@ with st.sidebar.expander(get_text("help_documentation")):
     """)
 
 if __name__ == "__main__":
-    st.sidebar.success(get_text('platform_active'))
-    st.sidebar.info(f"Last updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    try:
+        st.sidebar.success(get_text('platform_active'))
+        st.sidebar.info(f"Last updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    except Exception as e:
+        logger.error(f"Critical error in main execution: {str(e)}")
+        show_error_popup(f"Critical dashboard error: {str(e)}", "System Error")
+        st.stop()

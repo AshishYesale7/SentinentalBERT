@@ -6,8 +6,68 @@ from typing import List, Dict, Any
 import torch
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline
 import numpy as np
+import re
 
 logger = logging.getLogger(__name__)
+
+class SentimentAnalyzer:
+    """Simple sentiment analyzer for real-time analysis"""
+    
+    def __init__(self):
+        # Simple keyword-based sentiment analysis
+        self.positive_words = [
+            'good', 'great', 'excellent', 'amazing', 'wonderful', 'fantastic', 'awesome',
+            'love', 'like', 'happy', 'joy', 'success', 'win', 'best', 'perfect',
+            'beautiful', 'brilliant', 'outstanding', 'superb', 'magnificent'
+        ]
+        
+        self.negative_words = [
+            'bad', 'terrible', 'awful', 'horrible', 'hate', 'dislike', 'angry',
+            'sad', 'disappointed', 'fail', 'worst', 'disgusting', 'pathetic',
+            'stupid', 'ridiculous', 'annoying', 'frustrating', 'outrageous'
+        ]
+        
+        logger.info("Sentiment analyzer initialized")
+    
+    def analyze_sentiment(self, text: str) -> Dict[str, Any]:
+        """Analyze sentiment of text"""
+        try:
+            if not text:
+                return {'compound': 0.0, 'pos': 0.0, 'neg': 0.0, 'neu': 1.0}
+            
+            # Clean and tokenize text
+            words = re.findall(r'\b\w+\b', text.lower())
+            
+            if not words:
+                return {'compound': 0.0, 'pos': 0.0, 'neg': 0.0, 'neu': 1.0}
+            
+            # Count positive and negative words
+            pos_count = sum(1 for word in words if word in self.positive_words)
+            neg_count = sum(1 for word in words if word in self.negative_words)
+            
+            total_words = len(words)
+            
+            # Calculate scores
+            pos_score = pos_count / total_words if total_words > 0 else 0.0
+            neg_score = neg_count / total_words if total_words > 0 else 0.0
+            neu_score = max(0.0, 1.0 - pos_score - neg_score)
+            
+            # Calculate compound score
+            compound = pos_score - neg_score
+            
+            # Normalize compound score to [-1, 1]
+            compound = max(-1.0, min(1.0, compound * 2))
+            
+            return {
+                'compound': compound,
+                'pos': pos_score,
+                'neg': neg_score,
+                'neu': neu_score
+            }
+            
+        except Exception as e:
+            logger.error(f"Sentiment analysis error: {e}")
+            return {'compound': 0.0, 'pos': 0.0, 'neg': 0.0, 'neu': 1.0}
 
 class SentinelBERTModel:
     """Simplified BERT model for sentiment analysis"""

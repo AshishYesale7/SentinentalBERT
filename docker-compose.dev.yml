@@ -1,0 +1,356 @@
+version: '3.8'
+
+services:
+  # Main Streamlit Dashboard Application
+  streamlit-dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile.dashboard
+    container_name: sentinelbert-dashboard
+    environment:
+      - PYTHONPATH=/app
+      - STREAMLIT_SERVER_PORT=8501
+      - STREAMLIT_SERVER_ADDRESS=0.0.0.0
+      - STREAMLIT_SERVER_ENABLE_CORS=true
+      - STREAMLIT_SERVER_ENABLE_XSRF_PROTECTION=false
+      - STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
+      - DATABASE_URL=postgresql://sentinel:${POSTGRES_PASSWORD:-sentinelpass123}@postgres:5432/sentinelbert
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-redispass123}@redis:6379
+      - ELASTIC_URL=http://elasticsearch:9200
+      - ELASTIC_USERNAME=elastic
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD:-elasticpass123}
+      - NLP_SERVICE_URL=http://nlp-service:8000
+      - BACKEND_SERVICE_URL=http://backend-service:8080
+      - LOG_LEVEL=INFO
+    volumes:
+      - .:/app
+      - ./logs:/app/logs
+      - ./evidence_storage:/app/evidence_storage
+      - ./temp_files:/app/temp_files
+    ports:
+      - "8501:8501"  # Streamlit Dashboard
+      - "8502:8502"  # Alternative port
+    networks:
+      - sentinelbert-network
+    depends_on:
+      - postgres
+      - redis
+      - nlp-service
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 1G
+
+  # Database Services
+  postgres:
+    image: postgres:15-alpine
+    container_name: sentinelbert-postgres-dev
+    environment:
+      POSTGRES_DB: sentinelbert
+      POSTGRES_USER: sentinel
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sentinelpass123}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+      - ./sql:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "5432:5432"  # Exposed for development
+    networks:
+      - sentinelbert-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sentinel -d sentinelbert"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: sentinelbert-redis-dev
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redispass123}
+    volumes:
+      - redis_dev_data:/data
+    ports:
+      - "6379:6379"  # Exposed for development
+    networks:
+      - sentinelbert-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-redispass123}", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  # Elasticsearch for search and analytics
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.10.0
+    container_name: sentinelbert-elasticsearch-dev
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false  # Disabled for development
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+      - bootstrap.memory_lock=true
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - elasticsearch_dev_data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"  # Exposed for development
+      - "9300:9300"
+    networks:
+      - sentinelbert-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+
+  # NLP Service for sentiment analysis and text processing
+  nlp-service:
+    build:
+      context: ./services/nlp
+      dockerfile: Dockerfile
+    container_name: sentinelbert-nlp-dev
+    environment:
+      - MODEL_PATH=/app/models
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-redispass123}@redis:6379
+      - DATABASE_URL=postgresql://sentinel:${POSTGRES_PASSWORD:-sentinelpass123}@postgres:5432/sentinelbert
+      - LOG_LEVEL=INFO
+      - PYTHONPATH=/app
+    volumes:
+      - ./services/nlp:/app
+      - nlp_models:/app/models
+      - nlp_cache:/app/cache
+    ports:
+      - "8000:8000"  # NLP API
+    networks:
+      - sentinelbert-network
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+        reservations:
+          memory: 2G
+
+  # Backend API Service
+  backend-service:
+    build:
+      context: ./services/backend
+      dockerfile: Dockerfile
+    container_name: sentinelbert-backend-dev
+    environment:
+      - SPRING_PROFILES_ACTIVE=development
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/sentinelbert
+      - SPRING_DATASOURCE_USERNAME=sentinel
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD:-sentinelpass123}
+      - SPRING_REDIS_HOST=redis
+      - SPRING_REDIS_PASSWORD=${REDIS_PASSWORD:-redispass123}
+      - SPRING_ELASTICSEARCH_URIS=http://elasticsearch:9200
+      - NLP_SERVICE_URL=http://nlp-service:8000
+      - JWT_SECRET=${JWT_SECRET:-dev-jwt-secret-key-change-in-production}
+      - LOG_LEVEL=INFO
+    volumes:
+      - ./services/backend:/app
+    ports:
+      - "8080:8080"  # Backend API
+    networks:
+      - sentinelbert-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nlp-service:
+        condition: service_started
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 1G
+
+  # Evidence Collection Service
+  evidence-service:
+    build:
+      context: ./services/evidence
+      dockerfile: Dockerfile
+    container_name: sentinelbert-evidence-dev
+    environment:
+      - DATABASE_URL=postgresql://sentinel:${POSTGRES_PASSWORD:-sentinelpass123}@postgres:5432/sentinelbert
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-redispass123}@redis:6379
+      - STORAGE_PATH=/app/evidence_storage
+      - LOG_LEVEL=INFO
+    volumes:
+      - ./services/evidence:/app
+      - ./evidence_storage:/app/evidence_storage
+    ports:
+      - "8082:8000"  # Evidence API
+    networks:
+      - sentinelbert-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Data Ingestion Service
+  ingestion-service:
+    build:
+      context: ./services/ingestion
+      dockerfile: Dockerfile
+    container_name: sentinelbert-ingestion-dev
+    environment:
+      - DATABASE_URL=postgresql://sentinel:${POSTGRES_PASSWORD:-sentinelpass123}@postgres:5432/sentinelbert
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-redispass123}@redis:6379
+      - RUST_LOG=info
+      - TWITTER_BEARER_TOKEN=${TWITTER_BEARER_TOKEN:-}
+      - INSTAGRAM_ACCESS_TOKEN=${INSTAGRAM_ACCESS_TOKEN:-}
+      - REDDIT_CLIENT_ID=${REDDIT_CLIENT_ID:-}
+      - REDDIT_CLIENT_SECRET=${REDDIT_CLIENT_SECRET:-}
+      - YOUTUBE_API_KEY=${YOUTUBE_API_KEY:-}
+    volumes:
+      - ./services/ingestion:/app
+    ports:
+      - "8081:8080"  # Ingestion API
+    networks:
+      - sentinelbert-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Viral Detection Service
+  viral-detection:
+    build:
+      context: ./services/viral_detection
+      dockerfile: Dockerfile
+    container_name: sentinelbert-viral-dev
+    environment:
+      - DATABASE_URL=postgresql://sentinel:${POSTGRES_PASSWORD:-sentinelpass123}@postgres:5432/sentinelbert
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-redispass123}@redis:6379
+      - NLP_SERVICE_URL=http://nlp-service:8000
+      - LOG_LEVEL=INFO
+    volumes:
+      - ./services/viral_detection:/app
+    ports:
+      - "8083:8000"  # Viral Detection API
+    networks:
+      - sentinelbert-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nlp-service:
+        condition: service_started
+    restart: unless-stopped
+
+  # Development Tools
+  adminer:
+    image: adminer:latest
+    container_name: sentinelbert-adminer-dev
+    ports:
+      - "8084:8080"  # Database admin interface
+    networks:
+      - sentinelbert-network
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: sentinelbert-redis-commander-dev
+    environment:
+      - REDIS_HOSTS=local:redis:6379:0:${REDIS_PASSWORD:-redispass123}
+    ports:
+      - "8085:8081"  # Redis admin interface
+    networks:
+      - sentinelbert-network
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  # Monitoring (Lightweight for development)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: sentinelbert-prometheus-dev
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=24h'  # Shorter retention for dev
+      - '--web.enable-lifecycle'
+    volumes:
+      - ./monitoring/prometheus.dev.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_dev_data:/prometheus
+    ports:
+      - "9090:9090"  # Prometheus UI
+    networks:
+      - sentinelbert-network
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: sentinelbert-grafana-dev
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin123}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource
+    volumes:
+      - grafana_dev_data:/var/lib/grafana
+      - ./monitoring/grafana/dev:/etc/grafana/provisioning
+    ports:
+      - "3000:3000"  # Grafana UI
+    networks:
+      - sentinelbert-network
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
+volumes:
+  postgres_dev_data:
+    driver: local
+  redis_dev_data:
+    driver: local
+  elasticsearch_dev_data:
+    driver: local
+  nlp_models:
+    driver: local
+  nlp_cache:
+    driver: local
+  prometheus_dev_data:
+    driver: local
+  grafana_dev_data:
+    driver: local
+
+networks:
+  sentinelbert-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.21.0.0/16
