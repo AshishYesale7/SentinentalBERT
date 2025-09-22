@@ -8,13 +8,15 @@ services:
     environment:
       POSTGRES_DB: sentinelbert
       POSTGRES_USER: sentinel
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sentinel123}
+      # SECURITY FIX: Require password from environment, no default
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./database/init:/docker-entrypoint-initdb.d
-    ports:
-      - "5432:5432"
+      - ./database/init:/docker-entrypoint-initdb.d:ro
+    # SECURITY FIX: Don't expose database port externally
+    # ports:
+    #   - "5432:5432"
     networks:
       - sentinelbert-network
     healthcheck:
@@ -22,36 +24,58 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    # SECURITY FIX: Run as non-root user
+    user: "999:999"
+    # SECURITY FIX: Add security options
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/run/postgresql
 
   elasticsearch:
-    image: elasticsearch:8.10.0
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.10.0
     container_name: sentinelbert-elasticsearch
     environment:
       - discovery.type=single-node
-      - xpack.security.enabled=false
+      # SECURITY FIX: Enable security
+      - xpack.security.enabled=true
+      - xpack.security.enrollment.enabled=true
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
       - "ES_JAVA_OPTS=-Xms2g -Xmx2g"
       - bootstrap.memory_lock=true
+      # SECURITY FIX: Enable TLS
+      - xpack.security.http.ssl.enabled=true
+      - xpack.security.http.ssl.key=certs/elasticsearch/elasticsearch.key
+      - xpack.security.http.ssl.certificate=certs/elasticsearch/elasticsearch.crt
+      - xpack.security.http.ssl.certificate_authorities=certs/ca/ca.crt
     ulimits:
       memlock:
         soft: -1
         hard: -1
     volumes:
       - elasticsearch_data:/usr/share/elasticsearch/data
-    ports:
-      - "9200:9200"
-      - "9300:9300"
+      - elasticsearch_certs:/usr/share/elasticsearch/config/certs:ro
+    # SECURITY FIX: Don't expose ports externally
+    # ports:
+    #   - "9200:9200"
+    #   - "9300:9300"
     networks:
       - sentinelbert-network
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      test: ["CMD-SHELL", "curl -f -k -u elastic:${ELASTIC_PASSWORD} https://localhost:9200/_cluster/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
+    # SECURITY FIX: Add security options
+    security_opt:
+      - no-new-privileges:true
 
   redis:
     image: redis:7.2-alpine
     container_name: sentinelbert-redis
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis123}
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
     volumes:
       - redis_data:/data
     ports:
@@ -109,8 +133,8 @@ services:
       dockerfile: Dockerfile
     container_name: sentinelbert-ingestion
     environment:
-      - DATABASE_URL=postgresql://sentinel:${POSTGRES_PASSWORD:-sentinel123}@postgres:5432/sentinelbert
-      - REDIS_URL=redis://:${REDIS_PASSWORD:-redis123}@redis:6379
+      - DATABASE_URL=postgresql://sentinel:${POSTGRES_PASSWORD}@postgres:5432/sentinelbert
+      - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379
       - KAFKA_BROKERS=kafka:29092
       - RUST_LOG=info
       - TWITTER_BEARER_TOKEN=${TWITTER_BEARER_TOKEN}
@@ -143,8 +167,8 @@ services:
     container_name: sentinelbert-nlp
     environment:
       - MODEL_PATH=/app/models
-      - REDIS_URL=redis://:${REDIS_PASSWORD:-redis123}@redis:6379
-      - DATABASE_URL=postgresql://sentinel:${POSTGRES_PASSWORD:-sentinel123}@postgres:5432/sentinelbert
+      - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379
+      - DATABASE_URL=postgresql://sentinel:${POSTGRES_PASSWORD}@postgres:5432/sentinelbert
       - CUDA_VISIBLE_DEVICES=0
     volumes:
       - ./models:/app/models:ro
@@ -179,13 +203,18 @@ services:
       - SPRING_PROFILES_ACTIVE=docker
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/sentinelbert
       - SPRING_DATASOURCE_USERNAME=sentinel
-      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD:-sentinel123}
+      # SECURITY FIX: Require password from environment, no default
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
       - SPRING_REDIS_HOST=redis
-      - SPRING_REDIS_PASSWORD=${REDIS_PASSWORD:-redis123}
-      - SPRING_ELASTICSEARCH_URIS=http://elasticsearch:9200
+      # SECURITY FIX: Require password from environment, no default
+      - SPRING_REDIS_PASSWORD=${REDIS_PASSWORD}
+      - SPRING_ELASTICSEARCH_URIS=https://elasticsearch:9200
+      - SPRING_ELASTICSEARCH_USERNAME=elastic
+      - SPRING_ELASTICSEARCH_PASSWORD=${ELASTIC_PASSWORD}
       - NLP_SERVICE_URL=http://nlp-service:8000
       - INGESTION_SERVICE_URL=http://ingestion-service:8080
-      - JWT_SECRET=${JWT_SECRET:-your-secret-key-here}
+      # SECURITY FIX: Require JWT secret from environment, no default
+      - JWT_SECRET=${JWT_SECRET}
     depends_on:
       postgres:
         condition: service_healthy
@@ -249,7 +278,7 @@ services:
     container_name: sentinelbert-grafana
     environment:
       - GF_SECURITY_ADMIN_USER=${GRAFANA_USER:-admin}
-      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin123}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
       - GF_USERS_ALLOW_SIGN_UP=false
     volumes:
       - grafana_data:/var/lib/grafana
@@ -294,6 +323,8 @@ volumes:
   postgres_data:
     driver: local
   elasticsearch_data:
+    driver: local
+  elasticsearch_certs:
     driver: local
   redis_data:
     driver: local

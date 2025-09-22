@@ -3,9 +3,16 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](https://www.docker.com/)
 [![Kubernetes](https://img.shields.io/badge/Kubernetes-Ready-blue.svg)](https://kubernetes.io/)
+[![Security](https://img.shields.io/badge/Security-Hardened-green.svg)](./SECURITY_FIXES_APPLIED.md)
 [![wakatime](https://wakatime.com/badge/github/AshishYesale7/SentinentalBERT.svg)](https://wakatime.com/badge/github/AshishYesale7/SentinentalBERT)
 
 SentinelBERT is a comprehensive social media intelligence platform designed for law enforcement and security agencies to monitor, analyze, and understand sentiment patterns and behavioral trends across multiple social media platforms in real-time.
+
+## 🚨 SECURITY UPDATE
+**This project has been completely security-hardened!** All critical vulnerabilities have been fixed, including hardcoded passwords, weak authentication, and Docker security issues. See [SECURITY_FIXES_APPLIED.md](./SECURITY_FIXES_APPLIED.md) for details.
+
+## 🆕 InsideOut Secure Platform
+A production-ready, legally compliant platform for law enforcement is available in [`INSIDEOUT_SECURE_SKELETON/`](./INSIDEOUT_SECURE_SKELETON/). This includes warrant verification, chain of custody, and constitutional compliance features. See [INSIDEOUT_INTEGRATION_GUIDE.md](./INSIDEOUT_INTEGRATION_GUIDE.md) for integration details.
 
 ## Key Features
 
@@ -528,14 +535,47 @@ Our documentation is powered by an advanced AI system that:
 ---
 
 **Built with care for law enforcement and security professionals**
+## 🔒 Security & Compliance
+
+### Security Features (✅ IMPLEMENTED)
+- **JWT Authentication**: Token-based authentication with role-based permissions
+- **Encrypted Communications**: TLS/SSL for all service communications
+- **Secure Database Access**: Environment-based credentials, no hardcoded passwords
+- **Container Security**: Non-root execution, read-only filesystems, security options
+- **Audit Logging**: Comprehensive logging for all security events
+
+### Legal Compliance (🆕 AVAILABLE IN INSIDEOUT)
+- **Warrant Verification**: Real-time legal authority validation
+- **Chain of Custody**: Cryptographic evidence tracking
+- **Constitutional Compliance**: 4th Amendment protection checks
+- **Court-Admissible Evidence**: Tamper-proof evidence handling
+- **Data Retention Policies**: Automated compliance with legal requirements
+
+### Quick Security Setup
+```bash
+# 1. Copy environment template
+cp .env.template .env
+
+# 2. Set secure passwords (REQUIRED)
+# Edit .env and set:
+# - POSTGRES_PASSWORD=your-secure-password
+# - REDIS_PASSWORD=your-secure-password  
+# - JWT_SECRET=your-256-bit-secret
+
+# 3. Deploy with security hardening
+docker-compose up -d
+```
+
 ## 📚 Documentation
 
 - [📋 Documentation Index](docs/INDEX.md) - Complete documentation overview
 - [🚀 Quick Start](docs/QUICK_START.md) - Get started quickly
 - [🔧 Deployment Guide](DEPLOYMENT_GUIDE.md) - Deployment instructions
+- [🔒 Security Fixes Applied](SECURITY_FIXES_APPLIED.md) - **CRITICAL: Security updates**
+- [🏛️ InsideOut Integration](INSIDEOUT_INTEGRATION_GUIDE.md) - **NEW: Legal compliance platform**
 - [📡 API Reference](docs/api/API_REFERENCE.md) - API documentation
 - [🏗️ System Design](SYSTEM_DESIGN.md) - Technical architecture
-- [🔒 Security Guide](docs/SECURITY.md) - Security best practices
+- [🔍 Security Analysis](COMPREHENSIVE_SECURITY_ANALYSIS.md) - Complete vulnerability assessment
 
 ---
 

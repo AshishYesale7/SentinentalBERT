@@ -1,0 +1,611 @@
+version: '3.8'
+
+# InsideOut Platform - Secure Production Deployment
+# This configuration implements all security best practices
+
+services:
+  # Secure PostgreSQL with encryption
+  postgres:
+    image: postgres:15-alpine
+    container_name: insideout-postgres-secure
+    environment:
+      POSTGRES_DB: insideout
+      POSTGRES_USER: insideout
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C --auth-host=scram-sha-256"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./sql/insideout_schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./config/postgresql.conf:/etc/postgresql/postgresql.conf
+    ports:
+      - "127.0.0.1:5432:5432"  # Bind to localhost only
+    networks:
+      - insideout-secure-network
+    secrets:
+      - postgres_password
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U insideout -d insideout"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/run/postgresql
+    user: "999:999"  # postgres user
+    cap_drop:
+      - ALL
+    cap_add:
+      - SETUID
+      - SETGID
+
+  # Secure Redis with TLS
+  redis:
+    image: redis:7.2-alpine
+    container_name: insideout-redis-secure
+    command: >
+      redis-server
+      --requirepass-file /run/secrets/redis_password
+      --tls-port 6380
+      --port 0
+      --tls-cert-file /etc/ssl/certs/redis.crt
+      --tls-key-file /etc/ssl/private/redis.key
+      --tls-ca-cert-file /etc/ssl/certs/ca.crt
+      --tls-auth-clients yes
+    volumes:
+      - redis_data:/data
+      - ./ssl/redis.crt:/etc/ssl/certs/redis.crt:ro
+      - ./ssl/redis.key:/etc/ssl/private/redis.key:ro
+      - ./ssl/ca.crt:/etc/ssl/certs/ca.crt:ro
+    ports:
+      - "127.0.0.1:6380:6380"  # TLS port only
+    networks:
+      - insideout-secure-network
+    secrets:
+      - redis_password
+    healthcheck:
+      test: ["CMD", "redis-cli", "--tls", "--cert", "/etc/ssl/certs/redis.crt", "--key", "/etc/ssl/private/redis.key", "--cacert", "/etc/ssl/certs/ca.crt", "-p", "6380", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+    user: "999:999"  # redis user
+    cap_drop:
+      - ALL
+
+  # Secure Elasticsearch with authentication
+  elasticsearch:
+    image: elasticsearch:8.10.4
+    container_name: insideout-elasticsearch-secure
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=true
+      - xpack.security.transport.ssl.enabled=true
+      - xpack.security.http.ssl.enabled=true
+      - xpack.security.transport.ssl.keystore.path=/usr/share/elasticsearch/config/certs/elastic-certificates.p12
+      - xpack.security.http.ssl.keystore.path=/usr/share/elasticsearch/config/certs/elastic-certificates.p12
+      - ELASTIC_PASSWORD_FILE=/run/secrets/elastic_password
+      - "ES_JAVA_OPTS=-Xms2g -Xmx2g"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+      - ./ssl/elastic-certificates.p12:/usr/share/elasticsearch/config/certs/elastic-certificates.p12:ro
+    ports:
+      - "127.0.0.1:9200:9200"
+    networks:
+      - insideout-secure-network
+    secrets:
+      - elastic_password
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f https://localhost:9200/_cluster/health -u elastic:$(cat /run/secrets/elastic_password) -k || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    user: "1000:1000"  # elasticsearch user
+    cap_drop:
+      - ALL
+
+  # Secure Authentication Service
+  auth-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.auth
+    container_name: insideout-auth-secure
+    environment:
+      - PYTHONPATH=/app
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=insideout
+      - DB_USERNAME=insideout
+      - DB_PASSWORD_FILE=/run/secrets/postgres_password
+      - REDIS_HOST=redis
+      - REDIS_PORT=6380
+      - REDIS_PASSWORD_FILE=/run/secrets/redis_password
+      - REDIS_TLS=true
+      - JWT_SECRET_FILE=/run/secrets/jwt_secret
+      - ENCRYPTION_KEY_FILE=/run/secrets/encryption_key
+      - MFA_REQUIRED=true
+      - SESSION_TIMEOUT_HOURS=8
+      - LOG_LEVEL=INFO
+    volumes:
+      - auth_logs:/app/logs
+      - ./ssl/ca.crt:/etc/ssl/certs/ca.crt:ro
+    ports:
+      - "127.0.0.1:8001:8001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - insideout-secure-network
+    secrets:
+      - postgres_password
+      - redis_password
+      - jwt_secret
+      - encryption_key
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f https://localhost:8001/health -k || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /app/logs
+    user: "1000:1000"
+    cap_drop:
+      - ALL
+
+  # Secure Legal Compliance Service
+  legal-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.legal
+    container_name: insideout-legal-secure
+    environment:
+      - PYTHONPATH=/app
+      - COURT_API_ENDPOINT=${COURT_API_ENDPOINT}
+      - COURT_API_KEY_FILE=/run/secrets/court_api_key
+      - WARRANT_VERIFICATION_REQUIRED=true
+      - CONSTITUTIONAL_COMPLIANCE=true
+      - GDPR_COMPLIANCE=true
+      - LOG_LEVEL=INFO
+    volumes:
+      - legal_logs:/app/logs
+    ports:
+      - "127.0.0.1:8002:8002"
+    networks:
+      - insideout-secure-network
+    secrets:
+      - court_api_key
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f https://localhost:8002/health -k || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /app/logs
+    user: "1000:1000"
+    cap_drop:
+      - ALL
+
+  # Secure Evidence Management Service
+  evidence-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.evidence
+    container_name: insideout-evidence-secure
+    environment:
+      - PYTHONPATH=/app
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=insideout
+      - DB_USERNAME=insideout
+      - DB_PASSWORD_FILE=/run/secrets/postgres_password
+      - ENCRYPTION_KEY_FILE=/run/secrets/encryption_key
+      - BLOCKCHAIN_PROVIDER_URL=${BLOCKCHAIN_PROVIDER_URL}
+      - BLOCKCHAIN_CONTRACT_ADDRESS=${BLOCKCHAIN_CONTRACT_ADDRESS}
+      - BLOCKCHAIN_PRIVATE_KEY_FILE=/run/secrets/blockchain_private_key
+      - LOG_LEVEL=INFO
+    volumes:
+      - evidence_data:/app/data
+      - evidence_logs:/app/logs
+      - ./ssl/evidence-signing.key:/app/ssl/signing.key:ro
+      - ./ssl/evidence-signing.crt:/app/ssl/signing.crt:ro
+    ports:
+      - "127.0.0.1:8003:8003"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - insideout-secure-network
+    secrets:
+      - postgres_password
+      - encryption_key
+      - blockchain_private_key
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f https://localhost:8003/health -k || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /app/logs
+    user: "1000:1000"
+    cap_drop:
+      - ALL
+
+  # Secure BERT Analysis Service
+  analysis-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.analysis
+    container_name: insideout-analysis-secure
+    environment:
+      - PYTHONPATH=/app
+      - BERT_MODEL=bert-base-multilingual-cased
+      - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-}
+      - MODEL_CACHE_DIR=/app/models
+      - LOG_LEVEL=INFO
+    volumes:
+      - bert_models:/app/models
+      - analysis_logs:/app/logs
+    ports:
+      - "127.0.0.1:8004:8004"
+    networks:
+      - insideout-secure-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f https://localhost:8004/health -k || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /app/logs
+    user: "1000:1000"
+    cap_drop:
+      - ALL
+    deploy:
+      resources:
+        limits:
+          memory: 8G
+        reservations:
+          memory: 4G
+
+  # Secure API Gateway
+  api-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: insideout-api-gateway-secure
+    environment:
+      - PYTHONPATH=/app
+      - AUTH_SERVICE_URL=https://auth-service:8001
+      - LEGAL_SERVICE_URL=https://legal-service:8002
+      - EVIDENCE_SERVICE_URL=https://evidence-service:8003
+      - ANALYSIS_SERVICE_URL=https://analysis-service:8004
+      - REDIS_HOST=redis
+      - REDIS_PORT=6380
+      - REDIS_PASSWORD_FILE=/run/secrets/redis_password
+      - REDIS_TLS=true
+      - RATE_LIMITING_ENABLED=true
+      - CORS_ENABLED=true
+      - ALLOWED_ORIGINS=https://insideout.gov.in,https://dashboard.insideout.gov.in
+      - LOG_LEVEL=INFO
+    volumes:
+      - api_logs:/app/logs
+      - ./ssl/api-gateway.crt:/app/ssl/server.crt:ro
+      - ./ssl/api-gateway.key:/app/ssl/server.key:ro
+      - ./ssl/ca.crt:/app/ssl/ca.crt:ro
+    ports:
+      - "443:8080"  # HTTPS only
+    depends_on:
+      auth-service:
+        condition: service_healthy
+      legal-service:
+        condition: service_healthy
+      evidence-service:
+        condition: service_healthy
+      analysis-service:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - insideout-secure-network
+    secrets:
+      - redis_password
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f https://localhost:8080/health -k || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /app/logs
+    user: "1000:1000"
+    cap_drop:
+      - ALL
+
+  # Security Monitoring Service
+  security-monitor:
+    build:
+      context: .
+      dockerfile: Dockerfile.monitoring
+    container_name: insideout-security-monitor
+    environment:
+      - PYTHONPATH=/app
+      - REDIS_HOST=redis
+      - REDIS_PORT=6380
+      - REDIS_PASSWORD_FILE=/run/secrets/redis_password
+      - REDIS_TLS=true
+      - PROMETHEUS_ENDPOINT=http://prometheus:9090
+      - LOG_LEVEL=INFO
+    volumes:
+      - monitoring_logs:/app/logs
+      - ./ssl/ca.crt:/app/ssl/ca.crt:ro
+    ports:
+      - "127.0.0.1:8090:8090"  # Metrics endpoint
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - insideout-secure-network
+    secrets:
+      - redis_password
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8090/metrics || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /app/logs
+    user: "1000:1000"
+    cap_drop:
+      - ALL
+
+  # Prometheus for metrics collection
+  prometheus:
+    image: prom/prometheus:v2.47.0
+    container_name: insideout-prometheus-secure
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=90d'
+      - '--web.enable-lifecycle'
+      - '--web.enable-admin-api'
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    ports:
+      - "127.0.0.1:9090:9090"
+    networks:
+      - insideout-secure-network
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    user: "65534:65534"  # nobody user
+    cap_drop:
+      - ALL
+
+  # Grafana for visualization
+  grafana:
+    image: grafana/grafana:10.1.0
+    container_name: insideout-grafana-secure
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD_FILE=/run/secrets/grafana_password
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SERVER_PROTOCOL=https
+      - GF_SERVER_CERT_FILE=/etc/ssl/certs/grafana.crt
+      - GF_SERVER_CERT_KEY=/etc/ssl/private/grafana.key
+      - GF_SECURITY_COOKIE_SECURE=true
+      - GF_SECURITY_STRICT_TRANSPORT_SECURITY=true
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel,grafana-worldmap-panel
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./ssl/grafana.crt:/etc/ssl/certs/grafana.crt:ro
+      - ./ssl/grafana.key:/etc/ssl/private/grafana.key:ro
+    ports:
+      - "127.0.0.1:3001:3000"
+    depends_on:
+      - prometheus
+    networks:
+      - insideout-secure-network
+    secrets:
+      - grafana_password
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    user: "472:472"  # grafana user
+    cap_drop:
+      - ALL
+
+  # Jaeger for distributed tracing
+  jaeger:
+    image: jaegertracing/all-in-one:1.49
+    container_name: insideout-jaeger-secure
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+      - SPAN_STORAGE_TYPE=elasticsearch
+      - ES_SERVER_URLS=https://elasticsearch:9200
+      - ES_USERNAME=elastic
+      - ES_PASSWORD_FILE=/run/secrets/elastic_password
+      - ES_TLS_ENABLED=true
+      - ES_TLS_SKIP_HOST_VERIFY=true
+    ports:
+      - "127.0.0.1:16686:16686"
+      - "127.0.0.1:14268:14268"
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - insideout-secure-network
+    secrets:
+      - elastic_password
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    user: "10001:10001"  # jaeger user
+    cap_drop:
+      - ALL
+
+  # Nginx reverse proxy with security headers
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: insideout-nginx-secure
+    volumes:
+      - ./nginx/nginx-secure.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl/nginx.crt:/etc/ssl/certs/nginx.crt:ro
+      - ./ssl/nginx.key:/etc/ssl/private/nginx.key:ro
+      - ./ssl/dhparam.pem:/etc/ssl/certs/dhparam.pem:ro
+      - nginx_logs:/var/log/nginx
+    ports:
+      - "80:80"   # Redirect to HTTPS
+      - "443:443" # HTTPS
+    depends_on:
+      - api-gateway
+    networks:
+      - insideout-secure-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:80/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /var/cache/nginx
+      - /var/run
+      - /tmp
+    user: "101:101"  # nginx user
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETUID
+      - SETGID
+
+# Secure network configuration
+networks:
+  insideout-secure-network:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: insideout-secure
+    ipam:
+      config:
+        - subnet: 172.30.0.0/16
+          gateway: 172.30.0.1
+    labels:
+      - "com.insideout.network=secure"
+
+# Encrypted volumes
+volumes:
+  postgres_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind,encryption=aes256
+      device: /opt/insideout/data/postgres
+  redis_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind,encryption=aes256
+      device: /opt/insideout/data/redis
+  elasticsearch_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind,encryption=aes256
+      device: /opt/insideout/data/elasticsearch
+  evidence_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind,encryption=aes256
+      device: /opt/insideout/data/evidence
+  bert_models:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/insideout/models
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+  auth_logs:
+    driver: local
+  legal_logs:
+    driver: local
+  evidence_logs:
+    driver: local
+  analysis_logs:
+    driver: local
+  api_logs:
+    driver: local
+  monitoring_logs:
+    driver: local
+  nginx_logs:
+    driver: local
+
+# Docker secrets for sensitive data
+secrets:
+  postgres_password:
+    file: ./secrets/postgres_password.txt
+  redis_password:
+    file: ./secrets/redis_password.txt
+  elastic_password:
+    file: ./secrets/elastic_password.txt
+  grafana_password:
+    file: ./secrets/grafana_password.txt
+  jwt_secret:
+    file: ./secrets/jwt_secret.txt
+  encryption_key:
+    file: ./secrets/encryption_key.txt
+  court_api_key:
+    file: ./secrets/court_api_key.txt
+  blockchain_private_key:
+    file: ./secrets/blockchain_private_key.txt

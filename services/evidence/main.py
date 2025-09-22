@@ -93,12 +93,18 @@ class EvidenceManager:
         self.encryption_key = self._load_or_generate_key()
         self.cipher_suite = Fernet(self.encryption_key)
         
-        # Database connections
+        # Database connections - SECURITY FIX: Use environment variables
+        import os
+        db_password = os.getenv('DB_PASSWORD')
+        if not db_password:
+            raise ValueError("DB_PASSWORD environment variable must be set")
+        
         self.pg_conn = psycopg2.connect(
-            host='postgres',
-            database='insideout',
-            user='insideout',
-            password='password'
+            host=os.getenv('DB_HOST', 'postgres'),
+            database=os.getenv('DB_NAME', 'insideout'),
+            user=os.getenv('DB_USER', 'insideout'),
+            password=db_password,
+            sslmode='require'  # Enforce SSL connection
         )
         
         self.redis_client = redis.Redis(host='redis', port=6379, decode_responses=True)
