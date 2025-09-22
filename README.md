@@ -1,11 +1,8 @@
 # Government of India - Cyber Crime Analysis Platform
 
 ## भारत सरकार - साइबर अपराध विश्लेषण प्लेटफॉर्म
-
-[![Security](https://img.shields.io/badge/Security-Government_Grade-green.svg)](./SECURITY_FIXES_APPLIED.md)
-[![Compliance](https://img.shields.io/badge/Legal-IT_Act_2000_Compliant-blue.svg)](https://www.meity.gov.in/)
-[![Classification](https://img.shields.io/badge/Classification-RESTRICTED-red.svg)](https://www.mha.gov.in/)
-[![Ministry](https://img.shields.io/badge/Ministry-Home_Affairs-orange.svg)](https://www.mha.gov.in/)
+ 
+[![wakatime](https://wakatime.com/badge/github/AshishYesale7/SentinentalBERT.svg)](https://wakatime.com/badge/github/AshishYesale7/SentinentalBERT)
 
 A professional Indian government-themed viral content analysis platform for law enforcement and cyber crime investigation, with full compliance to Indian legal frameworks including IT Act 2000, CrPC 1973, and Evidence Act 1872.
 
