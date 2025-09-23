@@ -1,0 +1,162 @@
+version: '3.8'
+
+services:
+  # Enhanced Streamlit Dashboard with Viral Tracking
+  enhanced-dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile.enhanced
+      args:
+        - BUILDKIT_INLINE_CACHE=1
+    container_name: sentinelbert-enhanced-dashboard
+    environment:
+      # Application Configuration
+      - PYTHONPATH=/app
+      - STREAMLIT_SERVER_PORT=12000
+      - STREAMLIT_SERVER_ADDRESS=0.0.0.0
+      - STREAMLIT_SERVER_ENABLE_CORS=true
+      - STREAMLIT_SERVER_ENABLE_XSRF_PROTECTION=false
+      - STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
+      - STREAMLIT_SERVER_ALLOW_RUN_ON_SAVE=true
+      - STREAMLIT_SERVER_RUN_ON_SAVE=true
+      
+      # Database Configuration
+      - DATABASE_URL=postgresql://sentinel:sentinelpass123@postgres:5432/sentinelbert
+      - REDIS_URL=redis://:redispass123@redis:6379
+      
+      # Social Media API Credentials (Enhanced Tracking)
+      - TWITTER_API_KEY=tkG3UCrcXhq1LCzC3n02mqg2N
+      - TWITTER_API_SECRET=oXRCjqTeJkV4KWrXFS5JO7ZIjcGGTHSNiUGStL0KIjSHmke90x
+      - TWITTER_ACCESS_TOKEN=835527957481459713-m4BKaUIuaAt2uQ6c2DITWDyoBcFxMAJ
+      - TWITTER_ACCESS_TOKEN_SECRET=B4C9XYaJOMuy7l3nq3Lo2h8FmoKV4TzkmnuqlDtlbveP1
+      - TWITTER_BEARER_TOKEN=AAAAAAAAAAAAAAAAAAAAAHsN4QEAAAAA8%2BZQa%2BzllARQxtAvmhCQsA0WQCs%3DpF9thH1ztd85xkbAsWZvubIgJ98edZ3z7BdA8q1vfkRHnBMd6B
+      
+      # Enhanced Tracking Configuration
+      - TRACKING_API_RATE_LIMIT=100
+      - TRACKING_CONFIDENCE_THRESHOLD=0.7
+      - TRACKING_MAX_CHAIN_LENGTH=50
+      - TRACKING_TIMEOUT_SECONDS=30
+      
+      # Development Configuration
+      - LOG_LEVEL=INFO
+      - DEBUG_MODE=true
+      - DEVELOPMENT_MODE=true
+    
+    volumes:
+      # Mount source code for live development
+      - .:/app
+      - ./logs:/app/logs
+      - ./evidence_storage:/app/evidence_storage
+      - ./temp_files:/app/temp_files
+      - ./models:/app/models
+    
+    ports:
+      - "12000:12000"  # Enhanced Dashboard (Primary)
+      - "12001:12001"  # Alternative port
+      - "8501:8501"    # Standard Streamlit port
+    
+    networks:
+      - sentinelbert-network
+    
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    
+    restart: unless-stopped
+    
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:12000/_stcore/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    
+    deploy:
+      resources:
+        limits:
+          memory: 3G
+          cpus: '2.0'
+        reservations:
+          memory: 1.5G
+          cpus: '1.0'
+
+  # PostgreSQL Database with Enhanced Schema
+  postgres:
+    image: postgres:15-alpine
+    container_name: sentinelbert-postgres-enhanced
+    environment:
+      POSTGRES_DB: sentinelbert
+      POSTGRES_USER: sentinel
+      POSTGRES_PASSWORD: sentinelpass123
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    volumes:
+      - postgres_enhanced_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"  # Exposed for development and external tools
+    networks:
+      - sentinelbert-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sentinel -d sentinelbert"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
+
+  # Redis for Caching and Session Management
+  redis:
+    image: redis:7.2-alpine
+    container_name: sentinelbert-redis-enhanced
+    command: redis-server --appendonly yes --requirepass redispass123 --maxmemory 512mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_enhanced_data:/data
+    ports:
+      - "6379:6379"  # Exposed for development
+    networks:
+      - sentinelbert-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "redispass123", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+
+  # Development Tools and Utilities
+  adminer:
+    image: adminer:latest
+    container_name: sentinelbert-adminer-enhanced
+    environment:
+      - ADMINER_DEFAULT_SERVER=postgres
+      - ADMINER_DESIGN=pepa-linha
+    ports:
+      - "8084:8080"  # Database admin interface
+    networks:
+      - sentinelbert-network
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+networks:
+  sentinelbert-network:
+    driver: bridge
+    name: sentinelbert-network
+
+volumes:
+  postgres_enhanced_data:
+    name: sentinelbert_postgres_enhanced_data
+  redis_enhanced_data:
+    name: sentinelbert_redis_enhanced_data

@@ -13,24 +13,21 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 RUN apt-get update && apt-get install -y \
     build-essential \
     curl \
-    software-properties-common \
     git \
     wget \
     unzip \
-    libpq-dev \
     libssl-dev \
     libffi-dev \
     libjpeg-dev \
     libpng-dev \
     libfreetype6-dev \
     pkg-config \
-    postgresql-client \
-    redis-tools \
     vim \
     nano \
     htop \
     net-tools \
     procps \
+    netcat-openbsd \
     && rm -rf /var/lib/apt/lists/*
 
 # Create app directory and user
@@ -40,11 +37,9 @@ WORKDIR /app
 # Copy requirements first for better caching
 COPY requirements.txt .
 
-# Create enhanced requirements with additional packages
-RUN cat requirements.txt > requirements.enhanced.txt && \
+# Create enhanced requirements with additional packages (filter out built-in modules and problematic packages)
+RUN grep -v -E '^(sqlite3|hashlib|uuid|pathlib|asyncio|smtplib|zipfile|tarfile|shutil|subprocess|os|sys|platform|tiktok-scraper|redoc)' requirements.txt > requirements.enhanced.txt && \
     echo "tweepy==4.16.0" >> requirements.enhanced.txt && \
-    echo "praw==7.8.1" >> requirements.enhanced.txt && \
-    echo "google-api-python-client==2.182.0" >> requirements.enhanced.txt && \
     echo "networkx==3.5" >> requirements.enhanced.txt && \
     echo "python-dotenv==1.1.1" >> requirements.enhanced.txt && \
     echo "plotly==6.3.0" >> requirements.enhanced.txt && \
@@ -57,10 +52,8 @@ RUN cat requirements.txt > requirements.enhanced.txt && \
     echo "asyncio-throttle==1.0.2" >> requirements.enhanced.txt && \
     echo "python-dateutil==2.9.0.post0" >> requirements.enhanced.txt && \
     echo "pytz==2025.2" >> requirements.enhanced.txt && \
-    echo "tzdata==2025.2" >> requirements.enhanced.txt && \
     echo "psycopg2-binary==2.9.10" >> requirements.enhanced.txt && \
     echo "redis==5.2.1" >> requirements.enhanced.txt && \
-    echo "elasticsearch==8.16.0" >> requirements.enhanced.txt && \
     echo "prometheus-client==0.21.1" >> requirements.enhanced.txt && \
     echo "structlog==24.4.0" >> requirements.enhanced.txt && \
     echo "python-json-logger==2.0.7" >> requirements.enhanced.txt

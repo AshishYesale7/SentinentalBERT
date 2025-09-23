@@ -1,0 +1,73 @@
+
+Collecting usage statistics. To deactivate, set browser.gatherUsageStats to false.
+
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:12000
+
+/workspace/project/SentinentalBERT/simple_viral_dashboard.py:202: FutureWarning: 'H' is deprecated and will be removed in a future version, please use 'h' instead.
+  dates = pd.date_range(end=datetime.now(), periods=periods, freq=freq)
+/workspace/project/SentinentalBERT/simple_viral_dashboard.py:202: FutureWarning:
+
+'H' is deprecated and will be removed in a future version, please use 'h' instead.
+
+/workspace/project/SentinentalBERT/simple_viral_dashboard.py:202: FutureWarning:
+
+'H' is deprecated and will be removed in a future version, please use 'h' instead.
+
+2025-09-23 17:29:17.786 Uncaught app execution
+Traceback (most recent call last):
+  File "/openhands/micromamba/envs/openhands/lib/python3.12/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 128, in exec_func_with_error_handling
+    result = func()
+             ^^^^^^
+  File "/openhands/micromamba/envs/openhands/lib/python3.12/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 669, in code_to_exec
+    exec(code, module.__dict__)  # noqa: S102
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/project/SentinentalBERT/simple_viral_dashboard.py", line 564, in <module>
+    dashboard.run()
+  File "/workspace/project/SentinentalBERT/simple_viral_dashboard.py", line 507, in run
+    keyword, time_range, analysis_mode, platforms = self.render_sidebar()
+                                                    ^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/project/SentinentalBERT/simple_viral_dashboard.py", line 158, in render_sidebar
+    self.load_search_results(search)
+    ^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'SimpleViralDashboard' object has no attribute 'load_search_results'
+2025-09-23 17:29:20.055 Uncaught app execution
+Traceback (most recent call last):
+  File "/openhands/micromamba/envs/openhands/lib/python3.12/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 128, in exec_func_with_error_handling
+    result = func()
+             ^^^^^^
+  File "/openhands/micromamba/envs/openhands/lib/python3.12/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 669, in code_to_exec
+    exec(code, module.__dict__)  # noqa: S102
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/project/SentinentalBERT/simple_viral_dashboard.py", line 564, in <module>
+    dashboard.run()
+  File "/workspace/project/SentinentalBERT/simple_viral_dashboard.py", line 507, in run
+    keyword, time_range, analysis_mode, platforms = self.render_sidebar()
+                                                    ^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/project/SentinentalBERT/simple_viral_dashboard.py", line 158, in render_sidebar
+    self.load_search_results(search)
+    ^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'SimpleViralDashboard' object has no attribute 'load_search_results'
+2025-09-23 17:29:21.975 Uncaught app execution
+Traceback (most recent call last):
+  File "/openhands/micromamba/envs/openhands/lib/python3.12/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 128, in exec_func_with_error_handling
+    result = func()
+             ^^^^^^
+  File "/openhands/micromamba/envs/openhands/lib/python3.12/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 669, in code_to_exec
+    exec(code, module.__dict__)  # noqa: S102
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/project/SentinentalBERT/simple_viral_dashboard.py", line 564, in <module>
+    dashboard.run()
+  File "/workspace/project/SentinentalBERT/simple_viral_dashboard.py", line 507, in run
+    keyword, time_range, analysis_mode, platforms = self.render_sidebar()
+                                                    ^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/project/SentinentalBERT/simple_viral_dashboard.py", line 158, in render_sidebar
+    self.load_search_results(search)
+    ^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'SimpleViralDashboard' object has no attribute 'load_search_results'
+/workspace/project/SentinentalBERT/simple_viral_dashboard.py:202: FutureWarning:
+
+'H' is deprecated and will be removed in a future version, please use 'h' instead.
+
