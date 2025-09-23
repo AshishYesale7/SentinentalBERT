@@ -37,12 +37,22 @@ except ImportError as e:
     class RealTimeDataService:
         def __init__(self):
             pass
-        def get_comprehensive_analysis_data(self, *args, **kwargs):
-            return None
+        
+        async def get_comprehensive_analysis_data(self, *args, **kwargs):
+            return {"posts": [], "summary": {}, "trends": []}
+        
+        async def get_sentiment_behavior_data(self, *args, **kwargs):
+            return {"sentiment_data": [], "behavior_patterns": {}}
+        
+        async def get_influence_network_data(self, *args, **kwargs):
+            return {"nodes": [], "edges": [], "network_stats": {}}
     
     class SentinelBERTModel:
         def __init__(self):
             pass
+        
+        async def initialize(self):
+            return {"status": "mock", "message": "Mock model initialized"}
     
     class RealTimeSearchService:
         def __init__(self):
@@ -90,6 +100,93 @@ except ImportError as e:
         def __init__(self, **kwargs):
             for key, value in kwargs.items():
                 setattr(self, key, value)
+
+# Function definitions (moved to top for accessibility)
+def generate_chronological_network_data(tracking_input: str, tracking_type: str, 
+                                       chronological_mode: str, time_precision: str, 
+                                       network_depth: int) -> Dict[str, Any]:
+    """Generate chronological network data for influence analysis"""
+    
+    # Base timestamp (original source)
+    base_time = datetime.now() - timedelta(hours=np.random.randint(1, 48))
+    
+    nodes = []
+    edges = []
+    
+    # Generate original source node
+    original_node = {
+        'id': 'source_0',
+        'label': f'@original_user',
+        'timestamp': base_time.isoformat(),
+        'influence_score': np.random.uniform(0.8, 1.0),
+        'platform': 'twitter',
+        'node_type': 'source'
+    }
+    nodes.append(original_node)
+    
+    # Generate propagation nodes
+    current_time = base_time
+    for depth in range(1, network_depth + 1):
+        num_nodes_at_depth = np.random.randint(2, 6)
+        
+        for i in range(num_nodes_at_depth):
+            # Time progression based on precision
+            if time_precision == "Minutes":
+                time_delta = timedelta(minutes=np.random.randint(1, 60))
+            elif time_precision == "Hours":
+                time_delta = timedelta(hours=np.random.randint(1, 12))
+            else:  # Days
+                time_delta = timedelta(days=np.random.randint(1, 7))
+            
+            current_time += time_delta
+            
+            node = {
+                'id': f'node_{depth}_{i}',
+                'label': f'@user_{depth}_{i}',
+                'timestamp': current_time.isoformat(),
+                'influence_score': np.random.uniform(0.3, 0.8) * (1 - depth * 0.1),
+                'platform': np.random.choice(['twitter', 'facebook', 'instagram', 'youtube']),
+                'node_type': 'propagator'
+            }
+            nodes.append(node)
+            
+            # Create edges (connections)
+            if depth == 1:
+                # Connect to original source
+                edge = {
+                    'source': 'source_0',
+                    'target': node['id'],
+                    'weight': np.random.uniform(0.6, 1.0),
+                    'time_diff': str(time_delta),
+                    'interaction_type': np.random.choice(['retweet', 'share', 'mention', 'reply'])
+                }
+                edges.append(edge)
+            else:
+                # Connect to previous depth nodes
+                prev_depth_nodes = [n for n in nodes if n['node_type'] == 'propagator' and f'node_{depth-1}_' in n['id']]
+                if prev_depth_nodes:
+                    parent_node = np.random.choice(prev_depth_nodes)
+                    edge = {
+                        'source': parent_node['id'],
+                        'target': node['id'],
+                        'weight': np.random.uniform(0.4, 0.8),
+                        'time_diff': str(time_delta),
+                        'interaction_type': np.random.choice(['retweet', 'share', 'mention', 'reply'])
+                    }
+                    edges.append(edge)
+    
+    return {
+        'nodes': nodes,
+        'edges': edges,
+        'metadata': {
+            'tracking_input': tracking_input,
+            'tracking_type': tracking_type,
+            'chronological_mode': chronological_mode,
+            'time_precision': time_precision,
+            'network_depth': network_depth,
+            'generated_at': datetime.now().isoformat()
+        }
+    }
 
 # Page configuration
 st.set_page_config(
@@ -1786,91 +1883,7 @@ with tab4:
         **Start tracking above to see live network analysis!**
         """)
 
-def generate_chronological_network_data(tracking_input: str, tracking_type: str, 
-                                       chronological_mode: str, time_precision: str, 
-                                       network_depth: int) -> Dict[str, Any]:
-    """Generate chronological network data for influence analysis"""
-    
-    # Base timestamp (original source)
-    base_time = datetime.now() - timedelta(hours=np.random.randint(1, 48))
-    
-    nodes = []
-    edges = []
-    
-    # Generate original source node
-    original_node = {
-        'id': 'source_0',
-        'label': f'@original_user',
-        'timestamp': base_time.isoformat(),
-        'influence_score': np.random.uniform(0.8, 1.0),
-        'platform': 'twitter',
-        'node_type': 'source'
-    }
-    nodes.append(original_node)
-    
-    # Generate propagation nodes
-    current_time = base_time
-    for depth in range(1, network_depth + 1):
-        num_nodes_at_depth = np.random.randint(2, 6)
-        
-        for i in range(num_nodes_at_depth):
-            # Time progression based on precision
-            if time_precision == "Minutes":
-                time_delta = timedelta(minutes=np.random.randint(1, 60))
-            elif time_precision == "Hours":
-                time_delta = timedelta(hours=np.random.randint(1, 12))
-            else:  # Days
-                time_delta = timedelta(days=np.random.randint(1, 7))
-            
-            current_time += time_delta
-            
-            node = {
-                'id': f'node_{depth}_{i}',
-                'label': f'@user_{depth}_{i}',
-                'timestamp': current_time.isoformat(),
-                'influence_score': np.random.uniform(0.3, 0.8) * (1 - depth * 0.1),
-                'platform': np.random.choice(['twitter', 'facebook', 'instagram', 'youtube']),
-                'node_type': 'propagator'
-            }
-            nodes.append(node)
-            
-            # Create edges (connections)
-            if depth == 1:
-                # Connect to original source
-                edge = {
-                    'source': 'source_0',
-                    'target': node['id'],
-                    'weight': np.random.uniform(0.6, 1.0),
-                    'time_diff': str(time_delta),
-                    'interaction_type': np.random.choice(['retweet', 'share', 'mention', 'reply'])
-                }
-                edges.append(edge)
-            else:
-                # Connect to previous depth nodes
-                prev_depth_nodes = [n for n in nodes if n['node_type'] == 'propagator' and f'node_{depth-1}_' in n['id']]
-                if prev_depth_nodes:
-                    parent_node = np.random.choice(prev_depth_nodes)
-                    edge = {
-                        'source': parent_node['id'],
-                        'target': node['id'],
-                        'weight': np.random.uniform(0.4, 0.8),
-                        'time_diff': str(time_delta),
-                        'interaction_type': np.random.choice(['retweet', 'share', 'mention', 'reply'])
-                    }
-                    edges.append(edge)
-    
-    return {
-        'nodes': nodes,
-        'edges': edges,
-        'metadata': {
-            'tracking_input': tracking_input,
-            'tracking_type': tracking_type,
-            'chronological_mode': chronological_mode,
-            'time_precision': time_precision,
-            'network_depth': network_depth,
-            'generated_at': datetime.now().isoformat()
-        }
-    }
+
 
 def calculate_time_span(nodes: List[Dict]) -> str:
     """Calculate time span of the network"""
