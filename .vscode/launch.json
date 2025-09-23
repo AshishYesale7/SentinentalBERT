@@ -1,0 +1,81 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Enhanced Dashboard",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/enhanced_viral_dashboard.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}",
+                "STREAMLIT_SERVER_PORT": "12000",
+                "STREAMLIT_SERVER_ADDRESS": "0.0.0.0",
+                "DATABASE_URL": "postgresql://sentinel:sentinelpass123@localhost:5432/sentinelbert",
+                "REDIS_URL": "redis://:redispass123@localhost:6379",
+                "TWITTER_API_KEY": "tkG3UCrcXhq1LCzC3n02mqg2N",
+                "TWITTER_API_SECRET": "oXRCjqTeJkV4KWrXFS5JO7ZIjcGGTHSNiUGStL0KIjSHmke90x",
+                "TWITTER_ACCESS_TOKEN": "835527957481459713-m4BKaUIuaAt2uQ6c2DITWDyoBcFxMAJ",
+                "TWITTER_ACCESS_TOKEN_SECRET": "B4C9XYaJOMuy7l3nq3Lo2h8FmoKV4TzkmnuqlDtlbveP1",
+                "TWITTER_BEARER_TOKEN": "AAAAAAAAAAAAAAAAAAAAAHsN4QEAAAAA8%2BZQa%2BzllARQxtAvmhCQsA0WQCs%3DpF9thH1ztd85xkbAsWZvubIgJ98edZ3z7BdA8q1vfkRHnBMd6B"
+            },
+            "args": [
+                "run",
+                "--server.port=12000",
+                "--server.address=0.0.0.0",
+                "--server.enableCORS=true",
+                "--server.enableXsrfProtection=false",
+                "--browser.gatherUsageStats=false"
+            ]
+        },
+        {
+            "name": "Test Twitter API",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/test_twitter_api.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            }
+        },
+        {
+            "name": "Simple Demo Test",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/simple_demo_test.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            }
+        },
+        {
+            "name": "Enhanced Tracking Service",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/services/realtime/enhanced_tracking_service.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            }
+        },
+        {
+            "name": "Docker: Enhanced Dashboard",
+            "type": "docker",
+            "request": "launch",
+            "preLaunchTask": "docker-run: enhanced-dashboard",
+            "python": {
+                "pathMappings": [
+                    {
+                        "localRoot": "${workspaceFolder}",
+                        "remoteRoot": "/app"
+                    }
+                ],
+                "projectType": "general"
+            }
+        }
+    ]
+}

@@ -1,4 +1,101 @@
 {
     "workbench.colorTheme": "Default Dark Modern",
-    "workbench.startupEditor": "none"
+    "workbench.startupEditor": "none",
+    
+    "python.defaultInterpreterPath": "/usr/local/bin/python",
+    "python.linting.enabled": true,
+    "python.linting.pylintEnabled": true,
+    "python.linting.flake8Enabled": true,
+    "python.formatting.provider": "black",
+    "python.formatting.blackArgs": ["--line-length", "88"],
+    "python.sortImports.args": ["--profile", "black"],
+    "python.analysis.typeCheckingMode": "basic",
+    "python.analysis.autoImportCompletions": true,
+    "python.analysis.completeFunctionParens": true,
+    
+    "files.associations": {
+        "*.yml": "yaml",
+        "*.yaml": "yaml",
+        "docker-compose*.yml": "yaml",
+        "Dockerfile*": "dockerfile",
+        "*.sql": "sql"
+    },
+    
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+        "source.organizeImports": true
+    },
+    
+    "docker.defaultRegistryPath": "sentinelbert",
+    "docker.imageBuildContextPath": ".",
+    
+    "yaml.schemas": {
+        "https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json": [
+            "docker-compose*.yml",
+            "docker-compose*.yaml"
+        ]
+    },
+    
+    "sqltools.connections": [
+        {
+            "name": "SentinelBERT PostgreSQL",
+            "driver": "PostgreSQL",
+            "server": "localhost",
+            "port": 5432,
+            "database": "sentinelbert",
+            "username": "sentinel",
+            "password": "sentinelpass123",
+            "connectionTimeout": 30
+        }
+    ],
+    
+    "files.exclude": {
+        "**/__pycache__": true,
+        "**/*.pyc": true,
+        "**/node_modules": true,
+        "**/.git": false,
+        "**/data": true,
+        "**/cache": true,
+        "**/logs": true,
+        "**/temp_files": true
+    },
+    
+    "search.exclude": {
+        "**/data": true,
+        "**/cache": true,
+        "**/logs": true,
+        "**/temp_files": true,
+        "**/evidence_storage": true,
+        "**/__pycache__": true,
+        "**/node_modules": true
+    },
+    
+    "terminal.integrated.env.linux": {
+        "PYTHONPATH": "${workspaceFolder}",
+        "COMPOSE_FILE": "docker-compose.enhanced.yml"
+    },
+    
+    "terminal.integrated.env.osx": {
+        "PYTHONPATH": "${workspaceFolder}",
+        "COMPOSE_FILE": "docker-compose.enhanced.yml"
+    },
+    
+    "extensions.recommendations": [
+        "ms-python.python",
+        "ms-python.flake8",
+        "ms-python.black-formatter",
+        "ms-azuretools.vscode-docker",
+        "redhat.vscode-yaml",
+        "mtxr.sqltools",
+        "mtxr.sqltools-driver-pg",
+        "ms-vscode.vscode-json",
+        "bradlc.vscode-tailwindcss",
+        "ms-vscode-remote.remote-containers"
+    ],
+    
+    "remote.containers.defaultExtensions": [
+        "ms-python.python",
+        "ms-azuretools.vscode-docker",
+        "redhat.vscode-yaml"
+    ]
 }

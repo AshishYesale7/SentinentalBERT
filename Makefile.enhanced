@@ -1,0 +1,329 @@
+# Enhanced SentinelBERT Makefile
+# Indian Police Hackathon - Viral Tracking System
+# Supports Linux and macOS development environments
+
+.PHONY: help setup build up down restart logs clean test status health demo
+
+# Default target
+.DEFAULT_GOAL := help
+
+# Colors for output
+BLUE := \033[0;34m
+GREEN := \033[0;32m
+YELLOW := \033[1;33m
+RED := \033[0;31m
+NC := \033[0m # No Color
+
+# Docker Compose files
+COMPOSE_FILE := docker-compose.enhanced.yml
+COMPOSE_OVERRIDE := docker-compose.override.enhanced.yml
+
+# Detect Docker Compose command (standalone or plugin)
+COMPOSE_CMD := $(shell if command -v docker-compose >/dev/null 2>&1; then echo "docker-compose -f $(COMPOSE_FILE)"; elif docker compose version >/dev/null 2>&1; then echo "docker compose -f $(COMPOSE_FILE)"; else echo "docker-compose -f $(COMPOSE_FILE)"; fi)
+
+# Environment variables
+ENV_FILE := .env.enhanced
+POSTGRES_PASSWORD := sentinelpass123
+REDIS_PASSWORD := redispass123
+
+help: ## Show this help message
+	@echo "$(BLUE)Enhanced SentinelBERT - Docker Development Environment$(NC)"
+	@echo "$(BLUE)Indian Police Hackathon - Viral Tracking System$(NC)"
+	@echo ""
+	@echo "$(GREEN)Available commands:$(NC)"
+	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  $(YELLOW)%-15s$(NC) %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@echo ""
+	@echo "$(GREEN)Quick Start:$(NC)"
+	@echo "  make setup    # Complete setup and start all services"
+	@echo "  make demo     # Run hackathon demo"
+	@echo "  make clean    # Clean up everything"
+
+setup: ## Complete setup - create directories, build images, and start services
+	@echo "$(BLUE)🚀 Setting up Enhanced SentinelBERT...$(NC)"
+	@./setup-enhanced-docker.sh
+	@echo "$(GREEN)✅ Setup completed successfully!$(NC)"
+
+build: ## Build all Docker images
+	@echo "$(BLUE)🔨 Building Docker images...$(NC)"
+	@$(COMPOSE_CMD) build --parallel
+	@echo "$(GREEN)✅ Images built successfully!$(NC)"
+
+build-no-cache: ## Build all Docker images without cache
+	@echo "$(BLUE)🔨 Building Docker images (no cache)...$(NC)"
+	@$(COMPOSE_CMD) build --no-cache --parallel
+	@echo "$(GREEN)✅ Images built successfully!$(NC)"
+
+up: ## Start all services in detached mode
+	@echo "$(BLUE)🚀 Starting services...$(NC)"
+	@$(COMPOSE_CMD) up -d
+	@echo "$(GREEN)✅ Services started successfully!$(NC)"
+	@make status
+
+up-dev: ## Start services with development overrides
+	@echo "$(BLUE)🚀 Starting services with development overrides...$(NC)"
+	@$(COMPOSE_CMD) -f $(COMPOSE_OVERRIDE) up -d
+	@echo "$(GREEN)✅ Development services started successfully!$(NC)"
+	@make status
+
+down: ## Stop and remove all containers
+	@echo "$(BLUE)🛑 Stopping services...$(NC)"
+	@$(COMPOSE_CMD) down
+	@echo "$(GREEN)✅ Services stopped successfully!$(NC)"
+
+down-volumes: ## Stop and remove all containers and volumes
+	@echo "$(BLUE)🛑 Stopping services and removing volumes...$(NC)"
+	@$(COMPOSE_CMD) down -v
+	@echo "$(GREEN)✅ Services and volumes removed successfully!$(NC)"
+
+restart: ## Restart all services
+	@echo "$(BLUE)🔄 Restarting services...$(NC)"
+	@$(COMPOSE_CMD) restart
+	@echo "$(GREEN)✅ Services restarted successfully!$(NC)"
+
+restart-dashboard: ## Restart only the dashboard service
+	@echo "$(BLUE)🔄 Restarting dashboard...$(NC)"
+	@$(COMPOSE_CMD) restart enhanced-dashboard
+	@echo "$(GREEN)✅ Dashboard restarted successfully!$(NC)"
+
+logs: ## Show logs for all services
+	@echo "$(BLUE)📋 Showing logs...$(NC)"
+	@$(COMPOSE_CMD) logs -f
+
+logs-dashboard: ## Show logs for dashboard service
+	@echo "$(BLUE)📋 Showing dashboard logs...$(NC)"
+	@$(COMPOSE_CMD) logs -f enhanced-dashboard
+
+logs-db: ## Show logs for database services
+	@echo "$(BLUE)📋 Showing database logs...$(NC)"
+	@$(COMPOSE_CMD) logs -f postgres redis elasticsearch
+
+status: ## Show status of all services
+	@echo "$(BLUE)📊 Service Status:$(NC)"
+	@$(COMPOSE_CMD) ps
+	@echo ""
+	@echo "$(GREEN)🌐 Access URLs:$(NC)"
+	@echo "  Dashboard:     http://localhost:12000"
+	@echo "  Alternative:   http://localhost:12001"
+	@echo "  Adminer:       http://localhost:8084"
+	@echo "  Grafana:       http://localhost:3000"
+	@echo "  Prometheus:    http://localhost:9090"
+	@echo "  Redis Cmd:     http://localhost:8085"
+
+health: ## Check health of all services
+	@echo "$(BLUE)🏥 Checking service health...$(NC)"
+	@echo "$(YELLOW)PostgreSQL:$(NC)"
+	@docker exec sentinelbert-postgres-enhanced pg_isready -U sentinel -d sentinelbert || echo "$(RED)❌ PostgreSQL not ready$(NC)"
+	@echo "$(YELLOW)Redis:$(NC)"
+	@docker exec sentinelbert-redis-enhanced redis-cli -a $(REDIS_PASSWORD) ping || echo "$(RED)❌ Redis not ready$(NC)"
+	@echo "$(YELLOW)Elasticsearch:$(NC)"
+	@curl -s http://localhost:9200/_cluster/health | grep -q '"status":"green\|yellow"' && echo "$(GREEN)✅ Elasticsearch healthy$(NC)" || echo "$(RED)❌ Elasticsearch not healthy$(NC)"
+	@echo "$(YELLOW)Dashboard:$(NC)"
+	@curl -s http://localhost:12000/_stcore/health > /dev/null && echo "$(GREEN)✅ Dashboard healthy$(NC)" || echo "$(RED)❌ Dashboard not healthy$(NC)"
+
+test: ## Run all tests
+	@echo "$(BLUE)🧪 Running tests...$(NC)"
+	@echo "$(YELLOW)Testing Twitter API...$(NC)"
+	@python3 test_twitter_api.py
+	@echo "$(YELLOW)Running simple demo test...$(NC)"
+	@python3 simple_demo_test.py
+	@echo "$(YELLOW)Running quick demo test...$(NC)"
+	@python3 quick_demo_test.py
+	@echo "$(GREEN)✅ All tests completed!$(NC)"
+
+demo: ## Run hackathon demo
+	@echo "$(BLUE)🎯 Starting Hackathon Demo...$(NC)"
+	@echo "$(GREEN)🇮🇳 Indian Police Hackathon - Viral Tracking Demo$(NC)"
+	@echo ""
+	@echo "$(YELLOW)1. Ensuring services are running...$(NC)"
+	@make up
+	@sleep 10
+	@echo "$(YELLOW)2. Testing Twitter API connection...$(NC)"
+	@python3 test_twitter_api.py
+	@echo "$(YELLOW)3. Running tracking demo...$(NC)"
+	@python3 simple_demo_test.py
+	@echo ""
+	@echo "$(GREEN)🎉 Demo Ready!$(NC)"
+	@echo "$(GREEN)📊 Open Dashboard: http://localhost:12000$(NC)"
+	@echo "$(GREEN)🎯 Navigate to 'Influence Network' → 'VIRAL ORIGIN TRACKING'$(NC)"
+	@echo "$(GREEN)🐦 Test with: @YesaleAshish$(NC)"
+
+clean: ## Clean up Docker resources
+	@echo "$(BLUE)🧹 Cleaning up Docker resources...$(NC)"
+	@$(COMPOSE_CMD) down -v --remove-orphans
+	@docker system prune -f
+	@docker volume prune -f
+	@echo "$(GREEN)✅ Cleanup completed!$(NC)"
+
+clean-all: ## Clean up everything including images
+	@echo "$(BLUE)🧹 Cleaning up everything...$(NC)"
+	@$(COMPOSE_CMD) down -v --remove-orphans --rmi all
+	@docker system prune -af
+	@docker volume prune -f
+	@echo "$(GREEN)✅ Complete cleanup finished!$(NC)"
+
+shell-dashboard: ## Open shell in dashboard container
+	@echo "$(BLUE)🐚 Opening shell in dashboard container...$(NC)"
+	@docker exec -it sentinelbert-enhanced-dashboard /bin/bash
+
+shell-db: ## Open PostgreSQL shell
+	@echo "$(BLUE)🐚 Opening PostgreSQL shell...$(NC)"
+	@docker exec -it sentinelbert-postgres-enhanced psql -U sentinel -d sentinelbert
+
+shell-redis: ## Open Redis CLI
+	@echo "$(BLUE)🐚 Opening Redis CLI...$(NC)"
+	@docker exec -it sentinelbert-redis-enhanced redis-cli -a $(REDIS_PASSWORD)
+
+backup-db: ## Backup PostgreSQL database
+	@echo "$(BLUE)💾 Backing up database...$(NC)"
+	@mkdir -p backups
+	@docker exec sentinelbert-postgres-enhanced pg_dump -U sentinel sentinelbert > backups/sentinelbert_$(shell date +%Y%m%d_%H%M%S).sql
+	@echo "$(GREEN)✅ Database backup completed!$(NC)"
+
+restore-db: ## Restore PostgreSQL database (requires BACKUP_FILE variable)
+	@echo "$(BLUE)📥 Restoring database...$(NC)"
+	@if [ -z "$(BACKUP_FILE)" ]; then echo "$(RED)❌ Please specify BACKUP_FILE=path/to/backup.sql$(NC)"; exit 1; fi
+	@docker exec -i sentinelbert-postgres-enhanced psql -U sentinel -d sentinelbert < $(BACKUP_FILE)
+	@echo "$(GREEN)✅ Database restore completed!$(NC)"
+
+update: ## Update all Docker images
+	@echo "$(BLUE)🔄 Updating Docker images...$(NC)"
+	@$(COMPOSE_CMD) pull
+	@$(COMPOSE_CMD) build --pull
+	@echo "$(GREEN)✅ Images updated successfully!$(NC)"
+
+scale-viral: ## Scale viral detection service (requires REPLICAS variable)
+	@echo "$(BLUE)📈 Scaling viral detection service...$(NC)"
+	@$(COMPOSE_CMD) up -d --scale viral-detection=$(or $(REPLICAS),3)
+	@echo "$(GREEN)✅ Viral detection service scaled to $(or $(REPLICAS),3) replicas!$(NC)"
+
+monitor: ## Open monitoring dashboard
+	@echo "$(BLUE)📊 Opening monitoring dashboards...$(NC)"
+	@echo "$(GREEN)Grafana:     http://localhost:3000 (admin/admin123)$(NC)"
+	@echo "$(GREEN)Prometheus:  http://localhost:9090$(NC)"
+	@echo "$(GREEN)Jaeger:      http://localhost:16686$(NC)"
+	@if command -v open >/dev/null 2>&1; then \
+		open http://localhost:3000; \
+	elif command -v xdg-open >/dev/null 2>&1; then \
+		xdg-open http://localhost:3000; \
+	fi
+
+dev-tools: ## Start additional development tools
+	@echo "$(BLUE)🛠️ Starting development tools...$(NC)"
+	@$(COMPOSE_CMD) -f $(COMPOSE_OVERRIDE) up -d code-server jupyter pgadmin mailhog minio
+	@echo "$(GREEN)✅ Development tools started!$(NC)"
+	@echo "$(GREEN)Code Server: http://localhost:8443$(NC)"
+	@echo "$(GREEN)Jupyter:     http://localhost:8888$(NC)"
+	@echo "$(GREEN)pgAdmin:     http://localhost:5050$(NC)"
+	@echo "$(GREEN)MailHog:     http://localhost:8025$(NC)"
+	@echo "$(GREEN)Minio:       http://localhost:9001$(NC)"
+
+install-deps: ## Install local development dependencies
+	@echo "$(BLUE)📦 Installing development dependencies...$(NC)"
+	@pip install -r requirements.txt
+	@pip install black flake8 pytest pytest-cov
+	@echo "$(GREEN)✅ Dependencies installed!$(NC)"
+
+format: ## Format Python code with black
+	@echo "$(BLUE)🎨 Formatting Python code...$(NC)"
+	@black . --line-length 88 --exclude="/(\.git|\.venv|venv|\.tox|dist|build)/"
+	@echo "$(GREEN)✅ Code formatted!$(NC)"
+
+lint: ## Lint Python code with flake8
+	@echo "$(BLUE)🔍 Linting Python code...$(NC)"
+	@flake8 . --max-line-length=88 --exclude=.git,__pycache__,venv,.venv,.tox,dist,build
+	@echo "$(GREEN)✅ Linting completed!$(NC)"
+
+security-scan: ## Run security scan on containers
+	@echo "$(BLUE)🔒 Running security scan...$(NC)"
+	@if command -v trivy >/dev/null 2>&1; then \
+		trivy image sentinelbert-enhanced:latest; \
+	else \
+		echo "$(YELLOW)⚠️ Trivy not installed. Install with: brew install trivy$(NC)"; \
+	fi
+
+performance-test: ## Run performance tests
+	@echo "$(BLUE)⚡ Running performance tests...$(NC)"
+	@echo "$(YELLOW)Testing dashboard response time...$(NC)"
+	@curl -w "@curl-format.txt" -o /dev/null -s http://localhost:12000 || echo "$(RED)❌ Dashboard not responding$(NC)"
+	@echo "$(YELLOW)Testing API response time...$(NC)"
+	@curl -w "@curl-format.txt" -o /dev/null -s http://localhost:8080/health || echo "$(RED)❌ API not responding$(NC)"
+
+docs: ## Generate documentation
+	@echo "$(BLUE)📚 Generating documentation...$(NC)"
+	@if [ -d "docs" ]; then \
+		cd docs && make html; \
+		echo "$(GREEN)✅ Documentation generated in docs/_build/html/$(NC)"; \
+	else \
+		echo "$(YELLOW)⚠️ No docs directory found$(NC)"; \
+	fi
+
+# Environment-specific targets
+linux-setup: ## Linux-specific setup
+	@echo "$(BLUE)🐧 Linux-specific setup...$(NC)"
+	@sudo usermod -aG docker $$USER || true
+	@sudo systemctl enable docker || true
+	@sudo systemctl start docker || true
+	@echo "$(GREEN)✅ Linux setup completed!$(NC)"
+
+macos-setup: ## macOS-specific setup
+	@echo "$(BLUE)🍎 macOS-specific setup...$(NC)"
+	@if ! command -v docker >/dev/null 2>&1; then \
+		echo "$(RED)❌ Please install Docker Desktop for Mac$(NC)"; \
+		echo "$(BLUE)Download from: https://docs.docker.com/desktop/mac/install/$(NC)"; \
+		exit 1; \
+	fi
+	@echo "$(GREEN)✅ macOS setup completed!$(NC)"
+
+# Utility targets
+create-env: ## Create environment file from template
+	@echo "$(BLUE)📝 Creating environment file...$(NC)"
+	@if [ ! -f ".env.enhanced" ]; then \
+		cp .env.enhanced.template .env.enhanced 2>/dev/null || \
+		echo "$(YELLOW)⚠️ No template found, using defaults$(NC)"; \
+	fi
+	@echo "$(GREEN)✅ Environment file ready!$(NC)"
+
+check-ports: ## Check if required ports are available
+	@echo "$(BLUE)🔍 Checking port availability...$(NC)"
+	@for port in 12000 12001 8501 5432 6379 9200 3000 9090; do \
+		if lsof -i :$$port >/dev/null 2>&1; then \
+			echo "$(RED)❌ Port $$port is in use$(NC)"; \
+		else \
+			echo "$(GREEN)✅ Port $$port is available$(NC)"; \
+		fi; \
+	done
+
+version: ## Show version information
+	@echo "$(BLUE)Enhanced SentinelBERT - Version Information$(NC)"
+	@echo "$(GREEN)Docker:$(NC) $$(docker --version)"
+	@echo "$(GREEN)Docker Compose:$(NC) $$(docker-compose --version)"
+	@echo "$(GREEN)Python:$(NC) $$(python3 --version)"
+	@echo "$(GREEN)System:$(NC) $$(uname -s) $$(uname -r)"
+
+# Help for specific commands
+help-demo: ## Show detailed demo instructions
+	@echo "$(BLUE)🎯 Hackathon Demo Instructions$(NC)"
+	@echo ""
+	@echo "$(GREEN)1. Setup and Start:$(NC)"
+	@echo "   make setup"
+	@echo ""
+	@echo "$(GREEN)2. Open Dashboard:$(NC)"
+	@echo "   http://localhost:12000"
+	@echo ""
+	@echo "$(GREEN)3. Navigate to Viral Tracking:$(NC)"
+	@echo "   - Click 'Influence Network' tab"
+	@echo "   - Select 'VIRAL ORIGIN TRACKING'"
+	@echo ""
+	@echo "$(GREEN)4. Test Tracking:$(NC)"
+	@echo "   - Input: @YesaleAshish"
+	@echo "   - Algorithm: Enhanced Tracking"
+	@echo "   - Click 'Start Tracking'"
+	@echo ""
+	@echo "$(GREEN)5. View Results:$(NC)"
+	@echo "   - Network visualization"
+	@echo "   - Confidence score (80%+)"
+	@echo "   - Processing time (<3s)"
+	@echo ""
+	@echo "$(GREEN)6. Generate Report:$(NC)"
+	@echo "   - Click 'Generate Court Report'"
+	@echo "   - Download PDF with legal formatting"

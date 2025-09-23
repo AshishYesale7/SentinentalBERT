@@ -1,0 +1,353 @@
+# Docker Compose Override for Enhanced Development
+# This file extends docker-compose.enhanced.yml for local development
+
+version: '3.8'
+
+services:
+  # Enhanced Dashboard with development overrides
+  enhanced-dashboard:
+    environment:
+      # Development-specific environment variables
+      - STREAMLIT_SERVER_FILE_WATCHER_TYPE=poll
+      - STREAMLIT_SERVER_HEADLESS=true
+      - STREAMLIT_BROWSER_SERVER_ADDRESS=localhost
+      - STREAMLIT_BROWSER_SERVER_PORT=12000
+      
+      # Debug configuration
+      - PYTHONDONTWRITEBYTECODE=0
+      - PYTHONUNBUFFERED=1
+      - DEBUG=true
+      - FLASK_DEBUG=true
+      
+      # Hot reload for development
+      - WATCHDOG_ENABLED=true
+      - AUTO_RELOAD=true
+      
+    volumes:
+      # Additional development volumes
+      - ~/.ssh:/home/app/.ssh:ro
+      - ~/.aws:/home/app/.aws:ro
+      - ~/.config:/home/app/.config:ro
+      
+    # Development port mappings
+    ports:
+      - "12000:12000"  # Primary dashboard
+      - "12001:12001"  # Alternative port
+      - "8501:8501"    # Standard Streamlit
+      - "8502:8502"    # Debug port
+    
+    # Development labels
+    labels:
+      - "dev.environment=enhanced"
+      - "dev.service=dashboard"
+      - "dev.hot-reload=enabled"
+
+  # PostgreSQL with development settings
+  postgres:
+    environment:
+      # Development database settings
+      - POSTGRES_LOG_STATEMENT=all
+      - POSTGRES_LOG_MIN_DURATION_STATEMENT=0
+      - POSTGRES_SHARED_PRELOAD_LIBRARIES=pg_stat_statements
+      
+    volumes:
+      # Additional development volumes
+      - ./sql/dev_data.sql:/docker-entrypoint-initdb.d/99_dev_data.sql:ro
+      - ./postgresql.dev.conf:/etc/postgresql/postgresql.conf:ro
+      
+    # Expose additional ports for development tools
+    ports:
+      - "5432:5432"   # Main PostgreSQL port
+      - "5433:5432"   # Alternative port for testing
+    
+    # Development command with logging
+    command: >
+      postgres
+      -c log_statement=all
+      -c log_destination=stderr
+      -c log_min_messages=info
+      -c log_line_prefix='%t [%p]: [%l-1] user=%u,db=%d,app=%a,client=%h '
+
+  # Redis with development configuration
+  redis:
+    command: >
+      redis-server
+      --appendonly yes
+      --requirepass ${REDIS_PASSWORD:-redispass123}
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+      --save 60 1000
+      --loglevel verbose
+      
+    volumes:
+      # Development Redis configuration
+      - ./redis/redis.dev.conf:/usr/local/etc/redis/redis.conf:ro
+      
+    ports:
+      - "6379:6379"   # Main Redis port
+      - "6380:6379"   # Alternative port for testing
+
+  # Elasticsearch with development settings
+  elasticsearch:
+    environment:
+      # Development ES settings
+      - "ES_JAVA_OPTS=-Xms512m -Xmx1g -XX:+UseG1GC"
+      - cluster.routing.allocation.disk.threshold_enabled=false
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - xpack.monitoring.collection.enabled=true
+      - action.destructive_requires_name=false
+      
+    volumes:
+      # Development ES configuration
+      - ./elasticsearch/elasticsearch.dev.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
+      
+    ports:
+      - "9200:9200"   # REST API
+      - "9300:9300"   # Transport
+      - "9201:9200"   # Alternative REST port
+
+  # NLP Service with development settings
+  nlp-service:
+    environment:
+      # Development NLP settings
+      - FLASK_ENV=development
+      - FLASK_DEBUG=true
+      - WERKZEUG_DEBUG_PIN=off
+      - TRANSFORMERS_VERBOSITY=info
+      - TOKENIZERS_PARALLELISM=false
+      
+    volumes:
+      # Development code mounting
+      - ./services/nlp:/app:rw
+      - ./models:/app/models:rw
+      - ./cache:/app/cache:rw
+      
+    ports:
+      - "8000:8000"   # Main NLP API
+      - "8001:8000"   # Alternative port
+      - "5678:5678"   # Debug port for remote debugging
+
+  # Backend Service with development settings
+  backend-service:
+    environment:
+      # Development Spring Boot settings
+      - SPRING_PROFILES_ACTIVE=development,enhanced,debug
+      - SPRING_DEVTOOLS_RESTART_ENABLED=true
+      - SPRING_DEVTOOLS_LIVERELOAD_ENABLED=true
+      - LOGGING_LEVEL_ROOT=INFO
+      - LOGGING_LEVEL_COM_SENTINELBERT=DEBUG
+      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=*
+      
+    volumes:
+      # Development code mounting
+      - ./services/backend:/app:rw
+      - ./logs:/app/logs:rw
+      
+    ports:
+      - "8080:8080"   # Main API
+      - "8081:8080"   # Alternative port
+      - "5005:5005"   # Java debug port
+
+  # Viral Detection with development settings
+  viral-detection:
+    environment:
+      # Development viral detection settings
+      - FLASK_ENV=development
+      - FLASK_DEBUG=true
+      - ALGORITHM_DEBUG=true
+      - CACHE_DISABLED=true
+      
+    volumes:
+      # Development code mounting
+      - ./services/viral_detection:/app:rw
+      
+    ports:
+      - "8083:8000"   # Main viral detection API
+      - "8084:8000"   # Alternative port
+
+  # Evidence Service with development settings
+  evidence-service:
+    environment:
+      # Development evidence settings
+      - FLASK_ENV=development
+      - FLASK_DEBUG=true
+      - EVIDENCE_DEBUG=true
+      - SIGNATURE_VALIDATION_DISABLED=true
+      
+    volumes:
+      # Development code mounting
+      - ./services/evidence:/app:rw
+      - ./evidence_storage:/app/evidence_storage:rw
+      
+    ports:
+      - "8082:8000"   # Main evidence API
+      - "8085:8000"   # Alternative port
+
+  # Development-specific services
+  
+  # Code Server for browser-based development
+  code-server:
+    image: codercom/code-server:latest
+    container_name: sentinelbert-code-server
+    environment:
+      - PASSWORD=${CODE_SERVER_PASSWORD:-sentinelbert123}
+      - SUDO_PASSWORD=${CODE_SERVER_PASSWORD:-sentinelbert123}
+    volumes:
+      - .:/home/coder/project
+      - ~/.ssh:/home/coder/.ssh:ro
+      - code-server-data:/home/coder/.local/share/code-server
+    ports:
+      - "8443:8080"   # Code Server web interface
+    networks:
+      - sentinelbert-network
+    restart: unless-stopped
+    labels:
+      - "dev.service=code-server"
+      - "dev.description=Browser-based VSCode"
+
+  # Jupyter Lab for data analysis
+  jupyter:
+    image: jupyter/datascience-notebook:latest
+    container_name: sentinelbert-jupyter
+    environment:
+      - JUPYTER_ENABLE_LAB=yes
+      - JUPYTER_TOKEN=${JUPYTER_TOKEN:-sentinelbert123}
+      - GRANT_SUDO=yes
+    volumes:
+      - .:/home/jovyan/work
+      - jupyter-data:/home/jovyan/.jupyter
+    ports:
+      - "8888:8888"   # Jupyter Lab
+    networks:
+      - sentinelbert-network
+    restart: unless-stopped
+    labels:
+      - "dev.service=jupyter"
+      - "dev.description=Data analysis environment"
+
+  # pgAdmin for advanced database management
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: sentinelbert-pgadmin
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_EMAIL:-admin@sentinelbert.com}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PASSWORD:-admin123}
+      - PGADMIN_CONFIG_SERVER_MODE=False
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+      - ./pgadmin/servers.json:/pgadmin4/servers.json:ro
+    ports:
+      - "5050:80"     # pgAdmin web interface
+    networks:
+      - sentinelbert-network
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    labels:
+      - "dev.service=pgadmin"
+      - "dev.description=Advanced PostgreSQL management"
+
+  # Mailhog for email testing
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: sentinelbert-mailhog
+    ports:
+      - "1025:1025"   # SMTP server
+      - "8025:8025"   # Web interface
+    networks:
+      - sentinelbert-network
+    restart: unless-stopped
+    labels:
+      - "dev.service=mailhog"
+      - "dev.description=Email testing server"
+
+  # Minio for S3-compatible object storage testing
+  minio:
+    image: minio/minio:latest
+    container_name: sentinelbert-minio
+    environment:
+      - MINIO_ROOT_USER=${MINIO_USER:-minioadmin}
+      - MINIO_ROOT_PASSWORD=${MINIO_PASSWORD:-minioadmin123}
+    volumes:
+      - minio-data:/data
+    ports:
+      - "9000:9000"   # Minio API
+      - "9001:9001"   # Minio Console
+    networks:
+      - sentinelbert-network
+    command: server /data --console-address ":9001"
+    restart: unless-stopped
+    labels:
+      - "dev.service=minio"
+      - "dev.description=S3-compatible object storage"
+
+  # Grafana with development dashboards
+  grafana:
+    environment:
+      # Development Grafana settings
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin123}
+      - GF_USERS_ALLOW_SIGN_UP=true
+      - GF_USERS_ALLOW_ORG_CREATE=true
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
+      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource,grafana-worldmap-panel,grafana-piechart-panel
+      - GF_FEATURE_TOGGLES_ENABLE=ngalert
+      - GF_ALERTING_ENABLED=true
+      
+    volumes:
+      # Development Grafana configuration
+      - ./monitoring/grafana/dev:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards/dev:/var/lib/grafana/dashboards:ro
+      
+    ports:
+      - "3000:3000"   # Main Grafana port
+      - "3001:3000"   # Alternative port
+
+  # Prometheus with development configuration
+  prometheus:
+    volumes:
+      # Development Prometheus configuration
+      - ./monitoring/prometheus.dev.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/prometheus/rules/dev:/etc/prometheus/rules:ro
+      
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=24h'
+      - '--web.enable-lifecycle'
+      - '--web.enable-admin-api'
+      - '--log.level=debug'
+      
+    ports:
+      - "9090:9090"   # Main Prometheus port
+      - "9091:9090"   # Alternative port
+
+# Development-specific volumes
+volumes:
+  code-server-data:
+    driver: local
+  jupyter-data:
+    driver: local
+  pgadmin-data:
+    driver: local
+  minio-data:
+    driver: local
+
+# Development-specific networks
+networks:
+  sentinelbert-network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.22.0.0/16
+          gateway: 172.22.0.1
+    driver_opts:
+      com.docker.network.bridge.name: sentinelbert-enhanced-dev
+      com.docker.network.bridge.enable_icc: "true"
+      com.docker.network.bridge.enable_ip_masquerade: "true"
+      com.docker.network.driver.mtu: 1500

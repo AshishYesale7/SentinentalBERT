@@ -1,0 +1,235 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "docker-compose: build enhanced",
+            "type": "shell",
+            "command": "docker-compose",
+            "args": ["-f", "docker-compose.enhanced.yml", "build"],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "docker-compose: up enhanced",
+            "type": "shell",
+            "command": "docker-compose",
+            "args": ["-f", "docker-compose.enhanced.yml", "up", "-d"],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "docker-compose: down enhanced",
+            "type": "shell",
+            "command": "docker-compose",
+            "args": ["-f", "docker-compose.enhanced.yml", "down"],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "docker-compose: logs enhanced",
+            "type": "shell",
+            "command": "docker-compose",
+            "args": ["-f", "docker-compose.enhanced.yml", "logs", "-f"],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "docker: build enhanced dashboard",
+            "type": "shell",
+            "command": "docker",
+            "args": ["build", "-f", "Dockerfile.enhanced", "-t", "sentinelbert-enhanced:latest", "."],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "docker-run: enhanced-dashboard",
+            "type": "shell",
+            "command": "docker",
+            "args": [
+                "run",
+                "--rm",
+                "-d",
+                "--name", "sentinelbert-enhanced-dashboard-debug",
+                "-p", "12000:12000",
+                "-p", "12001:12001",
+                "-p", "8501:8501",
+                "-v", "${workspaceFolder}:/app",
+                "--network", "sentinelbert_sentinelbert-network",
+                "sentinelbert-enhanced:latest"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "setup: create directories",
+            "type": "shell",
+            "command": "mkdir",
+            "args": [
+                "-p",
+                "data/postgres",
+                "data/redis", 
+                "data/elasticsearch",
+                "data/prometheus",
+                "data/grafana",
+                "models/nlp",
+                "models/viral",
+                "cache/nlp",
+                "cache/huggingface",
+                "cache/viral",
+                "evidence/signatures",
+                "logs/backend"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "test: twitter api",
+            "type": "shell",
+            "command": "python",
+            "args": ["test_twitter_api.py"],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "test: simple demo",
+            "type": "shell",
+            "command": "python",
+            "args": ["simple_demo_test.py"],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "run: enhanced dashboard local",
+            "type": "shell",
+            "command": "streamlit",
+            "args": [
+                "run",
+                "enhanced_viral_dashboard.py",
+                "--server.port=12000",
+                "--server.address=0.0.0.0",
+                "--server.enableCORS=true",
+                "--server.enableXsrfProtection=false",
+                "--browser.gatherUsageStats=false"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "cleanup: docker system",
+            "type": "shell",
+            "command": "docker",
+            "args": ["system", "prune", "-f"],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "database: connect",
+            "type": "shell",
+            "command": "psql",
+            "args": [
+                "-h", "localhost",
+                "-p", "5432",
+                "-U", "sentinel",
+                "-d", "sentinelbert"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": []
+        }
+    ]
+}

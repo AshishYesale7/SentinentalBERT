@@ -79,29 +79,61 @@ class RateLimiter:
         self.calls.append(now)
 
 class TwitterConnector:
-    """Twitter/X.com API connector with rate limiting"""
+    """Twitter/X.com API connector with rate limiting - Optimized for Free Tier"""
     
     def __init__(self):
-        self.bearer_token = os.getenv('TWITTER_BEARER_TOKEN')
+        # Load all Twitter API credentials
+        self.api_key = os.getenv('TWITTER_API_KEY', 'tkG3UCrcXhq1LCzC3n02mqg2N')
+        self.api_secret = os.getenv('TWITTER_API_SECRET', 'oXRCjqTeJkV4KWrXFS5JO7ZIjcGGTHSNiUGStL0KIjSHmke90x')
+        self.access_token = os.getenv('TWITTER_ACCESS_TOKEN', '835527957481459713-m4BKaUIuaAt2uQ6c2DITWDyoBcFxMAJ')
+        self.access_token_secret = os.getenv('TWITTER_ACCESS_TOKEN_SECRET', 'B4C9XYaJOMuy7l3nq3Lo2h8FmoKV4TzkmnuqlDtlbveP1')
+        self.bearer_token = os.getenv('TWITTER_BEARER_TOKEN', 'AAAAAAAAAAAAAAAAAAAAAHsN4QEAAAAA8%2BZQa%2BzllARQxtAvmhCQsA0WQCs%3DpF9thH1ztd85xkbAsWZvubIgJ98edZ3z7BdA8q1vfkRHnBMd6B')
+        
         self.api_version = os.getenv('TWITTER_API_VERSION', '2')
-        self.rate_limit = int(os.getenv('TWITTER_RATE_LIMIT', '300'))
+        self.rate_limit = int(os.getenv('TWITTER_RATE_LIMIT', '100'))  # Free tier limit
         
-        if not self.bearer_token:
-            raise ValueError("TWITTER_BEARER_TOKEN not found in environment")
+        # Initialize Tweepy client with full authentication
+        try:
+            # Try v2 client first (preferred for new features)
+            self.client = tweepy.Client(
+                bearer_token=self.bearer_token,
+                consumer_key=self.api_key,
+                consumer_secret=self.api_secret,
+                access_token=self.access_token,
+                access_token_secret=self.access_token_secret,
+                wait_on_rate_limit=True
+            )
+            
+            # Also initialize v1.1 API for additional functionality
+            auth = tweepy.OAuth1UserHandler(
+                self.api_key, self.api_secret,
+                self.access_token, self.access_token_secret
+            )
+            self.api_v1 = tweepy.API(auth, wait_on_rate_limit=True)
+            
+            logger.info("Twitter connector initialized with full authentication")
+            logger.info(f"Rate limit set to {self.rate_limit} requests (Free tier)")
+            
+        except Exception as e:
+            logger.error(f"Failed to initialize Twitter client: {e}")
+            raise
         
-        # Initialize Tweepy client
-        self.client = tweepy.Client(bearer_token=self.bearer_token, wait_on_rate_limit=True)
-        self.rate_limiter = RateLimiter(self.rate_limit)
-        
-        logger.info("Twitter connector initialized")
+        self.rate_limiter = RateLimiter(self.rate_limit, time_window=900)  # 15 minutes
+        self.monthly_usage = 0  # Track monthly usage for free tier
+        self.max_monthly_posts = 100  # Free tier limit
     
     async def search_tweets(self, 
                           keywords: str, 
-                          max_results: int = 100,
+                          max_results: int = 10,  # Reduced for free tier
                           start_time: Optional[datetime] = None,
                           end_time: Optional[datetime] = None,
                           location: Optional[str] = None) -> List[SocialMediaPost]:
-        """Search for tweets with specified criteria"""
+        """Search for tweets with specified criteria - Optimized for Free Tier"""
+        
+        # Check monthly usage limit
+        if self.monthly_usage >= self.max_monthly_posts:
+            logger.warning("Monthly API usage limit reached (100 posts)")
+            return []
         
         await self.rate_limiter.wait_if_needed()
         
@@ -109,22 +141,25 @@ class TwitterConnector:
             # Build search query
             query = self._build_search_query(keywords, location)
             
-            # Set time parameters
+            # Set time parameters (shorter window for free tier)
             if not start_time:
-                start_time = datetime.now() - timedelta(hours=24)
+                start_time = datetime.now() - timedelta(hours=6)  # Reduced from 24h
             if not end_time:
                 end_time = datetime.now()
+            
+            # Limit results for free tier
+            max_results = min(max_results, 10, self.max_monthly_posts - self.monthly_usage)
             
             # Search tweets
             tweets = tweepy.Paginator(
                 self.client.search_recent_tweets,
                 query=query,
-                max_results=min(max_results, 100),  # API limit
+                max_results=max_results,
                 start_time=start_time,
                 end_time=end_time,
-                tweet_fields=['created_at', 'author_id', 'public_metrics', 'geo', 'context_annotations', 'entities'],
+                tweet_fields=['created_at', 'author_id', 'public_metrics', 'geo', 'context_annotations', 'entities', 'referenced_tweets'],
                 user_fields=['username', 'name', 'location', 'verified', 'public_metrics'],
-                expansions=['author_id', 'geo.place_id']
+                expansions=['author_id', 'geo.place_id', 'referenced_tweets.id']
             ).flatten(limit=max_results)
             
             posts = []
@@ -133,15 +168,97 @@ class TwitterConnector:
                     post = self._convert_tweet_to_post(tweet)
                     if post:
                         posts.append(post)
+                        self.monthly_usage += 1
                 except Exception as e:
                     logger.error(f"Error converting tweet {tweet.id}: {e}")
                     continue
             
-            logger.info(f"Retrieved {len(posts)} tweets for query: {keywords}")
+            logger.info(f"Retrieved {len(posts)} tweets for query: {keywords} (Monthly usage: {self.monthly_usage}/{self.max_monthly_posts})")
             return posts
             
         except Exception as e:
             logger.error(f"Error searching tweets: {e}")
+            return []
+    
+    async def get_tweet_by_id(self, tweet_id: str) -> Optional[SocialMediaPost]:
+        """Get a specific tweet by ID - Optimized for tracking"""
+        
+        # Check monthly usage limit
+        if self.monthly_usage >= self.max_monthly_posts:
+            logger.warning("Monthly API usage limit reached")
+            return None
+        
+        await self.rate_limiter.wait_if_needed()
+        
+        try:
+            # Get tweet by ID
+            tweet = self.client.get_tweet(
+                tweet_id,
+                tweet_fields=['created_at', 'author_id', 'public_metrics', 'geo', 'context_annotations', 'entities', 'referenced_tweets'],
+                user_fields=['username', 'name', 'location', 'verified', 'public_metrics'],
+                expansions=['author_id', 'geo.place_id', 'referenced_tweets.id']
+            )
+            
+            if tweet.data:
+                self.monthly_usage += 1
+                post = self._convert_tweet_to_post(tweet.data)
+                logger.info(f"Retrieved tweet {tweet_id} (Monthly usage: {self.monthly_usage}/{self.max_monthly_posts})")
+                return post
+            
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error getting tweet {tweet_id}: {e}")
+            return None
+    
+    async def get_user_timeline(self, username: str, max_results: int = 5) -> List[SocialMediaPost]:
+        """Get user's recent tweets - Optimized for free tier"""
+        
+        # Check monthly usage limit
+        if self.monthly_usage >= self.max_monthly_posts:
+            logger.warning("Monthly API usage limit reached")
+            return []
+        
+        await self.rate_limiter.wait_if_needed()
+        
+        try:
+            # Get user by username
+            user = self.client.get_user(username=username.lstrip('@'))
+            if not user.data:
+                logger.warning(f"User {username} not found")
+                return []
+            
+            user_id = user.data.id
+            
+            # Limit results for free tier
+            max_results = min(max_results, 5, self.max_monthly_posts - self.monthly_usage)
+            
+            # Get user tweets
+            tweets = self.client.get_users_tweets(
+                user_id,
+                max_results=max_results,
+                tweet_fields=['created_at', 'author_id', 'public_metrics', 'geo', 'context_annotations', 'entities', 'referenced_tweets'],
+                user_fields=['username', 'name', 'location', 'verified', 'public_metrics'],
+                expansions=['author_id', 'referenced_tweets.id']
+            )
+            
+            posts = []
+            if tweets.data:
+                for tweet in tweets.data:
+                    try:
+                        post = self._convert_tweet_to_post(tweet)
+                        if post:
+                            posts.append(post)
+                            self.monthly_usage += 1
+                    except Exception as e:
+                        logger.error(f"Error converting tweet {tweet.id}: {e}")
+                        continue
+            
+            logger.info(f"Retrieved {len(posts)} tweets from @{username} (Monthly usage: {self.monthly_usage}/{self.max_monthly_posts})")
+            return posts
+            
+        except Exception as e:
+            logger.error(f"Error getting user timeline for {username}: {e}")
             return []
     
     def _build_search_query(self, keywords: str, location: Optional[str] = None) -> str:
