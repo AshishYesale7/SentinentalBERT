@@ -23,7 +23,7 @@
     
     "editor.formatOnSave": true,
     "editor.codeActionsOnSave": {
-        "source.organizeImports": true
+        "source.organizeImports": "explicit"
     },
     
     "docker.defaultRegistryPath": "sentinelbert",
