@@ -71,7 +71,7 @@ async def verify_token(credentials: HTTPAuthorizationCredentials = Depends(secur
             'role': payload.get('role', 'user'),
             'permissions': payload.get('permissions', [])
         }
-    except jwt.InvalidTokenError:
+    except jwt.PyJWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
     except Exception as e:
         logger.error(f"Token verification error: {e}")

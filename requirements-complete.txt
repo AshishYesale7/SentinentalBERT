@@ -1,0 +1,61 @@
+# SentinelBERT Complete Requirements
+# Comprehensive dependency list for all deployment modes
+# Version: 2.0
+
+# Core Web Frameworks
+streamlit>=1.28.0
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+pydantic>=2.4.0
+
+# Data Processing
+pandas>=2.1.0
+numpy>=1.24.0
+scipy>=1.11.0
+
+# Machine Learning & NLP
+transformers>=4.35.0
+torch>=2.1.0
+scikit-learn>=1.3.0
+nltk>=3.8.0
+textblob>=0.17.0
+langdetect>=1.0.9
+
+# Social Media APIs
+tweepy>=4.16.0
+praw>=7.8.1
+google-api-python-client>=2.183.0
+
+# Database & Caching
+psycopg2-binary>=2.9.10
+redis>=5.0.0
+sqlalchemy>=2.0.0
+
+# Visualization
+plotly>=5.17.0
+matplotlib>=3.7.0
+seaborn>=0.12.0
+
+# Web Requests & HTTP
+requests>=2.31.0
+httpx>=0.25.0
+aiohttp>=3.9.0
+
+# Utilities
+python-dotenv>=1.0.0
+python-dateutil>=2.8.0
+pytz>=2023.3
+aiofiles>=23.2.0
+
+# Security
+cryptography>=41.0.0
+pyjwt>=2.8.0
+passlib>=1.7.4
+
+# Development & Testing
+pytest>=7.4.0
+black>=23.9.0
+
+# Additional utilities
+python-multipart>=0.0.5
+prometheus-client>=0.18.0
