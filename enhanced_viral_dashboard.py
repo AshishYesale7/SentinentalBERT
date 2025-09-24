@@ -190,7 +190,7 @@ def generate_chronological_network_data(tracking_input: str, tracking_type: str,
 
 # Page configuration
 st.set_page_config(
-    page_title="भारत सरकार - साइबर अपराध विश्लेषण प्लेटफॉर्म | Government of India - Cyber Crime Analysis Platform",
+    page_title="SentinelBERT - Social Media Analytics Dashboard | Comprehensive Content Tracking & Analysis Platform",
     page_icon="🇮🇳",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -272,8 +272,8 @@ def generate_synthetic_timeline_data(tracking_input: str, timeline_range: str) -
 # Language Translation System
 TRANSLATIONS = {
     'en': {
-        'title': 'Government of India - Cyber Crime Analysis Platform',
-        'subtitle': 'Ministry of Home Affairs - Cyber Crime Investigation Division',
+         'title': 'SentinelBERT - Social Media Analytics Dashboard',
+        'subtitle': 'Comprehensive Content Tracking & Analysis Platform - By Team: Code X',
         'platform_selection': 'Platform Selection',
         'legal_authorization': 'Legal Authorization',
         'case_number': 'Case Number',
@@ -306,8 +306,8 @@ TRANSLATIONS = {
         'languages_supported': 'languages supported'
     },
     'hi': {
-        'title': 'भारत सरकार - साइबर अपराध विश्लेषण प्लेटफॉर्म',
-        'subtitle': 'गृह मंत्रालय - साइबर अपराध जांच प्रभाग',
+         'title': 'SentinelBERT - Social Media Analytics Dashboard',
+         'subtitle': 'Comprehensive Content Tracking & Analysis Platform - By Team: Code X',
         'platform_selection': 'प्लेटफॉर्म चयन',
         'legal_authorization': 'कानूनी प्राधिकरण',
         'case_number': 'मामला संख्या',
@@ -746,8 +746,8 @@ def get_translation(key: str) -> str:
         logger.warning(f"Translation error for key '{key}': {e}")
         # Fallback translations
         fallback_translations = {
-            "dashboard_title": "Government of India - Cyber Crime Analysis Platform",
-            "government_text": "Ministry of Home Affairs - Cyber Crime Investigation Division",
+           "dashboard_title": "SentinelBERT - Social Media Analytics Dashboard",
+           "government_text": "Comprehensive Content Tracking & Analysis Platform - By Team: Code X",
             "active_clusters": "Active Clusters",
             "evidence_packages": "Evidence Packages", 
             "high_priority": "High Priority Cases",

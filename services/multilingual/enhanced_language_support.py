@@ -201,7 +201,7 @@ class EnhancedLanguageSupport:
     # UI Translation Methods
     def _get_hindi_translations(self) -> Dict[str, str]:
         return {
-            "dashboard_title": "इनसाइडआउट - वायरल सामग्री विश्लेषण प्लेटफॉर्म",
+            "dashboard_title": "SentinelBERT - Social Media Analytics Dashboard",
             "government_text": "भारत सरकार",
             "active_clusters": "सक्रिय वायरल क्लस्टर",
             "evidence_packages": "साक्ष्य पैकेज",
@@ -224,7 +224,7 @@ class EnhancedLanguageSupport:
     
     def _get_bengali_translations(self) -> Dict[str, str]:
         return {
-            "dashboard_title": "ইনসাইডআউট - ভাইরাল কন্টেন্ট বিশ্লেষণ প্ল্যাটফর্ম",
+            "dashboard_title": "SentinelBERT - Social Media Analytics Dashboard",
             "government_text": "ভারত সরকার",
             "active_clusters": "সক্রিয় ভাইরাল ক্লাস্টার",
             "evidence_packages": "প্রমাণ প্যাকেজ",
@@ -234,7 +234,7 @@ class EnhancedLanguageSupport:
     
     def _get_tamil_translations(self) -> Dict[str, str]:
         return {
-            "dashboard_title": "இன்சைட்அவுட் - வைரல் உள்ளடக்க பகுப்பாய்வு தளம்",
+            "dashboard_title": "SentinelBERT - Social Media Analytics Dashboard",
             "government_text": "இந்திய அரசு",
             "active_clusters": "செயலில் உள்ள வைரல் கிளஸ்டர்கள்",
             "evidence_packages": "சாக்ஷி தொகுப்புகள்",
@@ -244,7 +244,7 @@ class EnhancedLanguageSupport:
     
     def _get_telugu_translations(self) -> Dict[str, str]:
         return {
-            "dashboard_title": "ఇన్‌సైడ్‌అవుట్ - వైరల్ కంటెంట్ విశ్లేషణ ప్లాట్‌ఫారమ్",
+            "dashboard_title": "SentinelBERT - Social Media Analytics Dashboard",
             "government_text": "భారత ప్రభుత్వం",
             "active_clusters": "క్రియాశీల వైరల్ క్లస్టర్లు",
             "evidence_packages": "సాక్ష్య ప్యాకేజీలు",
@@ -254,7 +254,7 @@ class EnhancedLanguageSupport:
     
     def _get_english_translations(self) -> Dict[str, str]:
         return {
-            "dashboard_title": "InsideOut - Viral Content Analysis Platform",
+            "dashboard_title": "SentinelBERT - Social Media Analytics Dashboard",
             "government_text": "Government of India",
             "active_clusters": "Active Viral Clusters",
             "evidence_packages": "Evidence Packages",

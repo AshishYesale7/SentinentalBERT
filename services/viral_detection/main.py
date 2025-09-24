@@ -27,7 +27,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Initialize FastAPI app
-app = FastAPI(title="InsideOut Viral Detection Service", version="1.0.0")
+app = FastAPI(title="SentinelBERT - Social Media Analytics Dashboard", version="1.0.0")
 
 # Models
 class ContentItem(BaseModel):
