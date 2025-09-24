@@ -1,0 +1,23 @@
+
+Collecting usage statistics. To deactivate, set browser.gatherUsageStats to false.
+
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:12000
+
+WARNING:services.viral_detection.main:PostgreSQL connection failed: connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused
+	Is the server running on that host and accepting TCP/IP connections?
+connection to server at "localhost" (::1), port 5432 failed: Cannot assign requested address
+	Is the server running on that host and accepting TCP/IP connections?
+. Running in mock mode.
+INFO:services.viral_detection.main:Viral Detection Engine initialized on cpu
+ERROR:__main__:Failed to import services: cannot import name 'ViralDetectionService' from 'services.viral_detection.main' (/workspace/project/SentinentalBERT/services/viral_detection/main.py)
+WARNING:__main__:Some services not available: cannot import name 'ViralDetectionService' from 'services.viral_detection.main' (/workspace/project/SentinentalBERT/services/viral_detection/main.py)
+ERROR:__main__:Error initializing services: name 'SocialMediaAggregator' is not defined
+WARNING:__main__:Could not initialize sentiment model: a coroutine was expected, got {'status': 'mock', 'data': []}
+INFO:services.database.tracking_cache:Database initialized successfully
+INFO:services.database.tracking_cache:Mock trending data initialized
+ERROR:__main__:Failed to import services: cannot import name 'ViralDetectionService' from 'services.viral_detection.main' (/workspace/project/SentinentalBERT/services/viral_detection/main.py)
+WARNING:__main__:Some services not available: cannot import name 'ViralDetectionService' from 'services.viral_detection.main' (/workspace/project/SentinentalBERT/services/viral_detection/main.py)
+WARNING:__main__:Could not initialize sentiment model: a coroutine was expected, got {'status': 'mock', 'data': []}

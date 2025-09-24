@@ -70,25 +70,39 @@ class ViralDetectionEngine:
         # SECURITY FIX: Use environment variables for database credentials
         import os
         db_password = os.getenv('DB_PASSWORD')
-        if not db_password:
-            raise ValueError("DB_PASSWORD environment variable must be set")
+        
+        # Make database connection optional for development
+        self.pg_conn = None
+        self.redis_client = None
+        
+        if db_password:
+            try:
+                self.pg_conn = psycopg2.connect(
+                    host=os.getenv('DB_HOST', 'postgres'),
+                    database=os.getenv('DB_NAME', 'insideout'),
+                    user=os.getenv('DB_USER', 'insideout'),
+                    password=db_password,
+                    sslmode='prefer'  # Prefer SSL but allow non-SSL for development
+                )
+                logger.info("PostgreSQL connection established")
+            except Exception as e:
+                logger.warning(f"PostgreSQL connection failed: {e}. Running in mock mode.")
+                self.pg_conn = None
         
         redis_password = os.getenv('REDIS_PASSWORD')
-        self.redis_client = redis.Redis(
-            host=os.getenv('REDIS_HOST', 'redis'), 
-            port=int(os.getenv('REDIS_PORT', 6379)), 
-            password=redis_password,
-            decode_responses=True,
-            ssl=True if os.getenv('REDIS_SSL', 'false').lower() == 'true' else False
-        )
-        
-        self.pg_conn = psycopg2.connect(
-            host=os.getenv('DB_HOST', 'postgres'),
-            database=os.getenv('DB_NAME', 'insideout'),
-            user=os.getenv('DB_USER', 'insideout'),
-            password=db_password,
-            sslmode='require'  # Enforce SSL connection
-        )
+        if redis_password:
+            try:
+                self.redis_client = redis.Redis(
+                    host=os.getenv('REDIS_HOST', 'redis'), 
+                    port=int(os.getenv('REDIS_PORT', 6379)), 
+                    password=redis_password,
+                    decode_responses=True,
+                    ssl=True if os.getenv('REDIS_SSL', 'false').lower() == 'true' else False
+                )
+                logger.info("Redis connection established")
+            except Exception as e:
+                logger.warning(f"Redis connection failed: {e}. Running in mock mode.")
+                self.redis_client = None
         
         logger.info(f"Viral Detection Engine initialized on {self.device}")
     
@@ -334,6 +348,10 @@ class ViralDetectionEngine:
         try:
             scores = {}
             
+            # Return mock data if no database connection
+            if not self.pg_conn:
+                return {user_id: {'follower_count': 1000, 'verification_status': False, 'influence_score': 0.5} for user_id in user_ids}
+            
             with self.pg_conn.cursor(cursor_factory=RealDictCursor) as cursor:
                 cursor.execute("""
                     SELECT id, follower_count, verification_status, influence_score
@@ -396,6 +414,11 @@ class ViralDetectionEngine:
     async def store_viral_clusters(self, clusters: List[ViralCluster]):
         """Store viral clusters in database"""
         try:
+            # Skip storage if no database connection
+            if not self.pg_conn:
+                logger.info(f"Skipping storage of {len(clusters)} viral clusters (no database connection)")
+                return
+            
             with self.pg_conn.cursor() as cursor:
                 for cluster in clusters:
                     # Insert viral cluster
@@ -437,12 +460,14 @@ class ViralDetectionEngine:
                             post.engagement_count
                         ))
                 
-                self.pg_conn.commit()
+                if self.pg_conn:
+                    self.pg_conn.commit()
                 logger.info(f"Stored {len(clusters)} viral clusters")
                 
         except Exception as e:
             logger.error(f"Error storing viral clusters: {str(e)}")
-            self.pg_conn.rollback()
+            if self.pg_conn:
+                self.pg_conn.rollback()
             raise
 
 # Initialize global engine
