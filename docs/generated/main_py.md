@@ -1,6 +1,6 @@
-# enhanced_viral_dashboard.py
+# main.py
 
-> **File Type**: python | **Path**: `enhanced_viral_dashboard.py` | **Lines**: 2515
+> **File Type**: python | **Path**: `services/viral_detection/main.py` | **Lines**: 503
 
 ## 📋 Overview
 
@@ -24,7 +24,7 @@ This python file is a core component of the **SentinelBERT** multi-platform sent
 
 ```mermaid
 graph TD
-    A[Social Media APIs] --> B[enhanced_viral_dashboard.py]
+    A[Social Media APIs] --> B[main.py]
     B --> C[Data Processing Pipeline]
     C --> D[BERT Sentiment Analysis]
     D --> E[Dashboard & Alerts]
@@ -42,23 +42,22 @@ graph TD
 ```python
 #!/usr/bin/env python3
 """
-Enhanced InsideOut Viral Dashboard - Comprehensive Analysis Platform
-Integrates sentiment analysis, behavior analysis, legal compliance, multilingual support, and global platform analysis
+InsideOut Viral Detection Service
+Tracks viral content propagation and identifies original sources
 """
 
-import streamlit as st
-import pandas as pd
-import numpy as np
-import plotly.express as px
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
-import networkx as nx
-from datetime import datetime, timedelta
-import json
-import sys
-import os
 import asyncio
-imp...
+import logging
+import uuid
+from datetime import datetime, timedelta
+from typing import List, Dict, Optional, Tuple
+import numpy as np
+import torch
+from transformers import AutoModel, AutoTokenizer
+from sklearn.cluster import DBSCAN
+from sklearn.metrics.pairwise import cosine_similarity
+import networkx as nx
+from fastapi import FastAPI, HTTPException, D...
 ```
 
 ### Configuration

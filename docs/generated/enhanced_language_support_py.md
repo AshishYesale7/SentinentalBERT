@@ -1,6 +1,6 @@
-# enhanced_viral_dashboard.py
+# enhanced_language_support.py
 
-> **File Type**: python | **Path**: `enhanced_viral_dashboard.py` | **Lines**: 2515
+> **File Type**: python | **Path**: `services/multilingual/enhanced_language_support.py` | **Lines**: 296
 
 ## 📋 Overview
 
@@ -24,7 +24,7 @@ This python file is a core component of the **SentinelBERT** multi-platform sent
 
 ```mermaid
 graph TD
-    A[Social Media APIs] --> B[enhanced_viral_dashboard.py]
+    A[Social Media APIs] --> B[enhanced_language_support.py]
     B --> C[Data Processing Pipeline]
     C --> D[BERT Sentiment Analysis]
     D --> E[Dashboard & Alerts]
@@ -42,23 +42,25 @@ graph TD
 ```python
 #!/usr/bin/env python3
 """
-Enhanced InsideOut Viral Dashboard - Comprehensive Analysis Platform
-Integrates sentiment analysis, behavior analysis, legal compliance, multilingual support, and global platform analysis
+Enhanced Multilingual Support for InsideOut Platform
+Supports Indian languages and global content analysis
 """
 
-import streamlit as st
-import pandas as pd
-import numpy as np
-import plotly.express as px
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
-import networkx as nx
-from datetime import datetime, timedelta
 import json
-import sys
-import os
-import asyncio
-imp...
+import re
+from typing import Dict, List, Optional, Tuple
+from dataclasses import dataclass
+from enum import Enum
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+class LanguageFamily(Enum):
+    """Language families supported"""
+    INDO_ARYAN = "indo_aryan"
+    DRAVIDIAN = "dravidian...
 ```
 
 ### Configuration
