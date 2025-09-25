@@ -1,56 +1,98 @@
 # SentinelBERT API Reference
 
+*Auto-generated API documentation*
+
 ## Overview
 
-SentinelBERT provides RESTful APIs for social media sentiment analysis.
+SentinelBERT provides RESTful APIs for social media sentiment analysis and behavioral pattern detection.
 
-### Base URL
-```
-http://localhost:8080/api/v1
-```
+### Base URLs
+
+- **Development**: `http://localhost:8080/api`
+- **Production**: `https://your-domain.com/api`
 
 ### Authentication
+
+All API endpoints require JWT authentication:
+
 ```
-Authorization: Bearer <jwt-token>
+Authorization: Bearer <your-jwt-token>
 ```
 
-## Endpoints
+## Core Endpoints
 
 ### Search API
-- `POST /search` - Search social media content
-- `GET /search/{id}` - Get search results
-- `DELETE /search/{id}` - Delete search query
+
+**POST** `/api/v1/search`
+
+Perform content searches across social media platforms.
+
+```json
+{
+  "query": "climate change",
+  "platforms": ["twitter", "reddit"],
+  "date_range": {
+    "start": "2024-01-01",
+    "end": "2024-01-31"
+  },
+  "sentiment_filter": "negative"
+}
+```
 
 ### Analytics API
-- `GET /analytics/sentiment` - Get sentiment analysis
-- `GET /analytics/trends` - Get trending topics
-- `GET /analytics/influencers` - Get key influencers
 
-### User Management
-- `GET /users` - List users (admin only)
-- `POST /users` - Create user
-- `PUT /users/{id}` - Update user
-- `DELETE /users/{id}` - Delete user
+**GET** `/api/v1/analytics/sentiment`
+
+Get sentiment analysis results.
+
+**GET** `/api/v1/analytics/trends`
+
+Get trending topics and patterns.
+
+### User Management API
+
+**GET** `/api/v1/users`
+
+List system users (admin only).
+
+**POST** `/api/v1/users`
+
+Create new user account.
 
 ## Response Format
+
+All API responses follow this format:
 
 ```json
 {
   "success": true,
   "data": {},
-  "message": "Success",
+  "message": "Success message",
   "timestamp": "2024-01-18T10:30:00Z"
 }
 ```
 
-## Error Codes
+## Error Handling
 
-- `400` - Bad Request
-- `401` - Unauthorized
-- `403` - Forbidden
-- `404` - Not Found
-- `500` - Internal Server Error
+Error responses include appropriate HTTP status codes:
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Invalid input parameters"
+  },
+  "timestamp": "2024-01-18T10:30:00Z"
+}
+```
+
+## Rate Limiting
+
+- Standard endpoints: 100 requests/minute
+- Search endpoints: 50 requests/minute
+- Analysis endpoints: 20 requests/minute
 
 ---
 
-*For detailed API documentation, see the OpenAPI specification.*
+*This documentation is automatically updated when API changes are detected.*
