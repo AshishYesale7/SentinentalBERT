@@ -1,16 +1,100 @@
-# Ignore Python bytecode
+# Python bytecode and cache
 __pycache__/
 *.py[cod]
+*.pyo
+*.pyc
 *.so
 
-# Ignore virtual environments
+# Virtual environments
 env/
 venv/
+.venv/
 ENV/
+virtualenv/
 
-# Ignore environment variables and secrets
+# Environment variables and secrets
 
 
-# Ignore OS files
+
+# Log files
+*.log
+streamlit.log
+react_server.log
+react_server_fixed.log
+macos_compatibility_test.log
+nohup.out
+
+# Process ID files
+*.pid
+react_server.pid
+
+# Node.js dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+frontend/build/
+frontend/dist/
+
+# Database files (preserve schemas)
+data/*.db
+data/*.sqlite
+data/*.sqlite3
+*.db
+*.sqlite
+*.sqlite3
+
+# Test artifacts
+.pytest_cache/
+.coverage
+*.coverage
+htmlcov/
+coverage/
+.nyc_output/
+
+# Temporary files
+*.tmp
+*.temp
+.tmp/
+.temp/
+
+# Deployment and test reports
+deployment_report.json
+enhanced_integration_test_report.json
+macos_compatibility_results.json
+macos_compatibility_test.log
+
+# Anomalous files (like "=2.1.0")
+=*
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
+
+# Docker artifacts (if needed)
+.dockerignore.bak
+
+# Backup files
+*.backup
+*.bak
+*.orig
+
+# Runtime files
+*.sock
