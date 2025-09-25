@@ -1,6 +1,6 @@
-# Dockerfile.streamlit
+# requirements-docker.txt
 
-> **File Type**: unknown | **Path**: `Dockerfile.streamlit` | **Lines**: 32
+> **File Type**: unknown | **Path**: `requirements-docker.txt` | **Lines**: 84
 
 ## 📋 Overview
 
@@ -24,7 +24,7 @@ This unknown file is a core component of the **SentinelBERT** multi-platform sen
 
 ```mermaid
 graph TD
-    A[Social Media APIs] --> B[Dockerfile.streamlit]
+    A[Social Media APIs] --> B[requirements-docker.txt]
     B --> C[Data Processing Pipeline]
     C --> D[BERT Sentiment Analysis]
     D --> E[Dashboard & Alerts]
@@ -40,30 +40,35 @@ graph TD
 
 ### Code Structure
 ```unknown
-FROM python:3.11-slim-bullseye
+# Docker-optimized requirements for SentinentalBERT
+# Streamlined for container deployment
 
-WORKDIR /app
+# Core Web Framework
+streamlit>=1.28.0
+fastapi>=0.104.0
+uvicorn>=0.24.0
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    curl \
-    git \
-    software-properties-common \
-    pkg-config \
-    && rm -rf /var/lib/apt/lists/*
+# Data Processing and Analysis
+pandas>=2.1.0
+numpy>=1.24.0
 
-# Copy requirements and install dependencies
-COPY requirements-docker.txt .
-RUN pip install --no-cache-dir -r requirements-docker.txt
+# Visualization
+matplotlib>=3.7.0
+plotly>=5.17.0
 
-# Copy application code
-COPY . .
+# Machine Learning (CPU-only versions)
+scikit-learn>=1.3.0
+transformers>=4.35.0
 
-# Create necessary directories
-RUN mkdir -p /app/data /app/logs
+# Natural Language Processing
+nltk>=3.8.0
+textblob>=0.17.0
+langdetect>=1.0.9
 
-# Expose Streamlit...
+# Web Scraping and APIs
+requests>=2.31.0
+beautifulsoup4>=4.12.0
+tw...
 ```
 
 ### Configuration
