@@ -45,25 +45,20 @@ facebook-sdk>=3.1.0
 sqlalchemy>=2.0.0
 psycopg2-binary>=2.9.0
 redis>=5.0.0
-sqlite3
 
 # Security and Cryptography
 cryptography>=41.0.0
 bcrypt>=4.0.0
 pyjwt>=2.8.0
-hashlib
 
 # Configuration and Environment
 python-dotenv>=1.0.0
 pyyaml>=6.0.0
-configparser>=6.0.0
 
 # Utilities
 python-dateutil>=2.8.0
 pytz>=2023.3
-uuid
 json5>=0.9.0
-pathlib
 
 # System and Performance
 psutil>=5.9.0
@@ -93,7 +88,6 @@ pydantic>=2.4.0
 marshmallow>=3.20.0
 
 # Async Support
-asyncio
 aiofiles>=23.2.0
 
 # Development Tools
@@ -152,16 +146,4 @@ passlib>=1.7.4
 python-jose>=3.3.0
 
 # Email and Notifications
-smtplib
 email-validator>=2.1.0
-
-# Backup and Archive
-zipfile
-tarfile
-shutil
-
-# System Integration
-subprocess
-os
-sys
-platform
