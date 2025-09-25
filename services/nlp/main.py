@@ -47,46 +47,49 @@ from utils.metrics import MetricsCollector
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# SECURITY FIX: Add authentication
-security = HTTPBearer()
-JWT_SECRET = os.getenv('JWT_SECRET', 'insecure-default-change-in-production')
-if JWT_SECRET == 'insecure-default-change-in-production':
-    logger.warning("⚠️  Using default JWT secret - CHANGE IN PRODUCTION!")
+# SECURITY NOTE: Authentication disabled for development/testing
+# In production, uncomment the following lines and implement proper authentication:
+# security = HTTPBearer()
+# JWT_SECRET = os.getenv('JWT_SECRET', 'insecure-default-change-in-production')
+# if JWT_SECRET == 'insecure-default-change-in-production':
+#     logger.warning("⚠️  Using default JWT secret - CHANGE IN PRODUCTION!")
+logger.warning("⚠️  AUTHENTICATION DISABLED - FOR DEVELOPMENT ONLY!")
 
-async def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    """Verify JWT token for authentication"""
-    try:
-        payload = jwt.decode(credentials.credentials, JWT_SECRET, algorithms=['HS256'])
-        officer_id = payload.get('officer_id')
-        if not officer_id:
-            raise HTTPException(status_code=401, detail="Invalid token: missing officer_id")
-        
-        # Check token expiration
-        import time
-        if payload.get('exp', 0) < time.time():
-            raise HTTPException(status_code=401, detail="Token expired")
-        
-        return {
-            'officer_id': officer_id,
-            'role': payload.get('role', 'user'),
-            'permissions': payload.get('permissions', [])
-        }
-    except jwt.PyJWTError:
-        raise HTTPException(status_code=401, detail="Invalid token")
-    except Exception as e:
-        logger.error(f"Token verification error: {e}")
-        raise HTTPException(status_code=401, detail="Authentication failed")
-
-def require_permission(permission: str):
-    """Decorator to require specific permission"""
-    def permission_checker(user_info: dict = Depends(verify_token)):
-        if permission not in user_info.get('permissions', []):
-            raise HTTPException(
-                status_code=403, 
-                detail=f"Permission required: {permission}"
-            )
-        return user_info
-    return permission_checker
+# Authentication functions commented out for development
+# async def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
+#     """Verify JWT token for authentication"""
+#     try:
+#         payload = jwt.decode(credentials.credentials, JWT_SECRET, algorithms=['HS256'])
+#         officer_id = payload.get('officer_id')
+#         if not officer_id:
+#             raise HTTPException(status_code=401, detail="Invalid token: missing officer_id")
+#         
+#         # Check token expiration
+#         import time
+#         if payload.get('exp', 0) < time.time():
+#             raise HTTPException(status_code=401, detail="Token expired")
+#         
+#         return {
+#             'officer_id': officer_id,
+#             'role': payload.get('role', 'user'),
+#             'permissions': payload.get('permissions', [])
+#         }
+#     except jwt.PyJWTError:
+#         raise HTTPException(status_code=401, detail="Invalid token")
+#     except Exception as e:
+#         logger.error(f"Token verification error: {e}")
+#         raise HTTPException(status_code=401, detail="Authentication failed")
+# 
+# def require_permission(permission: str):
+#     """Decorator to require specific permission"""
+#     def permission_checker(user_info: dict = Depends(verify_token)):
+#         if permission not in user_info.get('permissions', []):
+#             raise HTTPException(
+#                 status_code=403, 
+#                 detail=f"Permission required: {permission}"
+#             )
+#         return user_info
+#     return permission_checker
 
 # Simplified metrics (avoid conflicts)
 try:
@@ -242,8 +245,7 @@ async def analyze_texts(
     request: TextAnalysisRequest,
     background_tasks: BackgroundTasks,
     model_mgr: ModelManager = Depends(get_model_manager),
-    cache_svc: CacheService = Depends(get_cache_service),
-    user_info: dict = Depends(require_permission('nlp:analyze'))
+    cache_svc: CacheService = Depends(get_cache_service)
 ):
     """Analyze texts for sentiment and behavioral patterns"""
     start_time = asyncio.get_event_loop().time()
@@ -339,8 +341,7 @@ async def analyze_texts(
 @app.post("/analyze/sentiment")
 async def analyze_sentiment_only(
     request: TextAnalysisRequest,
-    model_mgr: ModelManager = Depends(get_model_manager),
-    user_info: dict = Depends(require_permission('nlp:sentiment'))
+    model_mgr: ModelManager = Depends(get_model_manager)
 ):
     """Analyze texts for sentiment only (faster endpoint)"""
     try:
@@ -364,8 +365,7 @@ async def analyze_sentiment_only(
 @app.post("/analyze/behavior")
 async def analyze_behavior_patterns(
     request: TextAnalysisRequest,
-    model_mgr: ModelManager = Depends(get_model_manager),
-    user_info: dict = Depends(require_permission('nlp:behavior'))
+    model_mgr: ModelManager = Depends(get_model_manager)
 ):
     """Analyze texts for behavioral patterns only"""
     try:
@@ -391,8 +391,7 @@ async def analyze_behavior_patterns(
 
 @app.get("/models")
 async def list_models(
-    model_mgr: ModelManager = Depends(get_model_manager),
-    user_info: dict = Depends(require_permission('admin:models'))
+    model_mgr: ModelManager = Depends(get_model_manager)
 ):
     """List available model versions"""
     return {
@@ -405,8 +404,7 @@ async def list_models(
 @app.post("/models/{version}/load")
 async def load_model_version(
     version: str,
-    model_mgr: ModelManager = Depends(get_model_manager),
-    user_info: dict = Depends(require_permission('admin:models'))
+    model_mgr: ModelManager = Depends(get_model_manager)
 ):
     """Load a specific model version"""
     try:

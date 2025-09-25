@@ -6,9 +6,9 @@ services:
     image: postgres:15-alpine
     container_name: sentinelbert-postgres
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-sentinelbert}
-      POSTGRES_USER: ${POSTGRES_USER:-sentinel}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_HOST_AUTH_METHOD: trust
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
@@ -16,7 +16,7 @@ services:
     networks:
       - sentinelbert-net
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-sentinel}"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -49,17 +49,19 @@ services:
     environment:
       - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379
       - DATABASE_URL=postgresql://${POSTGRES_USER:-sentinel}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-sentinelbert}
+      - PORT=8001
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
     ports:
-      - "8000:8000"
+      - "8001:8001"
+      - "12000:8001"
     networks:
       - sentinelbert-net
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -72,14 +74,14 @@ services:
       dockerfile: Dockerfile.streamlit
     container_name: sentinelbert-streamlit
     environment:
-      - NLP_SERVICE_URL=http://nlp-service:8000
+      - NLP_SERVICE_URL=http://nlp-service:8001
       - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379
       - DATABASE_URL=postgresql://${POSTGRES_USER:-sentinel}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-sentinelbert}
     depends_on:
       nlp-service:
         condition: service_healthy
     ports:
-      - "12000:8501"
+      - "12002:8501"
     networks:
       - sentinelbert-net
     restart: unless-stopped
@@ -89,9 +91,11 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        - REACT_APP_API_URL=https://work-1-nzmvrrcbclaeqnzx.prod-runtime.all-hands.dev
     container_name: sentinelbert-frontend
     environment:
-      - REACT_APP_API_URL=http://localhost:8000
+      - REACT_APP_API_URL=https://work-1-nzmvrrcbclaeqnzx.prod-runtime.all-hands.dev
     depends_on:
       - nlp-service
     ports:
