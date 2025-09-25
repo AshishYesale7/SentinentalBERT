@@ -1,6 +1,6 @@
-# docker-compose.dev.yml
+# docker-compose.enhanced.yml
 
-> **File Type**: yaml | **Path**: `docker-compose.dev.yml` | **Lines**: 356
+> **File Type**: yaml | **Path**: `docker-compose.enhanced.yml` | **Lines**: 621
 
 ## 📋 Overview
 
@@ -24,7 +24,7 @@ This yaml file is a core component of the **SentinelBERT** multi-platform sentim
 
 ```mermaid
 graph TD
-    A[Social Media APIs] --> B[docker-compose.dev.yml]
+    A[Social Media APIs] --> B[docker-compose.enhanced.yml]
     B --> C[Data Processing Pipeline]
     C --> D[BERT Sentiment Analysis]
     D --> E[Dashboard & Alerts]
@@ -43,20 +43,21 @@ graph TD
 version: '3.8'
 
 services:
-  # Main Streamlit Dashboard Application
-  streamlit-dashboard:
+  # Enhanced Streamlit Dashboard with Viral Tracking
+  enhanced-dashboard:
     build:
       context: .
-      dockerfile: Dockerfile.dashboard
-    container_name: sentinelbert-dashboard
+      dockerfile: Dockerfile.enhanced
+      args:
+        - BUILDKIT_INLINE_CACHE=1
+    container_name: sentinelbert-enhanced-dashboard
     environment:
+      # Application Configuration
       - PYTHONPATH=/app
-      - STREAMLIT_SERVER_PORT=8501
+      - STREAMLIT_SERVER_PORT=12000
       - STREAMLIT_SERVER_ADDRESS=0.0.0.0
       - STREAMLIT_SERVER_ENABLE_CORS=true
-      - STREAMLIT_SERVER_ENABLE_XSRF_PROTECTION=false
-      - STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
-      - DATABASE_URL=postgresql://se...
+      - STREAMLIT_SERVER_ENABLE_XSRF_PROT...
 ```
 
 ### Configuration

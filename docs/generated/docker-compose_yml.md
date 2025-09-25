@@ -1,6 +1,6 @@
-# docker-compose.dev.yml
+# docker-compose.yml
 
-> **File Type**: yaml | **Path**: `docker-compose.dev.yml` | **Lines**: 356
+> **File Type**: yaml | **Path**: `docker-compose.yml` | **Lines**: 349
 
 ## 📋 Overview
 
@@ -24,7 +24,7 @@ This yaml file is a core component of the **SentinelBERT** multi-platform sentim
 
 ```mermaid
 graph TD
-    A[Social Media APIs] --> B[docker-compose.dev.yml]
+    A[Social Media APIs] --> B[docker-compose.yml]
     B --> C[Data Processing Pipeline]
     C --> D[BERT Sentiment Analysis]
     D --> E[Dashboard & Alerts]
@@ -43,20 +43,19 @@ graph TD
 version: '3.8'
 
 services:
-  # Main Streamlit Dashboard Application
-  streamlit-dashboard:
-    build:
-      context: .
-      dockerfile: Dockerfile.dashboard
-    container_name: sentinelbert-dashboard
+  # Database Services
+  postgres:
+    image: postgres:15
+    container_name: sentinelbert-postgres
     environment:
-      - PYTHONPATH=/app
-      - STREAMLIT_SERVER_PORT=8501
-      - STREAMLIT_SERVER_ADDRESS=0.0.0.0
-      - STREAMLIT_SERVER_ENABLE_CORS=true
-      - STREAMLIT_SERVER_ENABLE_XSRF_PROTECTION=false
-      - STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
-      - DATABASE_URL=postgresql://se...
+      POSTGRES_DB: sentinelbert
+      POSTGRES_USER: sentinel
+      # SECURITY FIX: Require password from environment, no default
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init:/docker-entrypoint-init...
 ```
 
 ### Configuration

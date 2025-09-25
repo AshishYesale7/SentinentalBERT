@@ -1,15 +1,15 @@
-# docker-compose.dev.yml
+# LOCAL_POSTGRESQL_SETUP.md
 
-> **File Type**: yaml | **Path**: `docker-compose.dev.yml` | **Lines**: 356
+> **File Type**: markdown | **Path**: `LOCAL_POSTGRESQL_SETUP.md` | **Lines**: 208
 
 ## 📋 Overview
 
-This yaml file is a core component of the **SentinelBERT** multi-platform sentiment analysis system, designed specifically for law enforcement and security applications.
+This markdown file is a core component of the **SentinelBERT** multi-platform sentiment analysis system, designed specifically for law enforcement and security applications.
 
 ## 🎯 Purpose & Functionality
 
 ### Primary Functions
-- **Data Processing**: Handles yaml-specific operations within the SentinelBERT ecosystem
+- **Data Processing**: Handles markdown-specific operations within the SentinelBERT ecosystem
 - **Integration**: Seamlessly connects with other system components
 - **Performance**: Optimized for high-throughput social media analysis
 - **Security**: Implements privacy-compliant data handling procedures
@@ -24,7 +24,7 @@ This yaml file is a core component of the **SentinelBERT** multi-platform sentim
 
 ```mermaid
 graph TD
-    A[Social Media APIs] --> B[docker-compose.dev.yml]
+    A[Social Media APIs] --> B[LOCAL_POSTGRESQL_SETUP.md]
     B --> C[Data Processing Pipeline]
     C --> D[BERT Sentiment Analysis]
     D --> E[Dashboard & Alerts]
@@ -32,31 +32,32 @@ graph TD
 
 ### Component Relationships
 - **Upstream**: Receives data from social media API connectors
-- **Processing**: Applies yaml-specific transformations and validations
+- **Processing**: Applies markdown-specific transformations and validations
 - **Downstream**: Feeds processed data to ML/NLP analysis pipeline
 - **Monitoring**: Integrates with system health and performance metrics
 
 ## 🔧 Technical Implementation
 
 ### Code Structure
-```yaml
-version: '3.8'
+```markdown
+# Local PostgreSQL Setup Guide for SentinelBERT
 
-services:
-  # Main Streamlit Dashboard Application
-  streamlit-dashboard:
-    build:
-      context: .
-      dockerfile: Dockerfile.dashboard
-    container_name: sentinelbert-dashboard
-    environment:
-      - PYTHONPATH=/app
-      - STREAMLIT_SERVER_PORT=8501
-      - STREAMLIT_SERVER_ADDRESS=0.0.0.0
-      - STREAMLIT_SERVER_ENABLE_CORS=true
-      - STREAMLIT_SERVER_ENABLE_XSRF_PROTECTION=false
-      - STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
-      - DATABASE_URL=postgresql://se...
+This guide helps you configure SentinelBERT to use your local PostgreSQL database instead of Docker containers.
+
+## 🎯 Overview
+
+The application has been configured to connect to your local PostgreSQL database with these settings:
+
+- **Host**: localhost
+- **Port**: 5432
+- **Database**: sentinelbert
+- **User**: sentinel
+- **Password**: sentinel_native_2024
+
+## 📋 Prerequisites
+
+1. **PostgreSQL installed and running** on your local machine
+2. **Python...
 ```
 
 ### Configuration

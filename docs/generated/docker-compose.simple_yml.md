@@ -1,6 +1,6 @@
-# docker-compose.dev.yml
+# docker-compose.simple.yml
 
-> **File Type**: yaml | **Path**: `docker-compose.dev.yml` | **Lines**: 356
+> **File Type**: yaml | **Path**: `docker-compose.simple.yml` | **Lines**: 110
 
 ## 📋 Overview
 
@@ -24,7 +24,7 @@ This yaml file is a core component of the **SentinelBERT** multi-platform sentim
 
 ```mermaid
 graph TD
-    A[Social Media APIs] --> B[docker-compose.dev.yml]
+    A[Social Media APIs] --> B[docker-compose.simple.yml]
     B --> C[Data Processing Pipeline]
     C --> D[BERT Sentiment Analysis]
     D --> E[Dashboard & Alerts]
@@ -43,20 +43,22 @@ graph TD
 version: '3.8'
 
 services:
-  # Main Streamlit Dashboard Application
-  streamlit-dashboard:
-    build:
-      context: .
-      dockerfile: Dockerfile.dashboard
-    container_name: sentinelbert-dashboard
+  # Core Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: sentinelbert-postgres
     environment:
-      - PYTHONPATH=/app
-      - STREAMLIT_SERVER_PORT=8501
-      - STREAMLIT_SERVER_ADDRESS=0.0.0.0
-      - STREAMLIT_SERVER_ENABLE_CORS=true
-      - STREAMLIT_SERVER_ENABLE_XSRF_PROTECTION=false
-      - STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
-      - DATABASE_URL=postgresql://se...
+      POSTGRES_DB: ${POSTGRES_DB:-sentinelbert}
+      POSTGRES_USER: ${POSTGRES_USER:-sentinel}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - sentinelbert-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-sentinel...
 ```
 
 ### Configuration

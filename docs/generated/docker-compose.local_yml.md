@@ -1,6 +1,6 @@
-# docker-compose.dev.yml
+# docker-compose.local.yml
 
-> **File Type**: yaml | **Path**: `docker-compose.dev.yml` | **Lines**: 356
+> **File Type**: yaml | **Path**: `docker-compose.local.yml` | **Lines**: 109
 
 ## 📋 Overview
 
@@ -24,7 +24,7 @@ This yaml file is a core component of the **SentinelBERT** multi-platform sentim
 
 ```mermaid
 graph TD
-    A[Social Media APIs] --> B[docker-compose.dev.yml]
+    A[Social Media APIs] --> B[docker-compose.local.yml]
     B --> C[Data Processing Pipeline]
     C --> D[BERT Sentiment Analysis]
     D --> E[Dashboard & Alerts]
@@ -43,20 +43,24 @@ graph TD
 version: '3.8'
 
 services:
-  # Main Streamlit Dashboard Application
-  streamlit-dashboard:
-    build:
-      context: .
-      dockerfile: Dockerfile.dashboard
-    container_name: sentinelbert-dashboard
-    environment:
-      - PYTHONPATH=/app
-      - STREAMLIT_SERVER_PORT=8501
-      - STREAMLIT_SERVER_ADDRESS=0.0.0.0
-      - STREAMLIT_SERVER_ENABLE_CORS=true
-      - STREAMLIT_SERVER_ENABLE_XSRF_PROTECTION=false
-      - STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
-      - DATABASE_URL=postgresql://se...
+  # Redis (keeping for caching)
+  redis:
+    image: redis:7.2-alpine
+    container_name: sentinelbert-redis
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - sentinelbert-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # Application Services (configured for local P...
 ```
 
 ### Configuration

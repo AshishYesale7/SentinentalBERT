@@ -1,6 +1,6 @@
-# docker-compose.dev.yml
+# docker-compose.insideout.yml
 
-> **File Type**: yaml | **Path**: `docker-compose.dev.yml` | **Lines**: 356
+> **File Type**: yaml | **Path**: `docker-compose.insideout.yml` | **Lines**: 405
 
 ## 📋 Overview
 
@@ -24,7 +24,7 @@ This yaml file is a core component of the **SentinelBERT** multi-platform sentim
 
 ```mermaid
 graph TD
-    A[Social Media APIs] --> B[docker-compose.dev.yml]
+    A[Social Media APIs] --> B[docker-compose.insideout.yml]
     B --> C[Data Processing Pipeline]
     C --> D[BERT Sentiment Analysis]
     D --> E[Dashboard & Alerts]
@@ -40,23 +40,20 @@ graph TD
 
 ### Code Structure
 ```yaml
-version: '3.8'
-
 services:
-  # Main Streamlit Dashboard Application
-  streamlit-dashboard:
-    build:
-      context: .
-      dockerfile: Dockerfile.dashboard
-    container_name: sentinelbert-dashboard
+  # Enhanced PostgreSQL with PostGIS for geographic data
+  postgres:
+    image: postgis/postgis:15-3.3
+    container_name: insideout-postgres
     environment:
-      - PYTHONPATH=/app
-      - STREAMLIT_SERVER_PORT=8501
-      - STREAMLIT_SERVER_ADDRESS=0.0.0.0
-      - STREAMLIT_SERVER_ENABLE_CORS=true
-      - STREAMLIT_SERVER_ENABLE_XSRF_PROTECTION=false
-      - STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
-      - DATABASE_URL=postgresql://se...
+      POSTGRES_DB: insideout
+      POSTGRES_USER: insideout
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-insideout_secure_2024}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./sql/insideout_schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ...
 ```
 
 ### Configuration
