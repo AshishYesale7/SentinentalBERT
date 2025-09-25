@@ -17,8 +17,19 @@ NC='\033[0m'
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ENV_FILE="${PROJECT_DIR}/.env"
 COMPOSE_FILE="${PROJECT_DIR}/docker-compose.yml"
+SIMPLE_COMPOSE_FILE="${PROJECT_DIR}/docker-compose.simple.yml"
+MACOS_COMPOSE_FILE="${PROJECT_DIR}/docker-compose.macos.yml"
 MAX_RETRIES=3
 RETRY_DELAY=10
+
+# Detect OS and set appropriate compose file
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    ACTIVE_COMPOSE_FILE="$MACOS_COMPOSE_FILE"
+    OS_TYPE="macos"
+else
+    ACTIVE_COMPOSE_FILE="$SIMPLE_COMPOSE_FILE"
+    OS_TYPE="linux"
+fi
 
 print_header() {
     echo -e "${BLUE}================================${NC}"
@@ -42,7 +53,7 @@ print_info() {
     echo -e "${BLUE}ℹ️  $1${NC}"
 }
 
-# Check Docker prerequisites
+# Check Docker prerequisites and fix compatibility issues
 check_docker() {
     print_header "Checking Docker Prerequisites"
     
@@ -58,14 +69,104 @@ check_docker() {
         exit 1
     fi
     
+    # Detect OS for platform-specific fixes
+    OS_TYPE="unknown"
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        OS_TYPE="macos"
+        print_info "Detected macOS - applying compatibility fixes"
+    elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+        OS_TYPE="linux"
+        print_info "Detected Linux"
+    fi
+    
     # Check if Docker daemon is running
     if ! docker info > /dev/null 2>&1; then
-        print_error "Docker daemon is not running"
-        print_info "Please start Docker and try again"
+        print_warning "Docker daemon connectivity issue detected"
+        
+        if [[ "$OS_TYPE" == "macos" ]]; then
+            print_info "Attempting macOS Docker Desktop fix..."
+            fix_macos_docker
+        else
+            print_error "Docker daemon is not running"
+            print_info "Please start Docker and try again"
+            exit 1
+        fi
+    fi
+    
+    # Apply Docker API version compatibility fix
+    fix_docker_api_compatibility
+    
+    # Final connectivity test
+    if ! docker version > /dev/null 2>&1; then
+        print_error "Docker connectivity still failing after fixes"
+        print_info "Manual intervention required - see MACOS_DOCKER_FIX.md"
         exit 1
     fi
     
-    print_success "Docker and Docker Compose are available"
+    print_success "Docker and Docker Compose are available and compatible"
+}
+
+# Fix macOS Docker Desktop connectivity issues
+fix_macos_docker() {
+    print_info "Checking Docker Desktop status on macOS..."
+    
+    # Check if Docker Desktop is running
+    if ! pgrep -f "Docker Desktop" >/dev/null; then
+        print_warning "Docker Desktop not running, attempting to start..."
+        open -a Docker
+        print_info "Waiting for Docker Desktop to start (60 seconds)..."
+        sleep 60
+        
+        # Wait for Docker to be ready
+        local count=0
+        while ! docker version >/dev/null 2>&1 && [ $count -lt 12 ]; do
+            print_info "Still waiting for Docker... ($count/12)"
+            sleep 10
+            count=$((count + 1))
+        done
+    fi
+    
+    # If still not working, try restart
+    if ! docker version >/dev/null 2>&1; then
+        print_warning "Docker still not responding, attempting restart..."
+        pkill -f "Docker Desktop" 2>/dev/null || true
+        pkill -f "com.docker.docker" 2>/dev/null || true
+        sleep 5
+        open -a Docker
+        print_info "Waiting for Docker Desktop restart (90 seconds)..."
+        sleep 90
+    fi
+}
+
+# Fix Docker API version compatibility for all platforms
+fix_docker_api_compatibility() {
+    print_info "Applying Docker API version compatibility fixes..."
+    
+    # Set compatible API version for older daemons
+    export DOCKER_API_VERSION=1.40
+    
+    # Add to current shell session
+    echo "export DOCKER_API_VERSION=1.40" >> ~/.bashrc 2>/dev/null || true
+    echo "export DOCKER_API_VERSION=1.40" >> ~/.zshrc 2>/dev/null || true
+    
+    # Test API compatibility
+    if docker version >/dev/null 2>&1; then
+        print_success "Docker API compatibility confirmed"
+        
+        # Get Docker version info
+        local docker_version=$(docker version --format '{{.Client.Version}}' 2>/dev/null || echo "unknown")
+        local api_version=$(docker version --format '{{.Client.APIVersion}}' 2>/dev/null || echo "unknown")
+        print_info "Docker Client: $docker_version (API: $api_version)"
+    else
+        print_warning "Docker API compatibility issues persist"
+        # Try with even older API version
+        export DOCKER_API_VERSION=1.35
+        if docker version >/dev/null 2>&1; then
+            print_success "Docker working with API version 1.35"
+        else
+            print_error "Docker API compatibility cannot be resolved automatically"
+        fi
+    fi
 }
 
 # Create simplified environment file for Docker
@@ -237,6 +338,88 @@ EOF
     print_success "Simplified Docker Compose created"
 }
 
+# Create macOS-compatible Docker Compose
+create_macos_compose() {
+    print_header "Creating macOS-Compatible Docker Compose"
+    
+    # Use the existing macOS compose file if it exists, otherwise create it
+    if [[ ! -f "$MACOS_COMPOSE_FILE" ]]; then
+        print_info "Creating macOS-compatible compose file..."
+        
+        cat > "$MACOS_COMPOSE_FILE" << 'EOF'
+services:
+  postgres:
+    image: postgres:13-alpine
+    container_name: sentinelbert-postgres-macos
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-sentinelbert}
+      POSTGRES_USER: ${POSTGRES_USER:-sentinel}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-sentinel} -d ${POSTGRES_DB:-sentinelbert}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  redis:
+    image: redis:6-alpine
+    container_name: sentinelbert-redis-macos
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  streamlit-app:
+    build:
+      context: .
+      dockerfile: Dockerfile.streamlit
+    container_name: sentinelbert-app-macos
+    ports:
+      - "12000:12000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-sentinel}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-sentinelbert}
+      - REDIS_URL=redis://redis:6379
+      - STREAMLIT_SERVER_PORT=12000
+      - STREAMLIT_SERVER_ADDRESS=0.0.0.0
+    restart: unless-stopped
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  default:
+    driver: bridge
+EOF
+        print_success "macOS-compatible Docker Compose created"
+    else
+        print_success "Using existing macOS-compatible Docker Compose"
+    fi
+}
+
 # Create Dockerfiles if they don't exist
 create_dockerfiles() {
     print_header "Creating Dockerfiles"
@@ -281,7 +464,10 @@ WORKDIR /app
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
+    build-essential \
     curl \
+    software-properties-common \
+    git \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements and install dependencies
@@ -291,11 +477,18 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
+# Create necessary directories
+RUN mkdir -p /app/data /app/logs
+
 # Expose Streamlit port
-EXPOSE 8501
+EXPOSE 12000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:12000/_stcore/health || exit 1
 
 # Run Streamlit
-CMD ["streamlit", "run", "enhanced_viral_dashboard.py", "--server.port=8501", "--server.address=0.0.0.0", "--server.headless=true"]
+CMD ["streamlit", "run", "enhanced_viral_dashboard.py", "--server.port=12000", "--server.address=0.0.0.0", "--server.headless=true", "--server.enableCORS=false", "--server.enableXsrfProtection=false"]
 EOF
     print_success "Created Streamlit Dockerfile"
     
@@ -363,10 +556,12 @@ EOF
 deploy_with_retry() {
     local attempt=1
     
+    print_info "Using compose file: $(basename "$ACTIVE_COMPOSE_FILE") for $OS_TYPE"
+    
     while [[ $attempt -le $MAX_RETRIES ]]; do
         print_info "Deployment attempt $attempt of $MAX_RETRIES"
         
-        if docker-compose -f docker-compose.simple.yml up -d --build; then
+        if docker-compose -f "$ACTIVE_COMPOSE_FILE" up -d --build; then
             print_success "Docker services started successfully"
             return 0
         else
@@ -377,7 +572,7 @@ deploy_with_retry() {
                 sleep $RETRY_DELAY
                 
                 # Clean up failed containers
-                docker-compose -f docker-compose.simple.yml down --remove-orphans
+                docker-compose -f "$ACTIVE_COMPOSE_FILE" down --remove-orphans
             fi
         fi
         
@@ -400,7 +595,7 @@ wait_for_services() {
         print_info "Waiting for $service to be healthy..."
         
         while [[ $wait_time -lt $max_wait ]]; do
-            if docker-compose -f docker-compose.simple.yml ps | grep "$service" | grep -q "healthy\|Up"; then
+            if docker-compose -f "$ACTIVE_COMPOSE_FILE" ps | grep "$service" | grep -q "healthy\|Up"; then
                 print_success "$service is ready"
                 break
             fi
@@ -469,10 +664,10 @@ show_deployment_info() {
     echo "  🔴 Redis:              localhost:6379"
     echo ""
     print_info "Management commands:"
-    echo "  View logs:    docker-compose -f docker-compose.simple.yml logs -f"
-    echo "  Stop all:     docker-compose -f docker-compose.simple.yml down"
-    echo "  Restart:      docker-compose -f docker-compose.simple.yml restart"
-    echo "  Clean all:    docker-compose -f docker-compose.simple.yml down -v"
+    echo "  View logs:    docker-compose -f $(basename "$ACTIVE_COMPOSE_FILE") logs -f"
+    echo "  Stop all:     docker-compose -f $(basename "$ACTIVE_COMPOSE_FILE") down"
+    echo "  Restart:      docker-compose -f $(basename "$ACTIVE_COMPOSE_FILE") restart"
+    echo "  Clean all:    docker-compose -f $(basename "$ACTIVE_COMPOSE_FILE") down -v"
     echo ""
     print_warning "Update API keys in .env file for full social media functionality"
 }
@@ -481,7 +676,7 @@ show_deployment_info() {
 cleanup() {
     print_header "Cleaning Up"
     
-    docker-compose -f docker-compose.simple.yml down --remove-orphans
+    docker-compose -f "$ACTIVE_COMPOSE_FILE" down --remove-orphans
     docker system prune -f
     
     print_success "Cleanup completed"
@@ -493,7 +688,11 @@ main() {
         deploy)
             check_docker
             create_docker_env
-            create_simplified_compose
+            if [[ "$OS_TYPE" == "macos" ]]; then
+                create_macos_compose
+            else
+                create_simplified_compose
+            fi
             create_dockerfiles
             deploy_with_retry
             wait_for_services
@@ -505,17 +704,17 @@ main() {
             cleanup
             ;;
         status)
-            docker-compose -f docker-compose.simple.yml ps
+            docker-compose -f "$ACTIVE_COMPOSE_FILE" ps
             test_services
             ;;
         logs)
-            docker-compose -f docker-compose.simple.yml logs -f
+            docker-compose -f "$ACTIVE_COMPOSE_FILE" logs -f
             ;;
         stop)
-            docker-compose -f docker-compose.simple.yml down
+            docker-compose -f "$ACTIVE_COMPOSE_FILE" down
             ;;
         restart)
-            docker-compose -f docker-compose.simple.yml restart
+            docker-compose -f "$ACTIVE_COMPOSE_FILE" restart
             ;;
         *)
             echo "Usage: $0 {deploy|clean|status|logs|stop|restart}"
