@@ -102,7 +102,7 @@ transliterate>=1.10.2
 # Social Media Platform Specific
 instaloader>=4.10.0
 youtube-dl>=2021.12.17
-tiktok-scraper>=1.4.7
+tiktok-scraper>=1.0.0
 
 # Legal and Compliance
 python-docx>=0.8.11
