@@ -1,6 +1,6 @@
-# Dockerfile.dashboard
+# test-docker-build.sh
 
-> **File Type**: unknown | **Path**: `Dockerfile.dashboard` | **Lines**: 68
+> **File Type**: unknown | **Path**: `test-docker-build.sh` | **Lines**: 119
 
 ## 📋 Overview
 
@@ -24,7 +24,7 @@ This unknown file is a core component of the **SentinelBERT** multi-platform sen
 
 ```mermaid
 graph TD
-    A[Social Media APIs] --> B[Dockerfile.dashboard]
+    A[Social Media APIs] --> B[test-docker-build.sh]
     B --> C[Data Processing Pipeline]
     C --> D[BERT Sentiment Analysis]
     D --> E[Dashboard & Alerts]
@@ -40,30 +40,34 @@ graph TD
 
 ### Code Structure
 ```unknown
-# Multi-stage build for SentinentalBERT Dashboard
-FROM python:3.11-slim as base
+#!/bin/bash
 
-# Set environment variables
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    PYTHONPATH=/app \
-    DEBIAN_FRONTEND=noninteractive
+# Test Docker Build Script for SentinentalBERT
+# This script tests individual Docker builds to identify issues
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    curl \
-    git \
-    wget \
-    unzip \
-    libpq-dev \
-    libssl-dev \
-    libffi-dev \
-    libjpeg-dev \
-    libpng-dev \
-    libfreetype6-dev \
-    pkg-config \
-    && rm -r...
+set -e
+
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+
+print_header() {
+    echo -e "${BLUE}================================${NC}"
+    echo -e "${BLUE}  $1${NC}"
+    echo -e "${BLUE}================================${NC}"
+}
+
+print_success() {
+    echo -e "${GREEN}✅ $1${NC}"
+}
+
+print_error() {
+    echo -e "${RED}❌ $1${NC}"
+}
+...
 ```
 
 ### Configuration

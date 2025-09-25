@@ -1,15 +1,15 @@
-# Dockerfile.dashboard
+# DOCKER_BUILD_FIXES.md
 
-> **File Type**: unknown | **Path**: `Dockerfile.dashboard` | **Lines**: 68
+> **File Type**: markdown | **Path**: `DOCKER_BUILD_FIXES.md` | **Lines**: 142
 
 ## 📋 Overview
 
-This unknown file is a core component of the **SentinelBERT** multi-platform sentiment analysis system, designed specifically for law enforcement and security applications.
+This markdown file is a core component of the **SentinelBERT** multi-platform sentiment analysis system, designed specifically for law enforcement and security applications.
 
 ## 🎯 Purpose & Functionality
 
 ### Primary Functions
-- **Data Processing**: Handles unknown-specific operations within the SentinelBERT ecosystem
+- **Data Processing**: Handles markdown-specific operations within the SentinelBERT ecosystem
 - **Integration**: Seamlessly connects with other system components
 - **Performance**: Optimized for high-throughput social media analysis
 - **Security**: Implements privacy-compliant data handling procedures
@@ -24,7 +24,7 @@ This unknown file is a core component of the **SentinelBERT** multi-platform sen
 
 ```mermaid
 graph TD
-    A[Social Media APIs] --> B[Dockerfile.dashboard]
+    A[Social Media APIs] --> B[DOCKER_BUILD_FIXES.md]
     B --> C[Data Processing Pipeline]
     C --> D[BERT Sentiment Analysis]
     D --> E[Dashboard & Alerts]
@@ -32,38 +32,32 @@ graph TD
 
 ### Component Relationships
 - **Upstream**: Receives data from social media API connectors
-- **Processing**: Applies unknown-specific transformations and validations
+- **Processing**: Applies markdown-specific transformations and validations
 - **Downstream**: Feeds processed data to ML/NLP analysis pipeline
 - **Monitoring**: Integrates with system health and performance metrics
 
 ## 🔧 Technical Implementation
 
 ### Code Structure
-```unknown
-# Multi-stage build for SentinentalBERT Dashboard
-FROM python:3.11-slim as base
+```markdown
+# Docker Build Fixes for macOS Deployment
 
-# Set environment variables
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    PYTHONPATH=/app \
-    DEBIAN_FRONTEND=noninteractive
+## Issues Identified and Fixed
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    curl \
-    git \
-    wget \
-    unzip \
-    libpq-dev \
-    libssl-dev \
-    libffi-dev \
-    libjpeg-dev \
-    libpng-dev \
-    libfreetype6-dev \
-    pkg-config \
-    && rm -r...
+### 1. Frontend Dockerfile Issue (Line 65)
+**Problem**: 
+```dockerfile
+ENV REACT_APP_BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+```
+Docker ENV doesn't support command substitution during build time.
+
+**Solution**: 
+```dockerfile
+ARG REACT_APP_VERSION=1.0.0
+ARG REACT_APP_BUILD_DATE
+ENV REACT_APP_VERSION=${REACT_APP_VERSION}
+RUN if [ -z "$REACT_APP_BUILD_DATE" ]; then \
+        export REACT_APP_BUILD_DATE=$(date -u +"%Y-%m...
 ```
 
 ### Configuration

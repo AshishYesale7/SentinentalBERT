@@ -1,6 +1,6 @@
-# Dockerfile.dashboard
+# Dockerfile
 
-> **File Type**: unknown | **Path**: `Dockerfile.dashboard` | **Lines**: 68
+> **File Type**: unknown | **Path**: `services/nlp/Dockerfile` | **Lines**: 315
 
 ## 📋 Overview
 
@@ -24,7 +24,7 @@ This unknown file is a core component of the **SentinelBERT** multi-platform sen
 
 ```mermaid
 graph TD
-    A[Social Media APIs] --> B[Dockerfile.dashboard]
+    A[Social Media APIs] --> B[Dockerfile]
     B --> C[Data Processing Pipeline]
     C --> D[BERT Sentiment Analysis]
     D --> E[Dashboard & Alerts]
@@ -40,30 +40,17 @@ graph TD
 
 ### Code Structure
 ```unknown
-# Multi-stage build for SentinentalBERT Dashboard
-FROM python:3.11-slim as base
-
-# Set environment variables
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    PYTHONPATH=/app \
-    DEBIAN_FRONTEND=noninteractive
-
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    curl \
-    git \
-    wget \
-    unzip \
-    libpq-dev \
-    libssl-dev \
-    libffi-dev \
-    libjpeg-dev \
-    libpng-dev \
-    libfreetype6-dev \
-    pkg-config \
-    && rm -r...
+# =============================================================================
+# SentinelBERT NLP Service Dockerfile (Python)
+# =============================================================================
+# 
+# This Dockerfile builds the Python-based NLP service with BERT models.
+# It supports both CPU and GPU execution with CUDA optimization.
+# 
+# Build stages:
+# 1. Base stage: Python environment with system dependencies
+# 2. Dependencies stage: Install Python packages and ML models
+# 3. Runti...
 ```
 
 ### Configuration

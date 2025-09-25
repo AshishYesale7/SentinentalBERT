@@ -1,6 +1,6 @@
-# Dockerfile.dashboard
+# fix-docker-compose-version.sh
 
-> **File Type**: unknown | **Path**: `Dockerfile.dashboard` | **Lines**: 68
+> **File Type**: unknown | **Path**: `fix-docker-compose-version.sh` | **Lines**: 48
 
 ## 📋 Overview
 
@@ -24,7 +24,7 @@ This unknown file is a core component of the **SentinelBERT** multi-platform sen
 
 ```mermaid
 graph TD
-    A[Social Media APIs] --> B[Dockerfile.dashboard]
+    A[Social Media APIs] --> B[fix-docker-compose-version.sh]
     B --> C[Data Processing Pipeline]
     C --> D[BERT Sentiment Analysis]
     D --> E[Dashboard & Alerts]
@@ -40,30 +40,32 @@ graph TD
 
 ### Code Structure
 ```unknown
-# Multi-stage build for SentinentalBERT Dashboard
-FROM python:3.11-slim as base
+#!/bin/bash
 
-# Set environment variables
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    PYTHONPATH=/app \
-    DEBIAN_FRONTEND=noninteractive
+# Fix Docker Compose version warnings
+# This script removes the deprecated 'version' field from docker-compose files
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    curl \
-    git \
-    wget \
-    unzip \
-    libpq-dev \
-    libssl-dev \
-    libffi-dev \
-    libjpeg-dev \
-    libpng-dev \
-    libfreetype6-dev \
-    pkg-config \
-    && rm -r...
+set -e
+
+# Colors
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+
+print_info() {
+    echo -e "${BLUE}ℹ️  $1${NC}"
+}
+
+print_success() {
+    echo -e "${GREEN}✅ $1${NC}"
+}
+
+# Find and fix docker-compose files
+fix_compose_files() {
+    print_info "Fixing docker-compose version warnings..."
+    
+    # Find all docker-compose files
+    compose_files=$(find . -name "docke...
 ```
 
 ### Configuration
