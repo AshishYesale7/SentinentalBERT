@@ -2,7 +2,14 @@
 
 # SentinelBERT Quick Start Script
 # Automatically detects and deploys using the best available method
-# Version: 2.0
+# Version: 2.1
+#
+# Features:
+# - Streamlit Dashboard (Government-style interface) on port 12000
+# - React NLP Dashboard (Modern interface) on port 12001
+# - FastAPI NLP Service (Backend processing) on port 8001
+# - Automatic Node.js installation and React setup
+# - Environment configuration for external access
 
 set -e
 
@@ -251,6 +258,65 @@ show_manual_options() {
     done
 }
 
+# Setup React NLP Dashboard
+setup_react_dashboard() {
+    print_header "Setting up React NLP Dashboard"
+    
+    # Check if Node.js is installed
+    if ! command -v node &> /dev/null; then
+        print_info "Installing Node.js..."
+        if [[ "$OS" == "linux" ]]; then
+            curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+            sudo apt-get install -y nodejs
+        elif [[ "$OS" == "macos" ]]; then
+            if command -v brew &> /dev/null; then
+                brew install node
+            else
+                print_error "Please install Node.js manually from https://nodejs.org/"
+                return 1
+            fi
+        fi
+    fi
+    
+    # Navigate to frontend directory
+    cd frontend
+    
+    # Create .env file for React configuration
+    print_info "Configuring React development server..."
+    cat > .env << 'EOF'
+DANGEROUSLY_DISABLE_HOST_CHECK=true
+BROWSER=none
+HOST=0.0.0.0
+PORT=12001
+WDS_SOCKET_HOST=0.0.0.0
+WDS_SOCKET_PORT=12001
+EOF
+    
+    # Install dependencies
+    print_info "Installing React dependencies..."
+    npm install
+    
+    # Start React development server in background
+    print_info "Starting React NLP Dashboard on port 12001..."
+    npm start > react_server.log 2>&1 &
+    REACT_PID=$!
+    echo $REACT_PID > react_server.pid
+    
+    # Wait for server to start
+    print_info "Waiting for React server to start..."
+    sleep 15
+    
+    # Check if server is running
+    if curl -s -o /dev/null -w "%{http_code}" http://localhost:12001 | grep -q "200"; then
+        print_success "React NLP Dashboard started successfully on port 12001"
+    else
+        print_warning "React server may still be starting up..."
+    fi
+    
+    # Return to main directory
+    cd ..
+}
+
 # Execute deployment
 execute_deployment() {
     print_header "Starting Deployment"
@@ -270,6 +336,10 @@ execute_deployment() {
             print_info "Starting native deployment..."
             chmod +x native-deploy.sh
             ./native-deploy.sh deploy
+            # Also setup React dashboard for native deployment
+            if [[ "$NODE_AVAILABLE" == true ]]; then
+                setup_react_dashboard
+            fi
             ;;
         native-core)
             print_info "Starting core native deployment..."
@@ -280,6 +350,10 @@ execute_deployment() {
             print_info "Starting development deployment..."
             chmod +x native-deploy.sh
             ./native-deploy.sh deploy
+            # Setup React dashboard for development
+            if [[ "$NODE_AVAILABLE" == true ]]; then
+                setup_react_dashboard
+            fi
             ;;
         *)
             print_error "Unknown deployment method: $DEPLOYMENT_METHOD"
@@ -304,9 +378,9 @@ show_post_deployment() {
     
     print_info "Access URLs:"
     echo "  📱 Streamlit Dashboard: http://localhost:12000"
-    echo "  💻 React Frontend:     http://localhost:12001"
-    echo "  🔧 NLP API:            http://localhost:8000"
-    echo "  📖 API Documentation:  http://localhost:8000/docs"
+    echo "  💻 React NLP Dashboard: http://localhost:12001"
+    echo "  🔧 NLP API:            http://localhost:8001"
+    echo "  📖 API Documentation:  http://localhost:8001/docs"
     echo ""
     
     print_info "Next steps:"
