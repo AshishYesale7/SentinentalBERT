@@ -207,18 +207,8 @@ ENV MEMORY_LIMIT=4G \
 # Pre-compile Python bytecode for faster startup
 RUN python -m compileall /app
 
-# Warm up the models (load them once to cache)
-RUN python -c "\
-import sys; \
-sys.path.append('/app'); \
-try: \
-    from models.sentiment_model import SentinelBERTModel; \
-    print('Warming up BERT model...'); \
-    model = SentinelBERTModel(); \
-    print('Model warmed up successfully!'); \
-except Exception as e: \
-    print(f'Model warmup failed: {e}'); \
-"
+# Warm up the models (load them once to cache) - Skip for now to avoid syntax issues
+# RUN python -c "import sys; sys.path.append('/app'); from models.sentiment_model import SentinelBERTModel; model = SentinelBERTModel(); print('Model warmed up successfully!')"
 
 # Default command to run the service
 CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]
@@ -240,7 +230,7 @@ RUN pip install --no-cache-dir \
     jupyter \
     jupyterlab \
     # Debugging tools
-    pdb++ \
+    pdbpp \
     ipdb \
     # Performance profiling
     py-spy \

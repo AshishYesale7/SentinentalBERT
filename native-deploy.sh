@@ -242,6 +242,23 @@ setup_python_env() {
     print_success "Python environment setup complete"
 }
 
+# Test database connection
+test_database_connection() {
+    print_header "Testing Database Connection"
+    
+    if [[ -f "test_local_db_connection.py" ]]; then
+        print_info "Testing PostgreSQL connection..."
+        if python test_local_db_connection.py; then
+            print_success "Database connection successful"
+        else
+            print_warning "Database connection failed - continuing with SQLite cache only"
+            print_info "See LOCAL_POSTGRESQL_SETUP.md for database setup instructions"
+        fi
+    else
+        print_warning "Database test script not found"
+    fi
+}
+
 # Setup Node.js environment
 setup_node_env() {
     print_header "Setting up Node.js Environment"
@@ -531,6 +548,7 @@ deploy() {
     create_directories
     create_env_file
     setup_python_env
+    test_database_connection
     setup_node_env
     
     # Start services

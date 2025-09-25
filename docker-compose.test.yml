@@ -22,7 +22,7 @@ services:
       dockerfile: Dockerfile
     container_name: sentinelbert-nlp-test
     ports:
-      - "8000:8000"
+      - "8001:8000"
     environment:
       - PYTHONPATH=/app
       - HF_HOME=/app/models/cache

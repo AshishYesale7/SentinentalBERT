@@ -120,7 +120,7 @@ interface LanguageContextType {
 const LanguageContext = React.createContext<LanguageContextType | null>(null);
 
 // Translations
-const translations = {
+const translations: Record<string, Record<string, string>> = {
   'hi': {
     'dashboard.title': 'इनसाइडआउट डैशबोर्ड',
     'search.placeholder': 'खोजने के लिए कीवर्ड दर्ज करें',

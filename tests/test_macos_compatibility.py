@@ -300,7 +300,7 @@ class MacOSCompatibilityTester:
         # Test localhost connectivity
         import socket
         
-        test_ports = [5432, 6379, 8000, 8080, 3000]
+        test_ports = [5432, 6379, 8001, 8080, 3000]
         
         for port in test_ports:
             try:

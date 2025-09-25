@@ -44,7 +44,6 @@ RUN apk add --no-cache \
     curl
 
 # Set Node.js environment
-ENV NODE_ENV=${BUILD_MODE}
 ENV CI=true
 ENV GENERATE_SOURCEMAP=false
 
@@ -52,6 +51,7 @@ ENV GENERATE_SOURCEMAP=false
 COPY package.json package-lock.json ./
 
 # Install dependencies (including dev dependencies for build)
+# Note: We need devDependencies for react-scripts, so don't set NODE_ENV=production yet
 RUN npm ci --silent
 
 # Copy source code
@@ -68,6 +68,9 @@ RUN if [ -z "$REACT_APP_BUILD_DATE" ]; then \
         export REACT_APP_BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ"); \
     fi && \
     echo "REACT_APP_BUILD_DATE=${REACT_APP_BUILD_DATE}" >> .env.local
+
+# Set production environment for build
+ENV NODE_ENV=production
 
 # Build the React application
 RUN npm run build
