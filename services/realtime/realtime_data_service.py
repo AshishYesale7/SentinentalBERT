@@ -612,3 +612,125 @@ class RealTimeDataService:
             "high_risk_posts": len([p for p in evidence_data if p.risk_level == "high"]),
             "unique_authors": len(set(p.author_id for p in evidence_data))
         }
+    
+    # Additional search methods for real-time data integration
+    async def search_hashtag(self, hashtag: str, platforms: List[str] = None, max_results: int = 100) -> List[Dict[str, Any]]:
+        """Search for posts containing a specific hashtag"""
+        try:
+            query = SearchQuery(
+                keywords=[hashtag],
+                platforms=platforms or ["twitter", "youtube", "reddit"],
+                time_window=24,  # Last 24 hours
+                max_results=max_results
+            )
+            
+            results = await self.search_service.search_real_time(query)
+            
+            # Convert RealTimePost objects to dictionaries
+            posts_data = []
+            for post in results.posts:
+                posts_data.append({
+                    'id': post.id,
+                    'platform': post.platform,
+                    'content': post.content,
+                    'author_handle': post.author,
+                    'author_id': post.author_id,
+                    'timestamp': post.timestamp,
+                    'url': post.url,
+                    'engagement_metrics': post.engagement,
+                    'sentiment_score': post.sentiment_score,
+                    'viral_score': post.viral_score,
+                    'hashtags': post.hashtags,
+                    'mentions': post.mentions,
+                    'location': post.location,
+                    'language': post.language
+                })
+            
+            return posts_data
+            
+        except Exception as e:
+            logger.error(f"Error searching hashtag {hashtag}: {e}")
+            return []
+    
+    async def search_url_mentions(self, url: str, platforms: List[str] = None, max_results: int = 100) -> List[Dict[str, Any]]:
+        """Search for posts mentioning a specific URL"""
+        try:
+            # Extract domain or use full URL as keyword
+            import urllib.parse
+            parsed_url = urllib.parse.urlparse(url)
+            search_terms = [url, parsed_url.netloc, parsed_url.path]
+            
+            query = SearchQuery(
+                keywords=search_terms,
+                platforms=platforms or ["twitter", "youtube", "reddit"],
+                time_window=168,  # Last week
+                max_results=max_results
+            )
+            
+            results = await self.search_service.search_real_time(query)
+            
+            # Convert and filter results
+            posts_data = []
+            for post in results.posts:
+                # Check if URL is actually mentioned in content
+                if any(term in post.content.lower() for term in [url.lower(), parsed_url.netloc.lower()]):
+                    posts_data.append({
+                        'id': post.id,
+                        'platform': post.platform,
+                        'content': post.content,
+                        'author_handle': post.author,
+                        'author_id': post.author_id,
+                        'timestamp': post.timestamp,
+                        'url': post.url,
+                        'engagement_metrics': post.engagement,
+                        'sentiment_score': post.sentiment_score,
+                        'viral_score': post.viral_score,
+                        'hashtags': post.hashtags,
+                        'mentions': post.mentions,
+                        'location': post.location,
+                        'language': post.language
+                    })
+            
+            return posts_data
+            
+        except Exception as e:
+            logger.error(f"Error searching URL mentions for {url}: {e}")
+            return []
+    
+    async def search_keywords(self, keywords: List[str], platforms: List[str] = None, max_results: int = 100) -> List[Dict[str, Any]]:
+        """Search for posts containing specific keywords"""
+        try:
+            query = SearchQuery(
+                keywords=keywords,
+                platforms=platforms or ["twitter", "youtube", "reddit"],
+                time_window=48,  # Last 48 hours
+                max_results=max_results
+            )
+            
+            results = await self.search_service.search_real_time(query)
+            
+            # Convert RealTimePost objects to dictionaries
+            posts_data = []
+            for post in results.posts:
+                posts_data.append({
+                    'id': post.id,
+                    'platform': post.platform,
+                    'content': post.content,
+                    'author_handle': post.author,
+                    'author_id': post.author_id,
+                    'timestamp': post.timestamp,
+                    'url': post.url,
+                    'engagement_metrics': post.engagement,
+                    'sentiment_score': post.sentiment_score,
+                    'viral_score': post.viral_score,
+                    'hashtags': post.hashtags,
+                    'mentions': post.mentions,
+                    'location': post.location,
+                    'language': post.language
+                })
+            
+            return posts_data
+            
+        except Exception as e:
+            logger.error(f"Error searching keywords {keywords}: {e}")
+            return []

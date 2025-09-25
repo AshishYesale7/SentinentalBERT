@@ -1133,9 +1133,87 @@ with tab1:
             )
         
         # Generate timeline data based on tracking input
-        if cache_available:
+        use_real_data = os.getenv('USE_REAL_DATA', 'true').lower() == 'true'
+        
+        if use_real_data and cache_available:
             try:
-                # Get cached or mock data for the tracked content
+                # Get real-time data from APIs
+                primary_platform = tracking_platforms[0] if tracking_platforms else 'twitter'
+                
+                # First check cache for recent data
+                cached_data = cache_db.get_cached_data(primary_platform, tracking_type, tracking_input)
+                
+                if cached_data and (datetime.now() - cached_data.timestamp).seconds < 300:  # 5 minutes cache
+                    timeline_data = cached_data.data
+                    st.info(f"📊 Using cached data from {cached_data.timestamp.strftime('%H:%M:%S')}")
+                else:
+                    # Fetch real-time data from APIs
+                    st.info(f"🔄 Fetching real-time data for '{tracking_input}' from {primary_platform}...")
+                    
+                    try:
+                        # Use the real-time data service
+                        real_time_service = RealTimeDataService()
+                        
+                        if query_type == "hashtag":
+                            # Search for hashtag data
+                            import asyncio
+                            search_results = asyncio.run(real_time_service.search_hashtag(
+                                hashtag=tracking_input,
+                                platforms=[primary_platform],
+                                max_results=100
+                            ))
+                        elif query_type == "url":
+                            # Search for URL mentions
+                            import asyncio
+                            search_results = asyncio.run(real_time_service.search_url_mentions(
+                                url=tracking_input,
+                                platforms=[primary_platform],
+                                max_results=100
+                            ))
+                        else:
+                            # General keyword search
+                            import asyncio
+                            search_results = asyncio.run(real_time_service.search_keywords(
+                                keywords=[tracking_input],
+                                platforms=[primary_platform],
+                                max_results=100
+                            ))
+                        
+                        if search_results and len(search_results) > 0:
+                            # Convert real-time data to timeline format
+                            timeline_data = convert_realtime_to_timeline(search_results, timeline_range)
+                            
+                            # Cache the results
+                            cache_db.store_cached_data(
+                                platform=primary_platform,
+                                query_type=tracking_type,
+                                query_value=tracking_input,
+                                data=timeline_data,
+                                ttl_hours=1
+                            )
+                            
+                            st.success(f"✅ Found {len(search_results)} real-time posts for '{tracking_input}'")
+                        else:
+                            st.warning(f"⚠️ No real-time data found for '{tracking_input}'. Using fallback data.")
+                            timeline_data = generate_synthetic_timeline_data(tracking_input, timeline_range)
+                            
+                    except Exception as api_error:
+                        st.error(f"❌ API Error: {str(api_error)}")
+                        st.info("🔄 Falling back to cached/synthetic data...")
+                        
+                        # Fallback to mock data if API fails
+                        mock_data = cache_db.get_mock_trending_data(tracking_input.replace('#', ''))
+                        if mock_data:
+                            timeline_data = mock_data[0]['trend_data']
+                        else:
+                            timeline_data = generate_synthetic_timeline_data(tracking_input, timeline_range)
+                            
+            except Exception as e:
+                st.error(f"❌ Error fetching data: {str(e)}")
+                timeline_data = generate_synthetic_timeline_data(tracking_input, timeline_range)
+        elif cache_available:
+            # Fallback to mock data when real-time is disabled
+            try:
                 primary_platform = tracking_platforms[0] if tracking_platforms else 'twitter'
                 cached_data = cache_db.get_cached_data(primary_platform, tracking_type, tracking_input)
                 
@@ -2601,3 +2679,116 @@ def calculate_confidence_score(network_data: Dict) -> float:
     confidence = (node_count_factor * 0.3 + edge_density * 0.3 + time_consistency * 0.4)
     
     return min(confidence, 0.95)  # Cap at 95%
+
+def convert_realtime_to_timeline(search_results: List[Dict], timeline_range: str) -> Dict[str, Any]:
+    """Convert real-time search results to timeline format for visualization"""
+    
+    # Parse timeline range
+    if timeline_range == "Last 24 Hours":
+        hours = 24
+        time_points = [datetime.now() - timedelta(hours=i) for i in range(hours, 0, -1)]
+    elif timeline_range == "Last 1 Week":
+        days = 7
+        time_points = [datetime.now() - timedelta(days=i) for i in range(days, 0, -1)]
+    elif timeline_range == "Last 1 Month":
+        days = 30
+        time_points = [datetime.now() - timedelta(days=i) for i in range(days, 0, -1)]
+    else:
+        hours = 24
+        time_points = [datetime.now() - timedelta(hours=i) for i in range(hours, 0, -1)]
+    
+    # Initialize timeline data structure
+    timeline_data = {
+        'timestamps': [tp.isoformat() for tp in time_points],
+        'post_counts': [0] * len(time_points),
+        'engagement_counts': [0] * len(time_points),
+        'sentiment_scores': [0.0] * len(time_points),
+        'viral_scores': [0.0] * len(time_points),
+        'platforms': {},
+        'top_posts': [],
+        'total_posts': len(search_results),
+        'total_engagement': 0,
+        'avg_sentiment': 0.0
+    }
+    
+    # Process search results
+    total_sentiment = 0
+    total_engagement = 0
+    
+    for post in search_results:
+        try:
+            # Parse post timestamp
+            if isinstance(post.get('timestamp'), str):
+                post_time = datetime.fromisoformat(post['timestamp'].replace('Z', '+00:00'))
+            elif isinstance(post.get('timestamp'), datetime):
+                post_time = post['timestamp']
+            else:
+                post_time = datetime.now()  # Fallback
+            
+            # Find the appropriate time bucket
+            for i, time_point in enumerate(time_points):
+                if post_time >= time_point:
+                    timeline_data['post_counts'][i] += 1
+                    
+                    # Add engagement metrics
+                    engagement = post.get('engagement_metrics', {})
+                    post_engagement = sum([
+                        engagement.get('likes', 0),
+                        engagement.get('shares', 0),
+                        engagement.get('comments', 0),
+                        engagement.get('views', 0)
+                    ])
+                    timeline_data['engagement_counts'][i] += post_engagement
+                    total_engagement += post_engagement
+                    
+                    # Add sentiment score
+                    sentiment = post.get('sentiment_score', 0.0)
+                    timeline_data['sentiment_scores'][i] += sentiment
+                    total_sentiment += sentiment
+                    
+                    # Add viral score (calculated from engagement)
+                    viral_score = min(post_engagement / 1000, 1.0)  # Normalize to 0-1
+                    timeline_data['viral_scores'][i] += viral_score
+                    
+                    # Track platform distribution
+                    platform = post.get('platform', 'unknown')
+                    if platform not in timeline_data['platforms']:
+                        timeline_data['platforms'][platform] = 0
+                    timeline_data['platforms'][platform] += 1
+                    
+                    break
+            
+            # Add to top posts if high engagement
+            if post_engagement > 100:  # Threshold for "top" posts
+                timeline_data['top_posts'].append({
+                    'content': post.get('content', '')[:200] + '...',
+                    'author': post.get('author_handle', 'Unknown'),
+                    'platform': post.get('platform', 'unknown'),
+                    'engagement': post_engagement,
+                    'timestamp': post_time.isoformat(),
+                    'url': post.get('url', '#')
+                })
+                
+        except Exception as e:
+            logger.warning(f"Error processing post: {e}")
+            continue
+    
+    # Calculate averages
+    timeline_data['total_engagement'] = total_engagement
+    timeline_data['avg_sentiment'] = total_sentiment / max(len(search_results), 1)
+    
+    # Sort top posts by engagement
+    timeline_data['top_posts'] = sorted(
+        timeline_data['top_posts'], 
+        key=lambda x: x['engagement'], 
+        reverse=True
+    )[:10]  # Keep top 10
+    
+    # Normalize sentiment scores per time point
+    for i in range(len(timeline_data['sentiment_scores'])):
+        if timeline_data['post_counts'][i] > 0:
+            timeline_data['sentiment_scores'][i] /= timeline_data['post_counts'][i]
+        if timeline_data['viral_scores'][i] > 0:
+            timeline_data['viral_scores'][i] /= timeline_data['post_counts'][i]
+    
+    return timeline_data
