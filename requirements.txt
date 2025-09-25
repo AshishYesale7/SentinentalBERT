@@ -10,7 +10,7 @@ flask>=2.3.0
 
 # Data Processing and Analysis
 pandas>=2.1.0
-numpy>=1.24.0
+numpy>=1.24.0,<3.0.0
 scipy>=1.11.0
 
 # Visualization
@@ -120,7 +120,7 @@ catboost>=1.2.0
 
 # API Documentation
 swagger-ui-bundle>=0.0.9
-redoc>=2.1.0
+redoc>=0.2.3
 
 # File Processing
 openpyxl>=3.1.0
