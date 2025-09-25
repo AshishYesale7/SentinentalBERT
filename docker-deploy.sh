@@ -146,8 +146,15 @@ fix_docker_api_compatibility() {
     export DOCKER_API_VERSION=1.40
     
     # Add to current shell session
-    echo "export DOCKER_API_VERSION=1.40" >> ~/.bashrc 2>/dev/null || true
-    echo "export DOCKER_API_VERSION=1.40" >> ~/.zshrc 2>/dev/null || true
+    if [[ -f ~/.bashrc ]]; then
+        echo "export DOCKER_API_VERSION=1.40" >> ~/.bashrc
+    fi
+    if [[ -f ~/.zshrc ]]; then
+        echo "export DOCKER_API_VERSION=1.40" >> ~/.zshrc
+    elif [[ "$OSTYPE" == "darwin"* ]]; then
+        # Create .zshrc if it doesn't exist on macOS
+        echo "export DOCKER_API_VERSION=1.40" >> ~/.zshrc
+    fi
     
     # Test API compatibility
     if docker version >/dev/null 2>&1; then
@@ -458,7 +465,7 @@ EOF
     
     # Streamlit Dockerfile
     cat > "Dockerfile.streamlit" << 'EOF'
-FROM python:3.11-slim
+FROM python:3.11-slim-bullseye
 
 WORKDIR /app
 
@@ -466,8 +473,9 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y \
     build-essential \
     curl \
-    software-properties-common \
     git \
+    software-properties-common \
+    pkg-config \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements and install dependencies
