@@ -1,15 +1,15 @@
-# README.md
+# clean.sh
 
-> **File Type**: markdown | **Path**: `frontend/README.md` | **Lines**: 229
+> **File Type**: unknown | **Path**: `clean.sh` | **Lines**: 390
 
 ## 📋 Overview
 
-This markdown file is a core component of the **SentinelBERT** multi-platform sentiment analysis system, designed specifically for law enforcement and security applications.
+This unknown file is a core component of the **SentinelBERT** multi-platform sentiment analysis system, designed specifically for law enforcement and security applications.
 
 ## 🎯 Purpose & Functionality
 
 ### Primary Functions
-- **Data Processing**: Handles markdown-specific operations within the SentinelBERT ecosystem
+- **Data Processing**: Handles unknown-specific operations within the SentinelBERT ecosystem
 - **Integration**: Seamlessly connects with other system components
 - **Performance**: Optimized for high-throughput social media analysis
 - **Security**: Implements privacy-compliant data handling procedures
@@ -24,7 +24,7 @@ This markdown file is a core component of the **SentinelBERT** multi-platform se
 
 ```mermaid
 graph TD
-    A[Social Media APIs] --> B[README.md]
+    A[Social Media APIs] --> B[clean.sh]
     B --> C[Data Processing Pipeline]
     C --> D[BERT Sentiment Analysis]
     D --> E[Dashboard & Alerts]
@@ -32,25 +32,41 @@ graph TD
 
 ### Component Relationships
 - **Upstream**: Receives data from social media API connectors
-- **Processing**: Applies markdown-specific transformations and validations
+- **Processing**: Applies unknown-specific transformations and validations
 - **Downstream**: Feeds processed data to ML/NLP analysis pipeline
 - **Monitoring**: Integrates with system health and performance metrics
 
 ## 🔧 Technical Implementation
 
 ### Code Structure
-```markdown
-# SentinelBERT React NLP Dashboard
+```unknown
+#!/bin/bash
 
-A modern React-based dashboard for real-time sentiment analysis and NLP processing using the SentinelBERT platform.
+# SentinelBERT Installation Cleanup Script
+# Completely removes all installation artifacts and processes
+# Version: 1.0
 
-## 🚀 Features
+set -e
 
-- **Real-time Sentiment Analysis**: BERT-based sentiment classification with confidence scores
-- **Behavioral Analysis**: User influence scoring and pattern detection
-- **System Monitoring**: Service health, model status, and resource usage tracking
-- **Modern UI**: Material-UI components with responsive design
-- **Performance Met...
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+
+print_header() {
+    echo -e "${BLUE}================================${NC}"
+    echo -e "${BLUE}  $1${NC}"
+    echo -e "${BLUE}================================${NC}"
+}
+
+print_success() {
+    echo -e "${GREEN}✅ $1${NC}"
+}
+
+print_error() {
+    echo -e "${RED}❌ $1...
 ```
 
 ### Configuration

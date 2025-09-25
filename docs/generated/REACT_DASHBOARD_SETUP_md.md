@@ -1,6 +1,6 @@
-# README.md
+# REACT_DASHBOARD_SETUP.md
 
-> **File Type**: markdown | **Path**: `frontend/README.md` | **Lines**: 229
+> **File Type**: markdown | **Path**: `REACT_DASHBOARD_SETUP.md` | **Lines**: 247
 
 ## 📋 Overview
 
@@ -24,7 +24,7 @@ This markdown file is a core component of the **SentinelBERT** multi-platform se
 
 ```mermaid
 graph TD
-    A[Social Media APIs] --> B[README.md]
+    A[Social Media APIs] --> B[REACT_DASHBOARD_SETUP.md]
     B --> C[Data Processing Pipeline]
     C --> D[BERT Sentiment Analysis]
     D --> E[Dashboard & Alerts]
@@ -40,17 +40,22 @@ graph TD
 
 ### Code Structure
 ```markdown
-# SentinelBERT React NLP Dashboard
+# React NLP Dashboard Setup Summary
 
-A modern React-based dashboard for real-time sentiment analysis and NLP processing using the SentinelBERT platform.
+## 🎯 What Was Added to `quick-start.sh`
 
-## 🚀 Features
+### New Function: `setup_react_dashboard()`
+This function handles the complete React dashboard setup:
 
-- **Real-time Sentiment Analysis**: BERT-based sentiment classification with confidence scores
-- **Behavioral Analysis**: User influence scoring and pattern detection
-- **System Monitoring**: Service health, model status, and resource usage tracking
-- **Modern UI**: Material-UI components with responsive design
-- **Performance Met...
+1. **Node.js Installation Check**
+   - Automatically installs Node.js 18.x on Linux systems
+   - Uses Homebrew on macOS (if available)
+   - Provides manual installation instructions if needed
+
+2. **Environment Configuration**
+   - Creates `.env` file in frontend directory with:
+     ```env
+     DANGEROUSLY_DISABLE_HOS...
 ```
 
 ### Configuration

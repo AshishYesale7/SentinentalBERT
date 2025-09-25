@@ -1,15 +1,15 @@
-# README.md
+# quick-start.sh
 
-> **File Type**: markdown | **Path**: `frontend/README.md` | **Lines**: 229
+> **File Type**: unknown | **Path**: `quick-start.sh` | **Lines**: 473
 
 ## 📋 Overview
 
-This markdown file is a core component of the **SentinelBERT** multi-platform sentiment analysis system, designed specifically for law enforcement and security applications.
+This unknown file is a core component of the **SentinelBERT** multi-platform sentiment analysis system, designed specifically for law enforcement and security applications.
 
 ## 🎯 Purpose & Functionality
 
 ### Primary Functions
-- **Data Processing**: Handles markdown-specific operations within the SentinelBERT ecosystem
+- **Data Processing**: Handles unknown-specific operations within the SentinelBERT ecosystem
 - **Integration**: Seamlessly connects with other system components
 - **Performance**: Optimized for high-throughput social media analysis
 - **Security**: Implements privacy-compliant data handling procedures
@@ -24,7 +24,7 @@ This markdown file is a core component of the **SentinelBERT** multi-platform se
 
 ```mermaid
 graph TD
-    A[Social Media APIs] --> B[README.md]
+    A[Social Media APIs] --> B[quick-start.sh]
     B --> C[Data Processing Pipeline]
     C --> D[BERT Sentiment Analysis]
     D --> E[Dashboard & Alerts]
@@ -32,25 +32,33 @@ graph TD
 
 ### Component Relationships
 - **Upstream**: Receives data from social media API connectors
-- **Processing**: Applies markdown-specific transformations and validations
+- **Processing**: Applies unknown-specific transformations and validations
 - **Downstream**: Feeds processed data to ML/NLP analysis pipeline
 - **Monitoring**: Integrates with system health and performance metrics
 
 ## 🔧 Technical Implementation
 
 ### Code Structure
-```markdown
-# SentinelBERT React NLP Dashboard
+```unknown
+#!/bin/bash
 
-A modern React-based dashboard for real-time sentiment analysis and NLP processing using the SentinelBERT platform.
+# SentinelBERT Quick Start Script
+# Automatically detects and deploys using the best available method
+# Version: 2.1
+#
+# Features:
+# - Streamlit Dashboard (Government-style interface) on port 12000
+# - React NLP Dashboard (Modern interface) on port 12001
+# - FastAPI NLP Service (Backend processing) on port 8001
+# - Automatic Node.js installation and React setup
+# - Environment configuration for external access
 
-## 🚀 Features
+set -e
 
-- **Real-time Sentiment Analysis**: BERT-based sentiment classification with confidence scores
-- **Behavioral Analysis**: User influence scoring and pattern detection
-- **System Monitoring**: Service health, model status, and resource usage tracking
-- **Modern UI**: Material-UI components with responsive design
-- **Performance Met...
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'...
 ```
 
 ### Configuration
