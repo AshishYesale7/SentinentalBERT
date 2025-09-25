@@ -40,7 +40,7 @@ class DeploymentTester:
         }
         self.base_url = "http://localhost"
         self.services = {
-            'nlp': 8000,
+            'nlp': 8001,
             'backend': 8080,
             'frontend': 3000,
             'postgres': 5432,

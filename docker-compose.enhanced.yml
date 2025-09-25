@@ -219,7 +219,7 @@ services:
       - nlp_cache_enhanced:/app/cache
       - huggingface_cache:/app/cache/huggingface
     ports:
-      - "8000:8000"  # NLP API
+      - "8001:8000"  # NLP API
     networks:
       - sentinelbert-network
     depends_on:

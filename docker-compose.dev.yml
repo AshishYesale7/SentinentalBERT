@@ -133,7 +133,7 @@ services:
       - nlp_models:/app/models
       - nlp_cache:/app/cache
     ports:
-      - "8000:8000"  # NLP API
+      - "8001:8000"  # NLP API
     networks:
       - sentinelbert-network
     depends_on:

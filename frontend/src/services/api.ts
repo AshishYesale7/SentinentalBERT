@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8001';
 
 // Test JWT token for demo purposes
 const TEST_JWT_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJvZmZpY2VyX2lkIjoidGVzdF91c2VyIiwicm9sZSI6ImFkbWluIiwicGVybWlzc2lvbnMiOlsibmxwOmFuYWx5emUiLCJubHA6c2VudGltZW50Iiwidmlld19yZXBvcnRzIiwiYWRtaW4iXSwiZXhwIjoxNzU4Njg3Njk4fQ.foU1cbemulfazsFFmjwnzROcV9FBN-7pLE7PU3MRgX8';

@@ -116,7 +116,7 @@ class DeploymentTester:
             }
             
             # Check available ports
-            for port in [5432, 6379, 9200, 8000, 8001, 8002]:
+            for port in [5432, 6379, 9200, 8001, 8002, 8003]:
                 if self.is_port_available(port):
                     env_info['available_ports'].append(port)
             
@@ -253,7 +253,7 @@ class DeploymentTester:
                         issues.append(f"Missing environment variable: {var}")
         
         # Check port availability
-        required_ports = [5432, 6379, 9200, 8000]
+        required_ports = [5432, 6379, 9200, 8001]
         available_ports = []
         for port in required_ports:
             if self.is_port_available(port):
@@ -289,7 +289,7 @@ class DeploymentTester:
         
         # Start mock services
         services_to_test = [
-            ('nlp', 8000),
+            ('nlp', 8001),
             ('auth', 8001),
             ('evidence', 8002)
         ]
