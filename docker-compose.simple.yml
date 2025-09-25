@@ -67,24 +67,24 @@ services:
       retries: 3
     restart: unless-stopped
 
-  # Streamlit Dashboard (temporarily disabled for NLP service testing)
-  # streamlit-dashboard:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile.streamlit
-  #   container_name: sentinelbert-streamlit
-  #   environment:
-  #     - NLP_SERVICE_URL=http://nlp-service:8000
-  #     - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379
-  #     - DATABASE_URL=postgresql://${POSTGRES_USER:-sentinel}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-sentinelbert}
-  #   depends_on:
-  #     nlp-service:
-  #       condition: service_healthy
-  #   ports:
-  #     - "12000:8501"
-  #   networks:
-  #     - sentinelbert-net
-  #   restart: unless-stopped
+  # Streamlit Dashboard
+  streamlit-dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile.streamlit
+    container_name: sentinelbert-streamlit
+    environment:
+      - NLP_SERVICE_URL=http://nlp-service:8001
+      - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-sentinel}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-sentinelbert}
+    depends_on:
+      nlp-service:
+        condition: service_healthy
+    ports:
+      - "12002:8501"
+    networks:
+      - sentinelbert-net
+    restart: unless-stopped
 
   # React Frontend
   frontend:
