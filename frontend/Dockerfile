@@ -51,8 +51,8 @@ ENV GENERATE_SOURCEMAP=false
 # Copy package files first for better caching
 COPY package.json package-lock.json ./
 
-# Install dependencies
-RUN npm ci --only=production --silent
+# Install dependencies (including dev dependencies for build)
+RUN npm ci --silent
 
 # Copy source code
 COPY public/ ./public/
@@ -61,8 +61,13 @@ COPY tsconfig.json ./
 COPY .env* ./
 
 # Set build-time environment variables
+ARG REACT_APP_VERSION=1.0.0
+ARG REACT_APP_BUILD_DATE
 ENV REACT_APP_VERSION=${REACT_APP_VERSION}
-ENV REACT_APP_BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+RUN if [ -z "$REACT_APP_BUILD_DATE" ]; then \
+        export REACT_APP_BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ"); \
+    fi && \
+    echo "REACT_APP_BUILD_DATE=${REACT_APP_BUILD_DATE}" >> .env.local
 
 # Build the React application
 RUN npm run build
@@ -98,7 +103,6 @@ COPY --from=builder /app/build /usr/share/nginx/html
 
 # Copy custom Nginx configuration
 COPY nginx.conf /etc/nginx/nginx.conf
-COPY nginx-default.conf /etc/nginx/conf.d/default.conf
 
 # Create necessary directories and set permissions
 RUN mkdir -p /var/cache/nginx /var/log/nginx /var/run && \
@@ -189,46 +193,46 @@ RUN apk add --no-cache \
     htop
 
 # Configure log rotation
-RUN echo '/var/log/nginx/*.log {
-    daily
-    missingok
-    rotate 30
-    compress
-    delaycompress
-    notifempty
-    create 644 sentinelbert sentinelbert
-    postrotate
-        if [ -f /var/run/nginx.pid ]; then
-            kill -USR1 `cat /var/run/nginx.pid`
-        fi
-    endscript
+RUN echo '/var/log/nginx/*.log {\
+    daily\
+    missingok\
+    rotate 30\
+    compress\
+    delaycompress\
+    notifempty\
+    create 644 sentinelbert sentinelbert\
+    postrotate\
+        if [ -f /var/run/nginx.pid ]; then\
+            kill -USR1 `cat /var/run/nginx.pid`\
+        fi\
+    endscript\
 }' > /etc/logrotate.d/nginx
 
 # Production Nginx configuration with optimizations
-COPY nginx-production.conf /etc/nginx/nginx.conf
+# Using the same nginx.conf for production
 
 # Enable gzip compression for better performance
-RUN echo 'gzip on;
-gzip_vary on;
-gzip_min_length 1024;
-gzip_proxied any;
-gzip_comp_level 6;
-gzip_types
-    text/plain
-    text/css
-    text/xml
-    text/javascript
-    application/json
-    application/javascript
-    application/xml+rss
-    application/atom+xml
+RUN echo 'gzip on;\
+gzip_vary on;\
+gzip_min_length 1024;\
+gzip_proxied any;\
+gzip_comp_level 6;\
+gzip_types\
+    text/plain\
+    text/css\
+    text/xml\
+    text/javascript\
+    application/json\
+    application/javascript\
+    application/xml+rss\
+    application/atom+xml\
     image/svg+xml;' > /etc/nginx/conf.d/gzip.conf
 
 # Security headers configuration
-RUN echo 'add_header X-Frame-Options "SAMEORIGIN" always;
-add_header X-Content-Type-Options "nosniff" always;
-add_header X-XSS-Protection "1; mode=block" always;
-add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+RUN echo 'add_header X-Frame-Options "SAMEORIGIN" always;\
+add_header X-Content-Type-Options "nosniff" always;\
+add_header X-XSS-Protection "1; mode=block" always;\
+add_header Referrer-Policy "strict-origin-when-cross-origin" always;\
 add_header Content-Security-Policy "default-src '\''self'\''; script-src '\''self'\''; style-src '\''self'\'' '\''unsafe-inline'\''; img-src '\''self'\'' data: https:; font-src '\''self'\''; connect-src '\''self'\'' ws: wss:;" always;' > /etc/nginx/conf.d/security.conf
 
 # Switch back to non-root user

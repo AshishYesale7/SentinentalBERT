@@ -125,48 +125,32 @@ ENV TRANSFORMERS_CACHE=/app/models/cache
 ENV HF_HOME=/app/models/cache
 
 # Download pre-trained BERT models
-RUN python -c "
-from transformers import AutoTokenizer, AutoModel
-import torch
-
-# Download BERT base model
-print('Downloading BERT base model...')
-tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased')
-model = AutoModel.from_pretrained('bert-base-uncased')
-
-# Save models to local directory
-tokenizer.save_pretrained('/app/models/bert/bert-base-uncased')
-model.save_pretrained('/app/models/bert/bert-base-uncased')
+RUN python -c "\
+from transformers import AutoTokenizer, AutoModel; \
+import torch; \
+print('Downloading BERT base model...'); \
+tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased'); \
+model = AutoModel.from_pretrained('bert-base-uncased'); \
+tokenizer.save_pretrained('/app/models/bert/bert-base-uncased'); \
+model.save_pretrained('/app/models/bert/bert-base-uncased'); \
+print('BERT base model downloaded successfully!')"
 
 # Download sentiment analysis model
-print('Downloading sentiment analysis model...')
-from transformers import pipeline
-sentiment_pipeline = pipeline('sentiment-analysis', 
-                             model='cardiffnlp/twitter-roberta-base-sentiment-latest')
-
-print('Models downloaded successfully!')
-"
+RUN python -c "\
+from transformers import pipeline; \
+print('Downloading sentiment analysis model...'); \
+sentiment_pipeline = pipeline('sentiment-analysis', model='cardiffnlp/twitter-roberta-base-sentiment-latest'); \
+print('Sentiment analysis model downloaded successfully!')"
 
 # Download additional models for behavioral analysis
-RUN python -c "
-from transformers import AutoTokenizer, AutoModel
-
-# Download models for different languages
-models = [
-    'bert-base-multilingual-cased',  # Multilingual support
-    'distilbert-base-uncased',       # Faster inference
-]
-
-for model_name in models:
-    print(f'Downloading {model_name}...')
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
-    model = AutoModel.from_pretrained(model_name)
-    
-    tokenizer.save_pretrained(f'/app/models/bert/{model_name}')
-    model.save_pretrained(f'/app/models/bert/{model_name}')
-
-print('Additional models downloaded successfully!')
-"
+RUN python -c "\
+from transformers import AutoTokenizer, AutoModel; \
+models = ['bert-base-multilingual-cased', 'distilbert-base-uncased']; \
+[print(f'Downloading {model_name}...') or \
+ AutoTokenizer.from_pretrained(model_name).save_pretrained(f'/app/models/bert/{model_name}') or \
+ AutoModel.from_pretrained(model_name).save_pretrained(f'/app/models/bert/{model_name}') \
+ for model_name in models]; \
+print('Additional models downloaded successfully!')"
 
 # -----------------------------------------------------------------------------
 # Runtime Stage - Optimized production environment
@@ -224,17 +208,16 @@ ENV MEMORY_LIMIT=4G \
 RUN python -m compileall /app
 
 # Warm up the models (load them once to cache)
-RUN python -c "
-import sys
-sys.path.append('/app')
-try:
-    from models.sentiment_model import SentinelBERTModel
-    print('Warming up BERT model...')
-    model = SentinelBERTModel()
-    print('Model warmed up successfully!')
-except Exception as e:
-    print(f'Model warmup failed: {e}')
-    # Don't fail the build if warmup fails
+RUN python -c "\
+import sys; \
+sys.path.append('/app'); \
+try: \
+    from models.sentiment_model import SentinelBERTModel; \
+    print('Warming up BERT model...'); \
+    model = SentinelBERTModel(); \
+    print('Model warmed up successfully!'); \
+except Exception as e: \
+    print(f'Model warmup failed: {e}'); \
 "
 
 # Default command to run the service
@@ -287,14 +270,15 @@ RUN apt-get update && apt-get install -y \
 
 # Create development configuration
 RUN mkdir -p /app/dev-config
-COPY dev-requirements.txt /app/dev-config/ 2>/dev/null || true
 
 # Switch back to non-root user
 USER sentinelbert
 
 # Expose additional ports for development
-EXPOSE 8888  # Jupyter
-EXPOSE 5678  # Debugger
+# Jupyter port
+EXPOSE 8888
+# Debugger port
+EXPOSE 5678
 
 # Development command with auto-reload
 CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload", "--log-level", "debug"]
