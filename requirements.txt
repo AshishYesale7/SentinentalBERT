@@ -96,13 +96,10 @@ flake8>=6.1.0
 mypy>=1.6.0
 
 # Additional Utilities for Indian Languages
-polyglot>=16.7.4
 transliterate>=1.10.2
 
-# Social Media Platform Specific
-instaloader>=4.10.0
-youtube-dl>=2021.12.17
-tiktok-scraper>=1.0.0
+# Social Media Platform Specific (Core APIs only)
+# Note: Platform-specific scrapers removed - using API integrations instead
 
 # Legal and Compliance
 python-docx>=0.8.11
@@ -114,15 +111,12 @@ folium>=0.14.0
 
 # Time Series Analysis
 statsmodels>=0.14.0
-prophet>=1.1.0
 
 # Graph and Network Analysis
 networkx>=3.2.0
-igraph>=0.10.0
 
 # Additional ML Libraries
 catboost>=1.2.0
-optuna>=3.4.0
 
 # API Documentation
 swagger-ui-bundle>=0.0.9
