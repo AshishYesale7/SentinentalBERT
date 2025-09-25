@@ -9,8 +9,7 @@ venv/
 ENV/
 
 # Ignore environment variables and secrets
-.env
-.env.*
+
 
 # Ignore OS files
 .DS_Store

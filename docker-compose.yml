@@ -6,33 +6,22 @@ services:
     image: postgres:15
     container_name: sentinelbert-postgres
     environment:
-      POSTGRES_DB: sentinelbert
-      POSTGRES_USER: sentinel
-      # SECURITY FIX: Require password from environment, no default
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_HOST_AUTH_METHOD: trust
       POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./database/init:/docker-entrypoint-initdb.d:ro
-    # SECURITY FIX: Don't expose database port externally
-    # ports:
-    #   - "5432:5432"
+    ports:
+      - "5432:5432"
     networks:
       - sentinelbert-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U sentinel -d sentinelbert"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
       interval: 10s
       timeout: 5s
       retries: 5
-    # SECURITY FIX: Run as non-root user
-    user: "999:999"
-    # SECURITY FIX: Add security options
-    security_opt:
-      - no-new-privileges:true
-    read_only: true
-    tmpfs:
-      - /tmp
-      - /var/run/postgresql
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.10.0

@@ -63,7 +63,9 @@ COPY .env* ./
 # Set build-time environment variables
 ARG REACT_APP_VERSION=1.0.0
 ARG REACT_APP_BUILD_DATE
+ARG REACT_APP_API_URL=http://localhost:8001
 ENV REACT_APP_VERSION=${REACT_APP_VERSION}
+ENV REACT_APP_API_URL=${REACT_APP_API_URL}
 RUN if [ -z "$REACT_APP_BUILD_DATE" ]; then \
         export REACT_APP_BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ"); \
     fi && \

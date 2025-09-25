@@ -31,6 +31,30 @@ services:
       timeout: 3s
       retries: 5
 
+  nlp-service:
+    build:
+      context: ./services/nlp
+      dockerfile: Dockerfile
+    container_name: sentinelbert-nlp-macos
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - DATABASE_URL=postgresql://sentinel:${POSTGRES_PASSWORD:-sentinel123}@postgres:5432/sentinelbert
+      - PORT=8001
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "8001:8001"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
   streamlit-app:
     build:
       context: .
@@ -43,6 +67,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      nlp-service:
+        condition: service_healthy
     environment:
       - DATABASE_URL=postgresql://sentinel:${POSTGRES_PASSWORD:-sentinel123}@postgres:5432/sentinelbert
       - REDIS_URL=redis://redis:6379
@@ -52,6 +78,19 @@ services:
     volumes:
       - ./data:/app/data
       - ./logs:/app/logs
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: sentinelbert-frontend-macos
+    environment:
+      - REACT_APP_API_URL=http://localhost:8001
+    depends_on:
+      - nlp-service
+    ports:
+      - "12001:80"
+    restart: unless-stopped
 
 volumes:
   postgres_data:

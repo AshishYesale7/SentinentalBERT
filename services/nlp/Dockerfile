@@ -192,11 +192,11 @@ RUN if [ -n "$CUDA_VERSION" ]; then \
 USER sentinelbert
 
 # Expose service port
-EXPOSE 8000
+EXPOSE 8001
 
 # Health check endpoint
 HEALTHCHECK --interval=30s --timeout=15s --start-period=60s --retries=3 \
-    CMD curl -f http://localhost:8000/health || exit 1
+    CMD curl -f http://localhost:${PORT:-8001}/health || exit 1
 
 # Set resource limits and optimization flags
 ENV MEMORY_LIMIT=4G \
@@ -211,7 +211,7 @@ RUN python -m compileall /app
 # RUN python -c "import sys; sys.path.append('/app'); from models.sentiment_model import SentinelBERTModel; model = SentinelBERTModel(); print('Model warmed up successfully!')"
 
 # Default command to run the service
-CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]
+CMD ["python", "main.py"]
 
 # Alternative command for development with auto-reload
 # CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
@@ -271,7 +271,7 @@ EXPOSE 8888
 EXPOSE 5678
 
 # Development command with auto-reload
-CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload", "--log-level", "debug"]
+CMD ["python", "main.py"]
 
 # -----------------------------------------------------------------------------
 # Metadata and Labels
