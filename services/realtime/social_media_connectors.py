@@ -17,16 +17,31 @@ import re
 
 # API Libraries
 import tweepy
-import praw
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
 import requests
+
+# Optional API libraries
+try:
+    import praw
+    PRAW_AVAILABLE = True
+except ImportError:
+    PRAW_AVAILABLE = False
+
+try:
+    from googleapiclient.discovery import build
+    from googleapiclient.errors import HttpError
+    GOOGLE_API_AVAILABLE = True
+except ImportError:
+    GOOGLE_API_AVAILABLE = False
 
 # Environment and utilities
 from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Import Telegram connector
 try:
@@ -36,9 +51,11 @@ except ImportError as e:
     logger.warning(f"Telegram connector not available: {e}")
     TELEGRAM_AVAILABLE = False
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# Log availability of optional dependencies
+if not PRAW_AVAILABLE:
+    logger.warning("praw not available - Reddit connector disabled")
+if not GOOGLE_API_AVAILABLE:
+    logger.warning("Google API client not available - YouTube connector disabled")
 
 @dataclass
 class SocialMediaPost:
@@ -90,41 +107,67 @@ class TwitterConnector:
     """Twitter/X.com API connector with rate limiting - Optimized for Free Tier"""
     
     def __init__(self):
-        # Load all Twitter API credentials
-        self.api_key = os.getenv('TWITTER_API_KEY', 'tkG3UCrcXhq1LCzC3n02mqg2N')
-        self.api_secret = os.getenv('TWITTER_API_SECRET', 'oXRCjqTeJkV4KWrXFS5JO7ZIjcGGTHSNiUGStL0KIjSHmke90x')
-        self.access_token = os.getenv('TWITTER_ACCESS_TOKEN', '835527957481459713-m4BKaUIuaAt2uQ6c2DITWDyoBcFxMAJ')
-        self.access_token_secret = os.getenv('TWITTER_ACCESS_TOKEN_SECRET', 'B4C9XYaJOMuy7l3nq3Lo2h8FmoKV4TzkmnuqlDtlbveP1')
-        self.bearer_token = os.getenv('TWITTER_BEARER_TOKEN', 'AAAAAAAAAAAAAAAAAAAAAHsN4QEAAAAA8%2BZQa%2BzllARQxtAvmhCQsA0WQCs%3DpF9thH1ztd85xkbAsWZvubIgJ98edZ3z7BdA8q1vfkRHnBMd6B')
+        # Load all Twitter API credentials (no fallback values - use mock data if not provided)
+        self.api_key = os.getenv('TWITTER_API_KEY')
+        self.api_secret = os.getenv('TWITTER_API_SECRET')
+        self.access_token = os.getenv('TWITTER_ACCESS_TOKEN')
+        self.access_token_secret = os.getenv('TWITTER_ACCESS_TOKEN_SECRET')
+        self.bearer_token = os.getenv('TWITTER_BEARER_TOKEN')
         
         self.api_version = os.getenv('TWITTER_API_VERSION', '2')
         self.rate_limit = int(os.getenv('TWITTER_RATE_LIMIT', '100'))  # Free tier limit
         
         # Initialize Tweepy client with full authentication
-        try:
-            # Try v2 client first (preferred for new features)
-            self.client = tweepy.Client(
-                bearer_token=self.bearer_token,
-                consumer_key=self.api_key,
-                consumer_secret=self.api_secret,
-                access_token=self.access_token,
-                access_token_secret=self.access_token_secret,
-                wait_on_rate_limit=True
-            )
-            
-            # Also initialize v1.1 API for additional functionality
-            auth = tweepy.OAuth1UserHandler(
-                self.api_key, self.api_secret,
-                self.access_token, self.access_token_secret
-            )
-            self.api_v1 = tweepy.API(auth, wait_on_rate_limit=True)
-            
-            logger.info("Twitter connector initialized with full authentication")
-            logger.info(f"Rate limit set to {self.rate_limit} requests (Free tier)")
-            
-        except Exception as e:
-            logger.error(f"Failed to initialize Twitter client: {e}")
-            raise
+        self.client = None
+        self.api_v1 = None
+        self.is_real_api = False
+        
+        # Check if we have valid credentials
+        if (self.bearer_token and self.bearer_token != 'your_twitter_bearer_token_here' and
+            self.api_key and self.api_key != 'your_twitter_api_key_here'):
+            try:
+                # Try v2 client first (preferred for new features)
+                self.client = tweepy.Client(
+                    bearer_token=self.bearer_token,
+                    consumer_key=self.api_key,
+                    consumer_secret=self.api_secret,
+                    access_token=self.access_token,
+                    access_token_secret=self.access_token_secret,
+                    wait_on_rate_limit=True
+                )
+                
+                # Test the connection
+                try:
+                    me = self.client.get_me()
+                    if me.data:
+                        self.is_real_api = True
+                        logger.info(f"Twitter API initialized successfully for user: {me.data.username}")
+                    else:
+                        logger.warning("Twitter API test failed - using mock data")
+                        self.client = None
+                except Exception as test_e:
+                    logger.warning(f"Twitter API test failed: {test_e} - using mock data")
+                    self.client = None
+                
+                # Also initialize v1.1 API for additional functionality if main client works
+                if self.client and self.is_real_api:
+                    auth = tweepy.OAuth1UserHandler(
+                        self.api_key, self.api_secret,
+                        self.access_token, self.access_token_secret
+                    )
+                    self.api_v1 = tweepy.API(auth, wait_on_rate_limit=True)
+                
+                if self.is_real_api:
+                    logger.info("Twitter connector initialized with full authentication")
+                    logger.info(f"Rate limit set to {self.rate_limit} requests (Free tier)")
+                
+            except Exception as e:
+                logger.warning(f"Failed to initialize Twitter client: {e} - using mock data")
+                self.client = None
+                self.api_v1 = None
+                self.is_real_api = False
+        else:
+            logger.info("Twitter API credentials not provided - using mock data")
         
         self.rate_limiter = RateLimiter(self.rate_limit, time_window=900)  # 15 minutes
         self.monthly_usage = 0  # Track monthly usage for free tier
@@ -137,6 +180,10 @@ class TwitterConnector:
                           end_time: Optional[datetime] = None,
                           location: Optional[str] = None) -> List[SocialMediaPost]:
         """Search for tweets with specified criteria - Optimized for Free Tier"""
+        
+        # Return mock data if real API is not available
+        if not self.is_real_api or not self.client:
+            return self._generate_mock_tweets(keywords, max_results)
         
         # Check monthly usage limit
         if self.monthly_usage >= self.max_monthly_posts:
@@ -342,11 +389,51 @@ class TwitterConnector:
         except Exception as e:
             logger.error(f"Error converting tweet: {e}")
             return None
+    
+    def _generate_mock_tweets(self, keywords: str, max_results: int) -> List[SocialMediaPost]:
+        """Generate mock Twitter data when real API is not available"""
+        import random
+        
+        mock_posts = []
+        sample_users = ['@user_analyst', '@data_expert', '@social_monitor', '@trend_watcher', '@info_seeker']
+        sample_content_templates = [
+            f"Interesting insights about {keywords} trending today! #analysis #data",
+            f"Latest updates on {keywords} - worth monitoring closely. #trending",
+            f"Deep dive into {keywords} patterns and implications. #research",
+            f"Breaking: New developments in {keywords} space. #news #update",
+            f"Analysis shows {keywords} gaining significant traction. #insights"
+        ]
+        
+        for i in range(min(max_results, 20)):  # Limit mock data
+            mock_posts.append(SocialMediaPost(
+                post_id=f"mock_tweet_{i}_{random.randint(1000, 9999)}",
+                platform="twitter",
+                author_handle=random.choice(sample_users),
+                author_id=f"mock_user_{random.randint(100000, 999999)}",
+                content=random.choice(sample_content_templates),
+                timestamp=datetime.now() - timedelta(minutes=random.randint(1, 1440)),
+                url=f"https://twitter.com/mock_user/status/{random.randint(1000000000000000000, 9999999999999999999)}",
+                engagement_metrics={
+                    'retweet_count': random.randint(0, 100),
+                    'like_count': random.randint(0, 500),
+                    'reply_count': random.randint(0, 50),
+                    'quote_count': random.randint(0, 25)
+                },
+                metadata={'source': 'mock_data', 'api_available': False},
+                hashtags=[keywords.replace('#', ''), 'analysis', 'trending'],
+                mentions=[]
+            ))
+        
+        logger.info(f"Generated {len(mock_posts)} mock Twitter posts for keywords: {keywords}")
+        return mock_posts
 
 class YouTubeConnector:
     """YouTube Data API connector"""
     
     def __init__(self):
+        if not GOOGLE_API_AVAILABLE:
+            raise ImportError("Google API client not available - install google-api-python-client")
+            
         self.api_key = os.getenv('YOUTUBE_API_KEY')
         if not self.api_key:
             raise ValueError("YOUTUBE_API_KEY not found in environment")
@@ -470,6 +557,9 @@ class RedditConnector:
     """Reddit API connector"""
     
     def __init__(self):
+        if not PRAW_AVAILABLE:
+            raise ImportError("praw not available - install praw for Reddit API access")
+            
         self.client_id = os.getenv('REDDIT_CLIENT_ID')
         self.client_secret = os.getenv('REDDIT_CLIENT_SECRET')
         self.user_agent = os.getenv('REDDIT_USER_AGENT', 'SentinelBERT/1.0')

@@ -278,7 +278,7 @@ class TelegramConnector:
             logger.error(f"Failed to get channel history: {e}")
             return []
     
-    async def search_hashtag(self, hashtag: str, limit: int = 100) -> List[TelegramPost]:
+    async def search_hashtag(self, hashtag: str, max_results: int = 100) -> List[TelegramPost]:
         """Search for posts with specific hashtag across accessible channels"""
         try:
             if not self.is_connected:
@@ -305,10 +305,10 @@ class TelegramConnector:
                                 if post:
                                     posts.append(post)
                                     
-                                    if len(posts) >= limit:
+                                    if len(posts) >= max_results:
                                         break
                         
-                        if len(posts) >= limit:
+                        if len(posts) >= max_results:
                             break
                             
                     except Exception as e:

@@ -107,11 +107,11 @@ except ImportError as e:
         async def get_influence_network_data(self, *args, **kwargs):
             return {"nodes": [], "edges": [], "network_stats": {}}
         
-        async def search_hashtag(self, hashtag, platforms=None, limit=100):
+        async def search_hashtag(self, hashtag, platforms=None, max_results=100):
             """Mock hashtag search method"""
             # Generate mock data for hashtag search
             mock_results = []
-            for i in range(min(limit, 33)):  # Generate up to 33 results
+            for i in range(min(max_results, 33)):  # Generate up to 33 results
                 mock_results.append({
                     'platform': 'Twitter',
                     'author': f'@user_{np.random.randint(1000, 9999)}',
@@ -136,7 +136,7 @@ except ImportError as e:
         def __init__(self):
             pass
         
-        async def search_hashtag(self, hashtag, platforms=None, limit=100):
+        async def search_hashtag(self, hashtag, platforms=None, max_results=100):
             return {"results": [], "summary": {}}
     
     class TwitterHashtagCollector:
