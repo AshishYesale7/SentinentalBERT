@@ -1,6 +1,6 @@
-# enhanced_viral_dashboard.py
+# telegram_connector.py
 
-> **File Type**: python | **Path**: `enhanced_viral_dashboard.py` | **Lines**: 3165
+> **File Type**: python | **Path**: `services/realtime/telegram_connector.py` | **Lines**: 489
 
 ## 📋 Overview
 
@@ -24,7 +24,7 @@ This python file is a core component of the **SentinelBERT** multi-platform sent
 
 ```mermaid
 graph TD
-    A[Social Media APIs] --> B[enhanced_viral_dashboard.py]
+    A[Social Media APIs] --> B[telegram_connector.py]
     B --> C[Data Processing Pipeline]
     C --> D[BERT Sentiment Analysis]
     D --> E[Dashboard & Alerts]
@@ -42,23 +42,25 @@ graph TD
 ```python
 #!/usr/bin/env python3
 """
-Enhanced InsideOut Viral Dashboard - Comprehensive Analysis Platform
-Integrates sentiment analysis, behavior analysis, legal compliance, multilingual support, and global platform analysis
+Telegram MTProto Connector for SentinelBERT
+Uses Telethon for full MTProto client capability with public channel access
 """
 
-import streamlit as st
-import pandas as pd
-import numpy as np
-import plotly.express as px
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
-import networkx as nx
-from datetime import datetime, timedelta
-import json
-import sys
 import os
+import json
+import logging
 import asyncio
-imp...
+import hashlib
+from datetime import datetime, timedelta
+from typing import Dict, List, Optional, Any, Tuple
+from dataclasses import dataclass, asdict
+import time
+import re
+
+# Telegram MTProto client
+from telethon import TelegramClient, events
+from telethon.tl.types import (
+    MessageMediaPhoto...
 ```
 
 ### Configuration

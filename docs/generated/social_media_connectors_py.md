@@ -1,6 +1,6 @@
-# enhanced_viral_dashboard.py
+# social_media_connectors.py
 
-> **File Type**: python | **Path**: `enhanced_viral_dashboard.py` | **Lines**: 3165
+> **File Type**: python | **Path**: `services/realtime/social_media_connectors.py` | **Lines**: 691
 
 ## 📋 Overview
 
@@ -24,7 +24,7 @@ This python file is a core component of the **SentinelBERT** multi-platform sent
 
 ```mermaid
 graph TD
-    A[Social Media APIs] --> B[enhanced_viral_dashboard.py]
+    A[Social Media APIs] --> B[social_media_connectors.py]
     B --> C[Data Processing Pipeline]
     C --> D[BERT Sentiment Analysis]
     D --> E[Dashboard & Alerts]
@@ -42,23 +42,26 @@ graph TD
 ```python
 #!/usr/bin/env python3
 """
-Enhanced InsideOut Viral Dashboard - Comprehensive Analysis Platform
-Integrates sentiment analysis, behavior analysis, legal compliance, multilingual support, and global platform analysis
+Real-time Social Media Connectors for SentinelBERT
+Provides secure, rate-limited access to X.com, YouTube, and Reddit APIs
 """
 
-import streamlit as st
-import pandas as pd
-import numpy as np
-import plotly.express as px
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
-import networkx as nx
-from datetime import datetime, timedelta
-import json
-import sys
 import os
+import json
+import logging
 import asyncio
-imp...
+from datetime import datetime, timedelta
+from typing import Dict, List, Optional, Any, Tuple
+from dataclasses import dataclass, asdict
+import time
+from urllib.parse import quote_plus
+import re
+
+# API Libraries
+import tweepy
+import praw
+from googleapiclient.discovery import build
+from googleap...
 ```
 
 ### Configuration

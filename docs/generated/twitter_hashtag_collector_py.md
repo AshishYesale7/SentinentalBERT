@@ -1,6 +1,6 @@
-# enhanced_viral_dashboard.py
+# twitter_hashtag_collector.py
 
-> **File Type**: python | **Path**: `enhanced_viral_dashboard.py` | **Lines**: 3165
+> **File Type**: python | **Path**: `services/realtime/twitter_hashtag_collector.py` | **Lines**: 496
 
 ## 📋 Overview
 
@@ -24,7 +24,7 @@ This python file is a core component of the **SentinelBERT** multi-platform sent
 
 ```mermaid
 graph TD
-    A[Social Media APIs] --> B[enhanced_viral_dashboard.py]
+    A[Social Media APIs] --> B[twitter_hashtag_collector.py]
     B --> C[Data Processing Pipeline]
     C --> D[BERT Sentiment Analysis]
     D --> E[Dashboard & Alerts]
@@ -42,23 +42,26 @@ graph TD
 ```python
 #!/usr/bin/env python3
 """
-Enhanced InsideOut Viral Dashboard - Comprehensive Analysis Platform
-Integrates sentiment analysis, behavior analysis, legal compliance, multilingual support, and global platform analysis
+Twitter Hashtag Collector - Real-time data collection for original source analysis
+Collects hashtag data with precise timestamps to identify original posters
 """
 
-import streamlit as st
-import pandas as pd
-import numpy as np
-import plotly.express as px
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
-import networkx as nx
-from datetime import datetime, timedelta
-import json
-import sys
+import tweepy
 import os
-import asyncio
-imp...
+import json
+import logging
+from datetime import datetime, timezone
+from typing import List, Dict, Any, Optional
+import psycopg2
+from psycopg2.extras import RealDictCursor
+import hashlib
+import time
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
+
+logger = log...
 ```
 
 ### Configuration
