@@ -1,0 +1,296 @@
+version: '3.8'
+
+services:
+  # Skip PostgreSQL service - using local PostgreSQL 15
+  
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.10.0
+    container_name: sentinelbert-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+      - bootstrap.memory_lock=false
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    networks:
+      - sentinelbert-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: sentinelbert-redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - sentinelbert-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # Message Queue
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    container_name: sentinelbert-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    volumes:
+      - zookeeper_data:/var/lib/zookeeper/data
+      - zookeeper_logs:/var/lib/zookeeper/log
+    networks:
+      - sentinelbert-network
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    container_name: sentinelbert-kafka
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: true
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    ports:
+      - "9092:9092"
+    networks:
+      - sentinelbert-network
+    healthcheck:
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Application Services
+  ingestion-service:
+    build:
+      context: ./services/ingestion
+      dockerfile: Dockerfile
+    container_name: sentinelbert-ingestion
+    environment:
+      - DATABASE_URL=postgresql://postgres@host.docker.internal:5432/sentinelbert
+      - REDIS_URL=redis://redis:6379
+      - KAFKA_BROKERS=kafka:29092
+      - RUST_LOG=info
+      - TWITTER_BEARER_TOKEN=${TWITTER_BEARER_TOKEN}
+      - TWITTER_API_KEY=${TWITTER_API_KEY}
+      - TWITTER_API_SECRET=${TWITTER_API_SECRET}
+      - TWITTER_ACCESS_TOKEN=${TWITTER_ACCESS_TOKEN}
+      - TWITTER_ACCESS_TOKEN_SECRET=${TWITTER_ACCESS_TOKEN_SECRET}
+      - REDDIT_CLIENT_ID=${REDDIT_CLIENT_ID}
+      - REDDIT_CLIENT_SECRET=${REDDIT_CLIENT_SECRET}
+      - YOUTUBE_API_KEY=${YOUTUBE_API_KEY}
+      - TELEGRAM_API_ID=${TELEGRAM_API_ID}
+      - TELEGRAM_API_HASH=${TELEGRAM_API_HASH}
+    depends_on:
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    ports:
+      - "8081:8080"
+    networks:
+      - sentinelbert-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  nlp-service:
+    build:
+      context: ./services/nlp
+      dockerfile: Dockerfile
+    container_name: sentinelbert-nlp
+    environment:
+      - MODEL_PATH=/app/models
+      - REDIS_URL=redis://redis:6379
+      - DATABASE_URL=postgresql://postgres@host.docker.internal:5432/sentinelbert
+      - CUDA_VISIBLE_DEVICES=0
+    volumes:
+      - ./models:/app/models:ro
+      - nlp_cache:/app/cache
+    depends_on:
+      redis:
+        condition: service_healthy
+    ports:
+      - "8001:8000"
+    networks:
+      - sentinelbert-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 8G
+        reservations:
+          memory: 4G
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  backend-service:
+    build:
+      context: ./services/backend
+      dockerfile: Dockerfile
+    container_name: sentinelbert-backend
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://host.docker.internal:5432/sentinelbert
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=
+      - SPRING_REDIS_HOST=redis
+      - SPRING_REDIS_PASSWORD=
+      - SPRING_ELASTICSEARCH_URIS=http://elasticsearch:9200
+      - NLP_SERVICE_URL=http://nlp-service:8000
+      - INGESTION_SERVICE_URL=http://ingestion-service:8080
+      - JWT_SECRET=${JWT_SECRET}
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nlp-service:
+        condition: service_started
+    ports:
+      - "8080:8080"
+    networks:
+      - sentinelbert-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 1G
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: sentinelbert-frontend
+    environment:
+      - REACT_APP_API_URL=http://localhost:8080
+      - REACT_APP_WEBSOCKET_URL=ws://localhost:8080
+      - REACT_APP_VERSION=1.0.0
+    depends_on:
+      - backend-service
+    ports:
+      - "3000:80"
+    networks:
+      - sentinelbert-network
+    restart: unless-stopped
+
+  # Streamlit Dashboard
+  streamlit-dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile.streamlit
+    container_name: sentinelbert-streamlit
+    environment:
+      - DATABASE_URL=postgresql://postgres@host.docker.internal:5432/sentinelbert
+      - REDIS_URL=redis://redis:6379
+      - NLP_SERVICE_URL=http://nlp-service:8000
+      - TWITTER_BEARER_TOKEN=${TWITTER_BEARER_TOKEN}
+      - TWITTER_API_KEY=${TWITTER_API_KEY}
+      - TWITTER_API_SECRET=${TWITTER_API_SECRET}
+      - TWITTER_ACCESS_TOKEN=${TWITTER_ACCESS_TOKEN}
+      - TWITTER_ACCESS_TOKEN_SECRET=${TWITTER_ACCESS_TOKEN_SECRET}
+      - REDDIT_CLIENT_ID=${REDDIT_CLIENT_ID}
+      - REDDIT_CLIENT_SECRET=${REDDIT_CLIENT_SECRET}
+      - YOUTUBE_API_KEY=${YOUTUBE_API_KEY}
+      - TELEGRAM_API_ID=${TELEGRAM_API_ID}
+      - TELEGRAM_API_HASH=${TELEGRAM_API_HASH}
+    depends_on:
+      - nlp-service
+      - redis
+    ports:
+      - "12000:8501"
+    networks:
+      - sentinelbert-network
+    restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # Monitoring Services
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: sentinelbert-prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    volumes:
+      - ./monitoring/prometheus:/etc/prometheus
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - sentinelbert-network
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: sentinelbert-grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+    ports:
+      - "3001:3000"
+    networks:
+      - sentinelbert-network
+    restart: unless-stopped
+
+volumes:
+  elasticsearch_data:
+    driver: local
+  redis_data:
+    driver: local
+  kafka_data:
+    driver: local
+  zookeeper_data:
+    driver: local
+  zookeeper_logs:
+    driver: local
+  nlp_cache:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+
+networks:
+  sentinelbert-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
