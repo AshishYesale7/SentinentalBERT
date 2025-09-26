@@ -1,9 +1,9 @@
 # Core ML Libraries
-transformers>=4.35.0
-torch>=2.1.0
+transformers>=4.30.0,<4.35.0
+torch>=2.0.0,<2.1.0
 scikit-learn>=1.1.0
 pandas>=1.5.0
-numpy>=1.21.0
+numpy>=1.21.0,<2.0.0
 
 # NLP Libraries
 nltk>=3.7
