@@ -14,6 +14,10 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 import hashlib
 import time
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 logger = logging.getLogger(__name__)
 
@@ -159,15 +163,24 @@ class TwitterHashtagCollector:
                     max_results=min(limit, 100)  # Twitter API limit
                 ).flatten(limit=limit)
                 
-                # Get user information
+                # Convert tweets to list to process them
+                tweets_list = list(tweets)
+                
+                # Get user information from the API response
                 users = {}
-                for tweet in tweets:
-                    if hasattr(tweet, 'includes') and 'users' in tweet.includes:
-                        for user in tweet.includes['users']:
-                            users[user.id] = user
+                # We need to make a separate call to get user info since Paginator doesn't include expansions properly
+                if tweets_list:
+                    author_ids = [tweet.author_id for tweet in tweets_list]
+                    try:
+                        users_response = self.client.get_users(ids=author_ids, user_fields=['username', 'name'])
+                        if users_response.data:
+                            for user in users_response.data:
+                                users[user.id] = user
+                    except Exception as e:
+                        logger.warning(f"Could not fetch user data: {e}")
                 
                 # Process tweets
-                for tweet in tweets:
+                for tweet in tweets_list:
                     try:
                         # Get user info
                         user = users.get(tweet.author_id, {})

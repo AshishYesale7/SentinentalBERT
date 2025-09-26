@@ -81,9 +81,18 @@ try:
     from realtime.realtime_data_service import RealTimeDataService
     from nlp.models.sentiment_model import SentinelBERTModel
     from realtime.realtime_search_service import RealTimeSearchService
-    from realtime.twitter_hashtag_collector import TwitterHashtagCollector
+    # Try to import the real TwitterHashtagCollector
+    try:
+        from services.realtime.twitter_hashtag_collector import TwitterHashtagCollector as RealTwitterCollector
+        REAL_TWITTER_API_AVAILABLE = True
+    except ImportError:
+        REAL_TWITTER_API_AVAILABLE = False
+        RealTwitterCollector = None
 except ImportError as e:
     logger.error(f"Failed to import services: {e}")
+    # Set default values for missing imports
+    REAL_TWITTER_API_AVAILABLE = False
+    RealTwitterCollector = None
     # Create mock classes to prevent crashes
     class RealTimeDataService:
         def __init__(self):
@@ -132,10 +141,42 @@ except ImportError as e:
     
     class TwitterHashtagCollector:
         def __init__(self):
-            pass
+            self.real_collector = None
+            self.is_real_api = False
+            if REAL_TWITTER_API_AVAILABLE and RealTwitterCollector:
+                try:
+                    self.real_collector = RealTwitterCollector()
+                    self.is_real_api = self.real_collector.client is not None
+                except Exception as e:
+                    logger.warning(f"Could not initialize real Twitter API: {e}")
         
         def collect_hashtag_data(self, hashtag, limit=100):
-            """Mock hashtag collection"""
+            """Collect hashtag data from real API or mock data"""
+            # Try real API first if available
+            if self.is_real_api and self.real_collector:
+                try:
+                    results = self.real_collector.collect_hashtag_data(hashtag, limit)
+                    if results and len(results) > 0:
+                        # Convert to expected format
+                        converted_results = []
+                        for result in results:
+                            converted_results.append({
+                                'platform': result.get('platform', 'twitter'),
+                                'author': result.get('author', '@unknown'),
+                                'content': result.get('content', ''),
+                                'timestamp': result.get('timestamp', datetime.now().isoformat()),
+                                'engagement': result.get('engagement', 0),
+                                'sentiment': result.get('sentiment', 'Neutral')
+                            })
+                        return converted_results
+                except Exception as e:
+                    logger.warning(f"Real API failed: {e}, using mock data")
+            
+            # Fallback to mock data
+            return self._generate_mock_data(hashtag, limit)
+        
+        def _generate_mock_data(self, hashtag, limit=100):
+            """Generate mock hashtag data"""
             import random
             from datetime import datetime, timedelta, timezone
             
@@ -2572,6 +2613,12 @@ with tab7:
                 try:
                     # Initialize Twitter hashtag collector
                     twitter_collector = get_twitter_hashtag_collector()
+                    
+                    # Show API status
+                    if hasattr(twitter_collector, 'is_real_api') and twitter_collector.is_real_api:
+                        st.success("🔗 **Using REAL Twitter API** - Live data from X.com")
+                    else:
+                        st.info("🔄 **Using Mock Data** - Twitter API unavailable (rate limited or credentials issue)")
                     
                     # Collect hashtag data
                     if search_type == "Hashtags" or search_query.startswith('#'):
