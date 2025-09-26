@@ -25,7 +25,7 @@
 ARG JAVA_VERSION=17
 ARG MAVEN_VERSION=3.9
 
-FROM maven:${MAVEN_VERSION}-openjdk-${JAVA_VERSION}-slim as builder
+FROM maven:3.9-openjdk-17 as builder
 
 # Build arguments
 ARG MAVEN_OPTS="-Dmaven.repo.local=/root/.m2/repository -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=WARN -Dorg.slf4j.simpleLogger.showDateTime=true -Djava.awt.headless=true"
@@ -65,7 +65,7 @@ RUN java -Djarmode=layertools -jar target/*.jar extract
 # -----------------------------------------------------------------------------
 # Runtime Stage - Optimized JRE environment
 # -----------------------------------------------------------------------------
-FROM openjdk:${JAVA_VERSION}-jre-slim as runtime
+FROM openjdk:17-jre-slim as runtime
 
 # Install runtime dependencies
 RUN apt-get update && apt-get install -y \

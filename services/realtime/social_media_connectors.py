@@ -28,6 +28,14 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
+# Import Telegram connector
+try:
+    from .telegram_connector import TelegramConnector
+    TELEGRAM_AVAILABLE = True
+except ImportError as e:
+    logger.warning(f"Telegram connector not available: {e}")
+    TELEGRAM_AVAILABLE = False
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -599,6 +607,13 @@ class SocialMediaAggregator:
         except Exception as e:
             logger.warning(f"Reddit connector not available: {e}")
         
+        # Initialize Telegram connector if available
+        if TELEGRAM_AVAILABLE:
+            try:
+                self.connectors['telegram'] = TelegramConnector()
+            except Exception as e:
+                logger.warning(f"Telegram connector not available: {e}")
+        
         logger.info(f"Social Media Aggregator initialized with {len(self.connectors)} connectors")
     
     async def search_all_platforms(self,
@@ -644,6 +659,11 @@ class SocialMediaAggregator:
                     keywords=keywords,
                     max_results=max_results_per_platform,
                     time_filter='day' if time_window_hours <= 24 else 'week'
+                )
+            elif platform == 'telegram':
+                task = connector.search_hashtag(
+                    hashtag=keywords,
+                    limit=max_results_per_platform
                 )
             else:
                 continue
