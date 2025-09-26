@@ -234,27 +234,9 @@ create_simplified_compose() {
 version: '3.8'
 
 services:
-  # Core Database
-  postgres:
-    image: postgres:15-alpine
-    container_name: sentinelbert-postgres
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB:-sentinelbert}
-      POSTGRES_USER: ${POSTGRES_USER:-sentinel}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-    networks:
-      - sentinelbert-net
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-sentinel}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
-
+  # Core Database - Using local PostgreSQL instead of containerized
+  # postgres service is commented out to use host PostgreSQL
+  
   # Redis Cache
   redis:
     image: redis:7-alpine
@@ -281,10 +263,8 @@ services:
     container_name: sentinelbert-nlp
     environment:
       - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-sentinel}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-sentinelbert}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-sentinel}:${POSTGRES_PASSWORD}@host.docker.internal:5432/${POSTGRES_DB:-sentinelbert}
     depends_on:
-      postgres:
-        condition: service_healthy
       redis:
         condition: service_healthy
     ports:
@@ -307,7 +287,7 @@ services:
     environment:
       - NLP_SERVICE_URL=http://nlp-service:8000
       - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-sentinel}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-sentinelbert}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-sentinel}:${POSTGRES_PASSWORD}@host.docker.internal:5432/${POSTGRES_DB:-sentinelbert}
     depends_on:
       nlp-service:
         condition: service_healthy
@@ -334,7 +314,6 @@ services:
     restart: unless-stopped
 
 volumes:
-  postgres_data:
   redis_data:
 
 networks:

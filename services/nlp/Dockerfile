@@ -124,33 +124,10 @@ RUN mkdir -p /app/models/bert /app/models/cache /app/models/custom
 ENV TRANSFORMERS_CACHE=/app/models/cache
 ENV HF_HOME=/app/models/cache
 
-# Download pre-trained BERT models
-RUN python -c "\
-from transformers import AutoTokenizer, AutoModel; \
-import torch; \
-print('Downloading BERT base model...'); \
-tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased'); \
-model = AutoModel.from_pretrained('bert-base-uncased'); \
-tokenizer.save_pretrained('/app/models/bert/bert-base-uncased'); \
-model.save_pretrained('/app/models/bert/bert-base-uncased'); \
-print('BERT base model downloaded successfully!')"
+# Note: Models will be downloaded at runtime to avoid build-time compatibility issues
+# This allows for better error handling and version compatibility
 
-# Download sentiment analysis model
-RUN python -c "\
-from transformers import pipeline; \
-print('Downloading sentiment analysis model...'); \
-sentiment_pipeline = pipeline('sentiment-analysis', model='cardiffnlp/twitter-roberta-base-sentiment-latest'); \
-print('Sentiment analysis model downloaded successfully!')"
-
-# Download additional models for behavioral analysis
-RUN python -c "\
-from transformers import AutoTokenizer, AutoModel; \
-models = ['bert-base-multilingual-cased', 'distilbert-base-uncased']; \
-[print(f'Downloading {model_name}...') or \
- AutoTokenizer.from_pretrained(model_name).save_pretrained(f'/app/models/bert/{model_name}') or \
- AutoModel.from_pretrained(model_name).save_pretrained(f'/app/models/bert/{model_name}') \
- for model_name in models]; \
-print('Additional models downloaded successfully!')"
+# Additional models will also be downloaded at runtime
 
 # -----------------------------------------------------------------------------
 # Runtime Stage - Optimized production environment
